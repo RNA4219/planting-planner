@@ -80,8 +80,6 @@ export const App = () => {
       })
   }, [items, cropIndex, favorites])
 
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
-
   const requestRecommendations = useCallback(
     async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
       const normalizedWeek = normalizeIsoWeek(inputWeek, fallbackWeek)
@@ -115,16 +113,10 @@ export const App = () => {
     void requestRecommendations(region, queryWeek, activeWeek)
   }
 
+
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
   }, [])
-
-  const handleWeekChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setQueryWeek(event.target.value)
-    },
-    [setQueryWeek],
-  )
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
