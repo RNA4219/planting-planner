@@ -1,5 +1,13 @@
 # TypeScript 型定義 - planting-planner v0.1
 
+## 共通型
+
+```ts
+export type Region = "cold" | "temperate" | "warm"
+```
+
+---
+
 ## 作物関連
 
 ```ts
@@ -7,7 +15,12 @@ export interface Crop {
   id: number
   name: string
   category: "leaf" | "root" | "fruit" | "flower" | string
-  growth_days: number
+}
+
+export interface GrowthDays {
+  crop_id: number
+  region: Region
+  days: number
 }
 ```
 
@@ -37,6 +50,7 @@ export type CropsResponse = Crop[]
 
 export interface RecommendResponse {
   week: number
+  region: Region
   items: Recommendation[]
 }
 
@@ -58,5 +72,9 @@ export interface RefreshStatusResponse {
 ```ts
 export interface FavoritesStorage {
   favorites: number[] // crop.id の配列
+}
+
+export interface RegionStorage {
+  region: Region
 }
 ```

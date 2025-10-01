@@ -18,11 +18,12 @@
 ---
 
 ### `growth_days`
-| カラム名       | 型      | 説明                  |
-|----------------|---------|-----------------------|
-| id             | INTEGER | 主キー                |
-| crop_id        | INTEGER | crops.id 外部キー     |
-| days           | INTEGER | 平均生育日数（単位: 日） |
+| カラム名       | 型      | 説明                                      |
+|----------------|---------|-------------------------------------------|
+| id             | INTEGER | 主キー                                    |
+| crop_id        | INTEGER | crops.id 外部キー                         |
+| region         | TEXT    | "cold"（寒冷地）/"temperate"（温暖地）/"warm"（暖地） |
+| days           | INTEGER | 平均生育日数（単位: 日）                  |
 
 ---
 
@@ -50,4 +51,4 @@
 
 ## インデックス
 - `prices(crop_id, week)` に複合インデックスを付与
-- `growth_days.crop_id` にユニーク制約
+- `growth_days(crop_id, region)` にユニーク制約
