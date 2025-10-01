@@ -34,8 +34,8 @@ jobs:
           name: planting-planner-frontend-dist
           path: frontend/dist
 
-  backend:
-    name: backend (fastapi+pytest)
+  backend-lint:
+    name: backend lint (ruff+black+mypy)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -53,5 +53,19 @@ jobs:
         run: black --check .
       - name: type check (mypy)
         run: mypy app
+
+  backend-test:
+    name: backend test (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt -r requirements-dev.txt
       - name: test (pytest)
         run: pytest -q
