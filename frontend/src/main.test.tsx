@@ -51,12 +51,17 @@ const fetchCrops = vi.fn<() => Promise<Crop[]>>()
 const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
 const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
-const fetchRecommendations = vi.fn<
-  (region: Region, week?: string) => Promise<RecommendResponse>
->(async (region, week) => fetchRecommend({ region, week }))
+const fetchRecommend = vi.fn<
+  (input: { region: Region; week?: string }) => Promise<RecommendResponse>
+>()
+
+fetchRecommendations.mockImplementation(async (region, week) =>
+  fetchRecommend({ region, week }),
+)
 
 vi.mock('./lib/api', () => ({
   fetchRecommendations,
+  fetchRecommend,
   fetchCrops,
   postRefresh,
   fetchRefreshStatus,
@@ -70,6 +75,7 @@ const resetSpies = () => {
   loadFavorites.mockClear()
   saveFavorites.mockClear()
   fetchRecommendations.mockReset()
+  fetchRecommend.mockReset()
   fetchCrops.mockReset()
   postRefresh.mockReset()
   fetchRefreshStatus.mockReset()

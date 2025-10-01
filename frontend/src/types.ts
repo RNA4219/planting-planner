@@ -11,6 +11,7 @@ export interface RecommendationItem {
   sowing_week: string
   harvest_week: string
   source: string
+  growth_days: number
 }
 
 export interface RecommendResponse {

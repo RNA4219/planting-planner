@@ -34,6 +34,7 @@ export interface RecommendationItem {
   harvest_week: string
   sowing_week: string
   source: string
+  growth_days: number
 }
 ```
 
