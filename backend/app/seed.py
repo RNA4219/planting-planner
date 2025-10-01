@@ -7,8 +7,16 @@ from typing import Any
 
 from . import db, utils_week
 
-
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+_NUMERIC_TYPES = (int, float, str)
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, _NUMERIC_TYPES):
+        return float(value)
+    raise TypeError(f"Unsupported numeric value: {value!r}")
 
 
 def _load_json(path: Path) -> list[dict[str, Any]]:
@@ -65,8 +73,8 @@ def seed(conn: sqlite3.Connection | None = None) -> None:
                 (
                     crop_id,
                     week_iso,
-                    float(price.get("price")) if price.get("price") is not None else None,
-                    float(price.get("stddev")) if price.get("stddev") is not None else None,
+                    _optional_float(price.get("price")),
+                    _optional_float(price.get("stddev")),
                     price.get("unit", "円/kg"),
                     price.get("source", "seed"),
                 ),
@@ -83,8 +91,8 @@ def seed(conn: sqlite3.Connection | None = None) -> None:
             (
                 int(row["crop_id"]),
                 week_iso,
-                float(row.get("avg_price")) if row.get("avg_price") is not None else None,
-                float(row.get("stddev")) if row.get("stddev") is not None else None,
+                _optional_float(row.get("avg_price")),
+                _optional_float(row.get("stddev")),
                 row.get("unit", "円/kg"),
                 row.get("source", "seed"),
             ),

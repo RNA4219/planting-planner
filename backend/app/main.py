@@ -47,12 +47,8 @@ RecommendRegionQuery = Annotated[
     schemas.Region, Query(description="Growing region for the recommendation schedule")
 ]
 PriceCropQuery = Annotated[int, Query(ge=1)]
-FromWeekQuery = Annotated[
-    str | None, Query(description="from ISO week e.g., 2025-W01")
-]
-ToWeekQuery = Annotated[
-    str | None, Query(description="to ISO week e.g., 2025-W52")
-]
+FromWeekQuery = Annotated[str | None, Query(description="from ISO week e.g., 2025-W01")]
+ToWeekQuery = Annotated[str | None, Query(description="to ISO week e.g., 2025-W52")]
 
 
 @app.get("/api/health")
@@ -189,7 +185,6 @@ def _refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
     status = etl.get_last_status(conn)
     payload = status.model_dump() if hasattr(status, "model_dump") else status.dict()
     return schemas.RefreshStatusResponse(**payload)
-
 
 
 @app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)

@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
-from typing import cast
+from typing import Any, Final, cast
 
 from . import db, schemas
 
-STATE_RUNNING = "running"
-STATE_SUCCESS = "success"
-STATE_FAILURE = "failure"
+STATE_RUNNING: Final[schemas.RefreshState] = "running"
+STATE_SUCCESS: Final[schemas.RefreshState] = "success"
+STATE_FAILURE: Final[schemas.RefreshState] = "failure"
+STATE_STALE: Final[schemas.RefreshState] = "stale"
+
+_STATE_LOOKUP: dict[str, schemas.RefreshState] = {
+    STATE_RUNNING: STATE_RUNNING,
+    STATE_SUCCESS: STATE_SUCCESS,
+    STATE_FAILURE: STATE_FAILURE,
+    STATE_STALE: STATE_STALE,
+}
 
 
 def _utc_now() -> str:
@@ -30,6 +38,15 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             mutated = True
     if mutated:
         conn.commit()
+
+
+def _coerce_state(value: Any) -> schemas.RefreshState:
+    if isinstance(value, str):
+        normalized = value.lower()
+        state = _STATE_LOOKUP.get(normalized)
+        if state is not None:
+            return state
+    return STATE_STALE
 
 
 def run_etl(conn: Any) -> int:
@@ -132,8 +149,8 @@ def get_last_status(conn: sqlite3.Connection) -> schemas.RefreshStatus:
             last_error=None,
         )
 
-    state = (row["state"] or "stale").lower()
-    finished_at = row["finished_at"]
+    state = _coerce_state(row["state"])
+    finished_at = cast(str | None, row["finished_at"])
     raw_updated_records = cast(int | None, row["updated_records"])
     updated_records = 0 if raw_updated_records is None else int(raw_updated_records)
     return schemas.RefreshStatus(
@@ -141,5 +158,5 @@ def get_last_status(conn: sqlite3.Connection) -> schemas.RefreshStatus:
         started_at=row["started_at"],
         finished_at=finished_at,
         updated_records=updated_records,
-        last_error=row["last_error"],
+        last_error=cast(str | None, row["last_error"]),
     )

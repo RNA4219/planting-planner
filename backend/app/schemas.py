@@ -4,8 +4,8 @@ from typing import Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel
 
-
 Region = Literal["cold", "temperate", "warm"]
+RefreshState = Literal["success", "failure", "running", "stale"]
 DEFAULT_REGION: Region = "temperate"
 
 
@@ -40,11 +40,11 @@ class RefreshTriggerPayload(TypedDict, total=False):
 
 
 class RefreshResponse(BaseModel):
-    state: Literal["success", "failure", "running", "stale"]
+    state: RefreshState
 
 
 class RefreshStatus(BaseModel):
-    state: Literal["success", "failure", "running", "stale"]
+    state: RefreshState
     started_at: str | None = None
     finished_at: str | None = None
     updated_records: int = 0

@@ -76,9 +76,7 @@ def test_recommend_default_region_returns_temperate_schedule() -> None:
 
 
 def test_recommend_allows_region_override() -> None:
-    response = client.get(
-        "/api/recommend", params={"week": REFERENCE_WEEK, "region": "cold"}
-    )
+    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK, "region": "cold"})
     assert response.status_code == 200
 
     payload = response.json()
