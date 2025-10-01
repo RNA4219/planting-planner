@@ -26,43 +26,43 @@ def seed(conn: sqlite3.Connection) -> None:
     crops_data = _load_json(crops_path)
     growth_days_data = _load_json(growth_days_path)
 
-    conn.execute("DELETE FROM growth_days")
-    conn.execute("DELETE FROM prices")
-    conn.execute("DELETE FROM crops")
-
-    name_to_id: dict[str, int] = {}
     for crop in crops_data:
+        crop_id = int(crop["id"])
         name = crop["name"]
         category = crop["category"]
-        cursor = conn.execute(
-            "INSERT INTO crops (name, category) VALUES (?, ?)",
-            (name, category),
+        conn.execute(
+            "INSERT OR IGNORE INTO crops (id, name, category) VALUES (?, ?, ?)",
+            (crop_id, name, category),
         )
-        crop_id = int(cursor.lastrowid)
-        name_to_id[name] = crop_id
+        conn.execute(
+            "UPDATE crops SET name = ?, category = ? WHERE id = ?",
+            (name, category, crop_id),
+        )
 
-        for price in crop.get("prices", []):
+        for price in crop.get("price_weekly", []):
             conn.execute(
-                "INSERT INTO prices (crop_id, week, price, source) VALUES (?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO price_weekly (crop_id, week, price, source) VALUES (?, ?, ?, ?)",
                 (crop_id, int(price["week"]), float(price["price"]), price["source"]),
             )
 
     for entry in growth_days_data:
-        crop_name = entry["crop"]
-        crop_id = name_to_id.get(crop_name)
-        if crop_id is None:
-            raise KeyError(f"growth_days refers to unknown crop '{crop_name}'")
+        crop_id = int(entry["crop_id"])
         conn.execute(
-            "INSERT OR REPLACE INTO growth_days (crop_id, region, days) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO growth_days (crop_id, region, days) VALUES (?, ?, ?)",
             (crop_id, entry["region"], int(entry["days"])),
+        )
+        conn.execute(
+            "UPDATE growth_days SET days = ? WHERE crop_id = ? AND region = ?",
+            (int(entry["days"]), crop_id, entry["region"]),
         )
 
     conn.commit()
 
 
 def seed_from_default_db() -> None:
-    conn = db.connect()
+    conn = db.get_conn()
     try:
+        db.init_db(conn)
         seed(conn)
     finally:
         conn.close()

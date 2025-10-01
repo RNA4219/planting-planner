@@ -32,7 +32,7 @@ def _ensure_schema(conn: Any) -> None:
 
 
 def run_etl(conn: Any) -> int:
-    row = conn.execute("SELECT COUNT(*) FROM prices").fetchone()
+    row = conn.execute("SELECT COUNT(*) FROM price_weekly").fetchone()
     if row is None:
         return 0
     value = row[0]
@@ -42,7 +42,7 @@ def run_etl(conn: Any) -> int:
 
 
 def start_etl_job() -> None:
-    conn = db.connect()
+    conn = db.get_conn()
     try:
         _ensure_schema(conn)
         started_at = _utc_now()

@@ -12,7 +12,7 @@ app = FastAPI(title="planting-planner API")
 
 @app.on_event("startup")
 def startup() -> None:
-    conn = db.connect()
+    conn = db.get_conn()
     try:
         db.init_db(conn)
         seed.seed(conn)
@@ -21,7 +21,7 @@ def startup() -> None:
 
 
 def get_conn() -> Generator[sqlite3.Connection, None, None]:
-    conn = db.connect()
+    conn = db.get_conn()
     _ensure_seeded(conn)
     try:
         yield conn
@@ -63,11 +63,11 @@ def recommend(
 
     rows = conn.execute(
         """
-        SELECT c.name, gd.days, p.week AS harvest_week, p.source
+        SELECT c.name, gd.days, pw.week AS harvest_week, pw.source
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
-        INNER JOIN prices AS p ON p.crop_id = c.id
-        ORDER BY p.week, c.name
+        INNER JOIN price_weekly AS pw ON pw.crop_id = c.id
+        ORDER BY pw.week, c.name
         """,
         (region.value,),
     ).fetchall()
@@ -91,14 +91,32 @@ def recommend(
     return schemas.RecommendResponse(week=reference_week, region=region, items=items)
 
 
-@app.post("/api/refresh", response_model=schemas.RefreshResponse)
-def refresh(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
-    etl.run(conn)
+def _start_refresh(_conn: sqlite3.Connection) -> schemas.RefreshResponse:
+    etl.start_etl_job()
 
     return schemas.RefreshResponse(status="refresh started")
 
 
-@app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)
-def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
+@app.post("/api/refresh", response_model=schemas.RefreshResponse)
+def refresh(_conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
+    return _start_refresh(_conn)
+
+
+@app.post("/refresh", response_model=schemas.RefreshResponse)
+def refresh_legacy(_conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
+    return _start_refresh(_conn)
+
+
+def _refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
     status = etl.get_last_status(conn)
     return schemas.RefreshStatusResponse(**status)
+
+
+@app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)
+def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
+    return _refresh_status(conn)
+
+
+@app.get("/refresh/status", response_model=schemas.RefreshStatusResponse)
+def refresh_status_legacy(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
+    return _refresh_status(conn)
