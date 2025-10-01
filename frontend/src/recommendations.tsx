@@ -1,5 +1,4 @@
 import { FavStar } from './components/FavStar'
-import { formatIsoWeek } from './lib/week'
 import type { RecommendationRow } from './hooks/useRecommendations'
 export { useRecommendations } from './hooks/useRecommendations'
 export type { RecommendationRow } from './hooks/useRecommendations'
@@ -22,7 +21,7 @@ export const RecommendationsTable = ({ rows, isFavorite, onToggleFavorite }: Rec
     </thead>
     <tbody>
       {rows.map((item) => (
-        <tr key={`${item.crop}-${item.sowing_week}-${item.harvest_week}`}>
+        <tr key={item.rowKey}>
           <td>
             <div className="recommend__crop">
               <FavStar
@@ -33,8 +32,8 @@ export const RecommendationsTable = ({ rows, isFavorite, onToggleFavorite }: Rec
               <span>{item.crop}</span>
             </div>
           </td>
-          <td>{formatIsoWeek(item.sowing_week)}</td>
-          <td>{formatIsoWeek(item.harvest_week)}</td>
+          <td>{item.sowingWeekLabel}</td>
+          <td>{item.harvestWeekLabel}</td>
           <td>{item.source}</td>
         </tr>
       ))}
