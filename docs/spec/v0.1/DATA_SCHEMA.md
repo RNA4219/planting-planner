@@ -46,6 +46,10 @@
 | status         | TEXT    | 成功/失敗                      |
 | updated_records| INTEGER | 更新件数                       |
 | error_message  | TEXT    | エラーメッセージ（失敗時）     |
+| state          | TEXT    | ETL ジョブの内部状態（running/success/failure） |
+| started_at     | TEXT    | 実行開始時刻（ISO8601文字列）  |
+| finished_at    | TEXT    | 実行終了時刻（ISO8601文字列）  |
+| last_error     | TEXT    | 直近のエラー内容（リトライ用） |
 
 ---
 
