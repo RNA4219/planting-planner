@@ -31,15 +31,9 @@ class RecommendResponse(BaseModel):
     items: list[RecommendationItem]
 
 
-class RefreshResponse(BaseModel):
-    status: str
-
-
-class RefreshStatusResponse(BaseModel):
-    status: Literal["success", "failure", "running", "stale"]
+class RefreshStatus(BaseModel):
     state: Literal["success", "failure", "running", "stale"]
-    last_run: str | None
     started_at: str | None = None
     finished_at: str | None = None
-    updated_records: int
+    updated_records: int = 0
     last_error: str | None = None

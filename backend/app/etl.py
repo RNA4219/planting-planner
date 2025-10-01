@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import cast
 
-from . import db
+from . import db, schemas
 
 STATE_RUNNING = "running"
 STATE_SUCCESS = "success"
@@ -14,7 +15,7 @@ def _utc_now() -> str:
     return datetime.now(tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _ensure_schema(conn: Any) -> None:
+def _ensure_schema(conn: sqlite3.Connection) -> None:
     columns = {row[1] for row in conn.execute("PRAGMA table_info('etl_runs')").fetchall()}
     migrations: dict[str, str] = {
         "state": "ALTER TABLE etl_runs ADD COLUMN state TEXT",
@@ -31,7 +32,7 @@ def _ensure_schema(conn: Any) -> None:
         conn.commit()
 
 
-def run_etl(conn: Any) -> int:
+def run_etl(conn: sqlite3.Connection) -> int:
     row = conn.execute("SELECT COUNT(*) FROM prices").fetchone()
     if row is None:
         return 0
@@ -106,7 +107,7 @@ def start_etl_job() -> None:
         conn.close()
 
 
-def get_last_status(conn: Any) -> dict[str, Any]:
+def get_last_status(conn: sqlite3.Connection) -> schemas.RefreshStatus:
     _ensure_schema(conn)
     row = conn.execute(
         """
@@ -123,27 +124,22 @@ def get_last_status(conn: Any) -> dict[str, Any]:
         """,
     ).fetchone()
     if row is None:
-        return {
-            "last_run": None,
-            "status": "stale",
-            "state": "stale",
-            "started_at": None,
-            "finished_at": None,
-            "updated_records": 0,
-            "last_error": None,
-        }
+        return schemas.RefreshStatus(
+            state="stale",
+            started_at=None,
+            finished_at=None,
+            updated_records=0,
+            last_error=None,
+        )
 
     state = (row["state"] or "stale").lower()
     finished_at = row["finished_at"]
-    last_run = finished_at if finished_at is not None else None
     raw_updated_records = cast(int | None, row["updated_records"])
     updated_records = 0 if raw_updated_records is None else int(raw_updated_records)
-    return {
-        "last_run": last_run,
-        "status": state,
-        "state": state,
-        "started_at": row["started_at"],
-        "finished_at": finished_at,
-        "updated_records": updated_records,
-        "last_error": row["last_error"],
-    }
+    return schemas.RefreshStatus(
+        state=state,
+        started_at=row["started_at"],
+        finished_at=finished_at,
+        updated_records=updated_records,
+        last_error=row["last_error"],
+    )
