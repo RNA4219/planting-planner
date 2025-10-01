@@ -3,12 +3,12 @@
 ## Day 1〜3: MVP開発
 - [x] リポジトリ初期化（README, License, .gitignore）
 - [x] CI 構築（Frontend/Backend lint, test, build）
-- [ ] Frontend 雛形 (React+TS+Vite)
-- [ ] Backend 雛形 (FastAPI+SQLite)
-- [ ] 作物マスタ/生育日数のシードデータ投入
-- [ ] API `/crops`, `/recommend`, `/health` 実装
-- [ ] フロントUI（リスト表示・☆お気に入り）
-- [ ] 更新ボタン → `/refresh` API 呼び出し
+- [x] Frontend 雛形 (React+TS+Vite)
+- [x] Backend 雛形 (FastAPI+SQLite)
+- [x] 作物マスタ/生育日数のシードデータ投入
+- [x] API `/crops`, `/recommend`, `/health` 実装
+- [x] フロントUI（リスト表示・☆お気に入り）
+- [x] 更新ボタン → `/refresh` API 呼び出し
 - [ ] MVP版公開（Pages/Render）
 
 ---

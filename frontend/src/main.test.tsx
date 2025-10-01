@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Crop, RecommendResponse, Region } from './types'
 
 vi.mock('./lib/week', () => ({
-  currentIsoWeek: () => '2024-W30',
+  getCurrentIsoWeek: () => '2024-W30',
   normalizeIsoWeek: (value: string) => value,
   formatIsoWeek: (value: string) => value,
   compareIsoWeek: (a: string, b: string) => a.localeCompare(b),
@@ -38,8 +38,8 @@ vi.mock('./lib/storage', () => ({
   saveFavorites,
 }))
 
-const fetchRecommend = vi.fn<
-  (input: { region: Region; week?: string }) => Promise<RecommendResponse>
+const fetchRecommendations = vi.fn<
+  (region: Region, week?: string) => Promise<RecommendResponse>
 >()
 const fetchCrops = vi.fn<() => Promise<Crop[]>>()
 const postRefresh = vi.fn<() => Promise<string>>()
@@ -82,7 +82,7 @@ describe('App', () => {
     const App = (await import('./App')).default
     const user = userEvent.setup()
     render(<App />)
-    await waitFor(() => expect(fetchRecommend).toHaveBeenCalled())
+    await waitFor(() => expect(fetchCrops).toHaveBeenCalled())
     return { user }
   }
 
@@ -91,7 +91,7 @@ describe('App', () => {
       { id: 1, name: '春菊', category: 'leaf' },
       { id: 2, name: 'にんじん', category: 'root' },
     ])
-    fetchRecommend.mockImplementation(async ({ region }) => ({
+    fetchRecommendations.mockImplementation(async (region) => ({
       week: '2024-W30',
       region,
       items: [
@@ -106,9 +106,13 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
-    expect(fetchRecommend).toHaveBeenLastCalledWith({
-      region: 'temperate',
-      week: '2024-W30',
+    const submit = screen.getByRole('button', { name: 'この条件で見る' })
+    expect(fetchRecommendations).not.toHaveBeenCalled()
+
+    await user.click(submit)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
     })
 
     const select = screen.getByLabelText('地域')
@@ -119,7 +123,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommend).toHaveBeenLastCalledWith({ region: 'cold', week: '2024-W32' })
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
     })
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
     expect(screen.getByText('にんじん')).toBeInTheDocument()
@@ -132,7 +136,7 @@ describe('App', () => {
       { id: 1, name: '春菊', category: 'leaf' },
       { id: 2, name: 'にんじん', category: 'root' },
     ])
-    fetchRecommend.mockResolvedValue({
+    fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',
       items: [
@@ -153,6 +157,8 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
+    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
+
     const toggle = screen.getByRole('button', { name: 'にんじんをお気に入りに追加' })
     await user.click(toggle)
 
@@ -168,7 +174,7 @@ describe('App', () => {
       { id: 3, name: 'キャベツ', category: 'leaf' },
     ])
 
-    fetchRecommend.mockResolvedValue({
+    fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',
 
@@ -196,6 +202,14 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
+    const submit = screen.getByRole('button', { name: 'この条件で見る' })
+    await user.click(submit)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenCalled()
+    })
+
+    fetchRecommendations.mockClear()
     expect(fetchRecommendations).not.toHaveBeenCalled()
 
     const select = screen.getByLabelText('地域')
@@ -214,12 +228,17 @@ describe('App', () => {
 
     const table = await screen.findByRole('table')
     const rows = within(table).getAllByRole('row').slice(1)
+    const [firstRow, secondRow, thirdRow] = rows
 
-    expect(rows[0]).toHaveTextContent('にんじん')
-    expect(rows[1]).toHaveTextContent('春菊')
-    expect(rows[2]).toHaveTextContent('キャベツ')
+    if (!firstRow || !secondRow || !thirdRow) {
+      throw new Error('推奨テーブルの行が不足しています')
+    }
 
-    const favToggle = within(rows[1]).getByRole('button', { name: '春菊をお気に入りに追加' })
+    expect(firstRow).toHaveTextContent('にんじん')
+    expect(secondRow).toHaveTextContent('春菊')
+    expect(thirdRow).toHaveTextContent('キャベツ')
+
+    const favToggle = within(secondRow).getByRole('button', { name: '春菊をお気に入りに追加' })
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])
