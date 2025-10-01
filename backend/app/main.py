@@ -83,14 +83,7 @@ def recommend(
         """
         SELECT
             c.name,
-            gd.days,
-            (
-                SELECT pw.source
-                FROM price_weekly AS pw
-                WHERE pw.crop_id = c.id AND pw.source != 'seed'
-                ORDER BY pw.week DESC
-                LIMIT 1
-            ) AS source
+            gd.days
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
         ORDER BY c.name
@@ -102,14 +95,13 @@ def recommend(
     for row in rows:
         growth_days = int(row["days"])
         sowing_week_iso = utils_week.subtract_days_to_iso_week(reference_week, growth_days)
-        source = str(row["source"]) if row["source"] else "internal"
         items.append(
             schemas.RecommendItem(
                 crop=str(row["name"]),
                 growth_days=growth_days,
                 harvest_week=reference_week,
                 sowing_week=sowing_week_iso,
-                source=source,
+                source="internal",
             )
         )
 
