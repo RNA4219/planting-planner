@@ -59,13 +59,16 @@ export const App = () => {
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     const favoriteSet = new Set(favorites)
     return items
-      .map<RecommendationRow>((item) => ({
-        ...item,
-        cropId: cropIndex.get(item.crop),
-        rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
-        sowingWeekLabel: formatIsoWeek(item.sowing_week),
-        harvestWeekLabel: formatIsoWeek(item.harvest_week),
-      }))
+      .map<RecommendationRow>((item) => {
+        const cropId = cropIndex.get(item.crop)
+        return {
+          ...item,
+          cropId,
+          rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
+          sowingWeekLabel: formatIsoWeek(item.sowing_week),
+          harvestWeekLabel: formatIsoWeek(item.harvest_week),
+        }
+      })
       .sort((a, b) => {
         const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
         const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
@@ -112,7 +115,6 @@ export const App = () => {
     event.preventDefault()
     void requestRecommendations(region, queryWeek, activeWeek)
   }
-
 
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)

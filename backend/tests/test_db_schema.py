@@ -14,9 +14,7 @@ def _column_names(conn: sqlite3.Connection, table: str) -> list[str]:
     return [str(row["name"]) for row in rows]
 
 
-def test_init_db_creates_expected_tables(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_init_db_creates_expected_tables(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     test_db = tmp_path / "schema.db"
     monkeypatch.setattr(db, "DATABASE_FILE", test_db)
 

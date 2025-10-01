@@ -185,5 +185,3 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     handleSubmit,
   }
 }
-
-export type { RecommendationRow } from '../utils/recommendations'
