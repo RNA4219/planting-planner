@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import re
-
 from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
 from app.main import app
-
 
 client = TestClient(app)
 ISO_WEEK_PATTERN = re.compile(r"^(\d{4})-W(\d{2})$")
@@ -64,6 +62,7 @@ def _assert_items(payload: dict[str, object], region: str) -> None:
         expected_sowing = _subtract_days(REFERENCE_WEEK, days)
         assert item["sowing_week"] == expected_sowing
         assert item["growth_days"] == days
+        assert item["source"] == "internal"
         _assert_iso_week(item["harvest_week"])
         _assert_iso_week(item["sowing_week"])
 

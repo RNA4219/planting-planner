@@ -27,14 +27,16 @@
 
 ---
 
-### `prices`
-| カラム名       | 型      | 説明                           |
-|----------------|---------|--------------------------------|
-| id             | INTEGER | 主キー                         |
-| crop_id        | INTEGER | crops.id 外部キー              |
-| week           | INTEGER | ISO週番号（例: 202540）        |
-| price          | REAL    | 単位あたり価格（円/kg 等正規化）|
-| source         | TEXT    | データ出典（e-Stat 等）         |
+### `price_weekly`
+| カラム名       | 型      | 説明                                   |
+|----------------|---------|----------------------------------------|
+| id             | INTEGER | 主キー                                 |
+| crop_id        | INTEGER | crops.id 外部キー                      |
+| week           | TEXT    | ISO 週番号（例: 2025-W40）             |
+| avg_price      | REAL    | 平均価格（単位あたり、円/kg 等正規化） |
+| stddev         | REAL    | 価格の標準偏差                         |
+| unit           | TEXT    | 価格単位（デフォルト: `円/kg`）        |
+| source         | TEXT    | データ出典（e-Stat 等）                 |
 
 ---
 
@@ -54,5 +56,5 @@
 ---
 
 ## インデックス
-- `prices(crop_id, week)` に複合インデックスを付与
+- `price_weekly(crop_id, week)` に複合インデックスを付与
 - `growth_days(crop_id, region)` にユニーク制約
