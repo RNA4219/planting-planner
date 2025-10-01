@@ -111,6 +111,12 @@ export const App = () => {
     void requestRecommendations(region, queryWeek, activeWeek)
   }, [requestRecommendations, region, queryWeek, activeWeek])
 
+  const handleWeekChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setQueryWeek(normalizeIsoWeek(event.target.value, currentWeekRef.current))
+  }, [])
+
+  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     void requestRecommendations(region, queryWeek, activeWeek)
