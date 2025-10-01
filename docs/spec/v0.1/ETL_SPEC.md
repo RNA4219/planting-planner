@@ -20,12 +20,11 @@ ETL (Extract, Transform, Load) により、公的市場データを週単位に�
 
 ## Load
 
-- SQLite に UPSERT
-- テーブル構造:
-  - `crops`（作物マスタ）
-  - `price_weekly`（週単位価格。主キー `id` と `crop_id`×`week` の一意制約。
-    主なカラムは `avg_price`、`stddev`、`unit`、`source`）
-  - `growth_days`（平均生育日数）
+- `price_weekly` テーブルを対象に SQLite へ UPSERT
+  - `crop_id` と `week` の組で既存行を判定し、更新または挿入する
+  - 主なカラムは `avg_price`（週平均価格、REAL）、`stddev`（価格変動の標準偏差、REAL）、
+    `unit`（単価単位。既定値は `円/kg`）、`source`（データ取得元ラベル）
+  - `crop_id` は `crops` テーブルの `id` への外部キーとして参照整合性を担保する
 
 ## エラーハンドリング
 
