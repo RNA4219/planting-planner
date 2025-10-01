@@ -1,30 +1,34 @@
 [
   {
+    "id": 1,
     "name": "ほうれん草",
     "category": "leaf",
-    "prices": [
+    "price_weekly": [
       { "week": 202440, "price": 260.0, "source": "e-Stat" },
       { "week": 202448, "price": 240.0, "source": "e-Stat" }
     ]
   },
   {
+    "id": 2,
     "name": "にんじん",
     "category": "root",
-    "prices": [
+    "price_weekly": [
       { "week": 202442, "price": 210.0, "source": "e-Stat" }
     ]
   },
   {
+    "id": 3,
     "name": "トマト",
     "category": "fruit",
-    "prices": [
+    "price_weekly": [
       { "week": 202448, "price": 520.0, "source": "JA Aichi" }
     ]
   },
   {
+    "id": 4,
     "name": "マリーゴールド",
     "category": "flower",
-    "prices": [
+    "price_weekly": [
       { "week": 202438, "price": 180.0, "source": "MAFF" }
     ]
   }

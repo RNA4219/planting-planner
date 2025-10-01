@@ -32,8 +32,8 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
         conn.commit()
 
 
-def run_etl(conn: sqlite3.Connection) -> int:
-    row = conn.execute("SELECT COUNT(*) FROM prices").fetchone()
+def run_etl(conn: Any) -> int:
+    row = conn.execute("SELECT COUNT(*) FROM price_weekly").fetchone()
     if row is None:
         return 0
     value = row[0]
@@ -43,7 +43,7 @@ def run_etl(conn: sqlite3.Connection) -> int:
 
 
 def start_etl_job() -> None:
-    conn = db.connect()
+    conn = db.get_conn()
     try:
         _ensure_schema(conn)
         started_at = _utc_now()
