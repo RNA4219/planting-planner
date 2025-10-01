@@ -28,15 +28,17 @@
 ---
 
 ### `price_weekly`
-| カラム名       | 型      | 説明                                   |
-|----------------|---------|----------------------------------------|
-| id             | INTEGER | 主キー                                 |
-| crop_id        | INTEGER | crops.id 外部キー                      |
-| week           | TEXT    | ISO 週番号（例: 2025-W40）             |
-| avg_price      | REAL    | 平均価格（単位あたり、円/kg 等正規化） |
-| stddev         | REAL    | 価格の標準偏差                         |
-| unit           | TEXT    | 価格単位（デフォルト: `円/kg`）        |
-| source         | TEXT    | データ出典（e-Stat 等）                 |
+| カラム名       | 型      | 説明                                                     |
+|----------------|---------|----------------------------------------------------------|
+| id             | INTEGER | 主キー                                                   |
+| crop_id        | INTEGER | crops.id 外部キー                                        |
+| week           | TEXT    | ISO 週番号（例: 2025-W40）                               |
+| avg_price      | REAL    | 平均価格（単位あたり、円/kg 等正規化。NULL=データ欠損） |
+| stddev         | REAL    | 価格の標準偏差（NULL=データ欠損）                        |
+| unit           | TEXT    | 価格単位（NOT NULL、デフォルト: `円/kg`）                |
+| source         | TEXT    | データ出典（NOT NULL、例: e-Stat）                        |
+
+- 一意制約: `UNIQUE (crop_id, week)`
 
 ---
 
@@ -56,5 +58,5 @@
 ---
 
 ## インデックス
-- `price_weekly(crop_id, week)` に複合インデックスを付与
+- `idx_price_weekly_crop_week`: `price_weekly(crop_id, week)` に複合インデックスを付与
 - `growth_days(crop_id, region)` にユニーク制約
