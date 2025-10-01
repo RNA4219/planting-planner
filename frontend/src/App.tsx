@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 
 import { FavStar } from './components/FavStar'
 import { RegionSelect } from './components/RegionSelect'
-import { fetchCrops, fetchRecommendations, triggerRefresh } from './lib/api'
+import { fetchCrops, fetchRecommendations, postRefresh } from './lib/api'
 import { loadFavorites, loadRegion, saveFavorites, saveRegion } from './lib/storage'
-import { formatIsoWeek, getCurrentIsoWeek } from './lib/week'
+import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { Crop, RecommendationItem, Region } from './types'
 import './App.css'
 
@@ -21,11 +21,13 @@ export const App = () => {
   const [favorites, setFavorites] = useState<number[]>(() => loadFavorites())
   const [crops, setCrops] = useState<Crop[]>([])
   const [items, setItems] = useState<RecommendationItem[]>([])
-  const [week, setWeek] = useState<number | null>(null)
+  const [queryWeek, setQueryWeek] = useState(() => getCurrentIsoWeek())
+  const [activeWeek, setActiveWeek] = useState<string | null>(null)
+  const [pendingRequest, setPendingRequest] = useState<{ region: Region; week: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
-  const [currentWeek] = useState(() => getCurrentIsoWeek())
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -46,15 +48,36 @@ export const App = () => {
   }, [])
 
   useEffect(() => {
+    if (initialized) {
+      return
+    }
+    const normalized = normalizeIsoWeek(queryWeek)
+    setQueryWeek(normalized)
+    setPendingRequest({ region, week: normalized })
+    setInitialized(true)
+  }, [initialized, queryWeek, region])
+
+  useEffect(() => {
+    if (!pendingRequest) {
+      return
+    }
     let active = true
     setLoading(true)
     setError(null)
+
     const load = async () => {
       try {
-        const response = await fetchRecommendations(region, currentWeek)
+        const response = await fetchRecommendations(pendingRequest.region, pendingRequest.week)
         if (!active) return
-        setWeek(response.week)
-        setItems(response.items)
+        const resolvedWeek = normalizeIsoWeek(response.week, pendingRequest.week)
+        const normalizedItems = response.items.map((item) => ({
+          ...item,
+          sowing_week: normalizeIsoWeek(item.sowing_week),
+          harvest_week: normalizeIsoWeek(item.harvest_week),
+        }))
+        setItems(normalizedItems)
+        setActiveWeek(resolvedWeek)
+        setQueryWeek(resolvedWeek)
       } catch {
         if (!active) return
         setError('推奨データの取得に失敗しました')
@@ -64,11 +87,13 @@ export const App = () => {
         }
       }
     }
+
     void load()
+
     return () => {
       active = false
     }
-  }, [region, currentWeek])
+  }, [pendingRequest])
 
   const cropIndex = useMemo(() => {
     const map = new Map<string, number>()
@@ -91,8 +116,9 @@ export const App = () => {
       if (aFav !== bFav) {
         return bFav - aFav
       }
-      if (a.sowing_week !== b.sowing_week) {
-        return a.sowing_week - b.sowing_week
+      const weekDiff = compareIsoWeek(a.sowing_week, b.sowing_week)
+      if (weekDiff !== 0) {
+        return weekDiff
       }
       return a.crop.localeCompare(b.crop, 'ja')
     })
@@ -101,6 +127,10 @@ export const App = () => {
   const handleRegionChange = (next: Region) => {
     setRegion(next)
     saveRegion(next)
+    const fallbackWeek = activeWeek ?? getCurrentIsoWeek()
+    const normalizedWeek = normalizeIsoWeek(queryWeek, fallbackWeek)
+    setQueryWeek(normalizedWeek)
+    setPendingRequest({ region: next, week: normalizedWeek })
   }
 
   const toggleFavorite = (cropId?: number) => {
@@ -113,31 +143,55 @@ export const App = () => {
     })
   }
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const fallbackWeek = activeWeek ?? getCurrentIsoWeek()
+    const normalizedWeek = normalizeIsoWeek(queryWeek, fallbackWeek)
+    setQueryWeek(normalizedWeek)
+    setPendingRequest({ region, week: normalizedWeek })
+  }
+
   const handleRefresh = async () => {
     try {
-      const response = await triggerRefresh()
+      const response = await postRefresh()
       setRefreshMessage(response.status)
     } catch {
       setRefreshMessage('更新に失敗しました')
     }
   }
 
+  const displayWeek = formatIsoWeek(activeWeek ?? normalizeIsoWeek(queryWeek))
+
   return (
     <div className="app">
       <header className="app__header">
         <h1 className="app__title">Planting Planner</h1>
-        <div className="app__controls">
+        <form className="app__controls" onSubmit={handleSubmit}>
           <RegionSelect value={region} onChange={handleRegionChange} />
+          <label className="app__week" htmlFor="week-input">
+            週
+            <input
+              id="week-input"
+              name="week"
+              type="text"
+              value={queryWeek}
+              onChange={(event) => setQueryWeek(event.target.value)}
+              placeholder={getCurrentIsoWeek()}
+              pattern="\d{4}-W\d{2}"
+              inputMode="numeric"
+            />
+          </label>
+          <button type="submit">この条件で見る</button>
           <button className="app__refresh" type="button" onClick={handleRefresh}>
             更新
           </button>
-        </div>
+        </form>
       </header>
       <main className="app__main">
         <section className="recommend">
           <div className="recommend__meta">
             <span>対象地域: {REGION_LABEL[region]}</span>
-            <span>基準週: {week ? formatIsoWeek(week) : formatIsoWeek(currentWeek)}</span>
+            <span>基準週: {displayWeek}</span>
           </div>
           {refreshMessage && <p className="recommend__status">{refreshMessage}</p>}
           {error && (
