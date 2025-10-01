@@ -51,6 +51,10 @@ const fetchCrops = vi.fn<() => Promise<Crop[]>>()
 const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
 const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
+const fetchRecommendations = vi.fn<
+  (region: Region, week?: string) => Promise<RecommendResponse>
+>(async (region, week) => fetchRecommend({ region, week }))
+
 vi.mock('./lib/api', () => ({
   fetchRecommendations,
   fetchCrops,
@@ -152,6 +156,8 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
+    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
+
     const toggle = screen.getByRole('button', { name: 'にんじんをお気に入りに追加' })
     await user.click(toggle)
 
@@ -213,12 +219,18 @@ describe('App', () => {
 
     const table = await screen.findByRole('table')
     const rows = within(table).getAllByRole('row').slice(1)
+    const [firstRow, secondRow, thirdRow] = rows
 
-    expect(rows[0]).toHaveTextContent('にんじん')
-    expect(rows[1]).toHaveTextContent('春菊')
-    expect(rows[2]).toHaveTextContent('キャベツ')
+    if (!firstRow || !secondRow || !thirdRow) {
+      throw new Error('推奨テーブルの行が不足しています')
+    }
+
+    expect(firstRow).toHaveTextContent('にんじん')
+    expect(secondRow).toHaveTextContent('春菊')
+    expect(thirdRow).toHaveTextContent('キャベツ')
 
     const favToggle = within(rows[1]!).getByRole('button', { name: '春菊をお気に入りに追加' })
+
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])

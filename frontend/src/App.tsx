@@ -1,3 +1,4 @@
+
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FavStar, useFavorites } from './components/FavStar'
@@ -6,9 +7,8 @@ import { RegionSelect } from './components/RegionSelect'
 import { fetchCrops, fetchRecommendations, fetchRefreshStatus, postRefresh } from './lib/api'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { Crop, RecommendationItem, Region } from './types'
-import './App.css'
 
-type RecommendationRow = RecommendationItem & { cropId?: number }
+import './App.css'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -25,6 +25,8 @@ export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
+  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
+    useRecommendations({ favorites })
 
   useEffect(() => {
     let active = true
@@ -137,8 +139,6 @@ export const App = () => {
     }
   }, [])
 
-  const displayWeek = formatIsoWeek(activeWeek)
-
   return (
     <div className="app">
       <header className="app__header">
@@ -152,8 +152,8 @@ export const App = () => {
               name="week"
               type="text"
               value={queryWeek}
-              onChange={(event) => setQueryWeek(event.target.value)}
-              placeholder={getCurrentIsoWeek()}
+              onChange={handleWeekChange}
+              placeholder={currentWeek}
               pattern="\d{4}-W\d{2}"
               inputMode="numeric"
             />

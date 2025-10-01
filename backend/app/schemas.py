@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Literal
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel
 
 
-class Region(str, Enum):
-    cold = "cold"
-    temperate = "temperate"
-    warm = "warm"
+Region = Literal["cold", "temperate", "warm"]
+DEFAULT_REGION: Region = "temperate"
 
 
 class Crop(BaseModel):
@@ -18,8 +15,9 @@ class Crop(BaseModel):
     category: str
 
 
-class RecommendationItem(BaseModel):
+class RecommendItem(BaseModel):
     crop: str
+    growth_days: int
     harvest_week: str
     sowing_week: str
     source: str = "internal"
@@ -28,7 +26,11 @@ class RecommendationItem(BaseModel):
 class RecommendResponse(BaseModel):
     week: str
     region: Region
-    items: list[RecommendationItem]
+    items: list[RecommendItem]
+
+
+class RefreshResponse(TypedDict):
+    state: Literal["success", "failure", "running", "stale"]
 
 
 class RecommendItem(RecommendationItem):
