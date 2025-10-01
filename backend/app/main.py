@@ -94,7 +94,8 @@ def recommend(
 def _start_refresh(_conn: sqlite3.Connection) -> schemas.RefreshResponse:
     etl.start_etl_job()
 
-    return schemas.RefreshResponse(status="refresh started")
+
+    return {"state": etl.STATE_RUNNING}
 
 
 @app.post("/api/refresh", response_model=schemas.RefreshResponse)

@@ -1,5 +1,6 @@
-import type { ChangeEvent } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 
+import { loadRegion, saveRegion } from '../lib/storage'
 import type { Region, RegionOption } from '../types'
 
 const DEFAULT_OPTIONS: RegionOption[] = [
@@ -9,15 +10,22 @@ const DEFAULT_OPTIONS: RegionOption[] = [
 ]
 
 interface Props {
-  value: Region
   onChange: (region: Region) => void
   options?: RegionOption[]
   disabled?: boolean
 }
 
-export const RegionSelect = ({ value, onChange, options = DEFAULT_OPTIONS, disabled }: Props) => {
+export const RegionSelect = ({ onChange, options = DEFAULT_OPTIONS, disabled }: Props) => {
+  const [selected, setSelected] = useState<Region>(() => loadRegion())
+
+  useEffect(() => {
+    onChange(selected)
+  }, [onChange, selected])
+
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(event.target.value as Region)
+    const next = event.target.value as Region
+    setSelected(next)
+    saveRegion(next)
   }
 
   return (
@@ -26,7 +34,7 @@ export const RegionSelect = ({ value, onChange, options = DEFAULT_OPTIONS, disab
       <select
         aria-label="地域"
         className="region-select__select"
-        value={value}
+        value={selected}
         onChange={handleChange}
         disabled={disabled}
       >
