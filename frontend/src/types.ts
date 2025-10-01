@@ -11,6 +11,7 @@ export interface RecommendationItem {
   sowing_week: string
   harvest_week: string
   source: string
+  /** 播種から収穫までの推定日数 */
   growth_days: number
 }
 
