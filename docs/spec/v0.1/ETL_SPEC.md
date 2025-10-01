@@ -29,7 +29,13 @@ ETL (Extract, Transform, Load) により、公的市場データを週単位に�
 
 ## ログ
 - `etl_runs` テーブルに記録
+  - `state`: ジョブの現在ステータス（`running`/`success`/`failure`）を保持
+  - `started_at`: ジョブ開始時刻。マイグレーション後は従来の `run_at` と同値で初期化
+  - `finished_at`: 正常終了・失敗時の完了時刻。実行中は `NULL`
+  - `last_error`: 直近の失敗メッセージ。成功時に `NULL` に戻し、失敗時に更新
   - 実行時刻
   - 成功/失敗
   - 更新件数
   - エラーメッセージ（失敗時）
+
+実装では失敗を検知すると `finished_at` と `last_error` を更新し、リトライ後に成功した場合でも `last_error` は `NULL` にリセットされる。これにより UI は最新のジョブ状態と直近の障害内容のみを参照できる。
