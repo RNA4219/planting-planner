@@ -1,48 +1,45 @@
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
+
+
+ISO_WEEK_PATTERN = re.compile(r"^(\d{4})-W(\d{2})$")
 
 
 class WeekFormatError(ValueError):
     pass
 
 
-def _split_week(week: int) -> tuple[int, int]:
-    week_str = str(week)
-    if len(week_str) != 6:
-        raise WeekFormatError("week must be in YYYYWW format")
-    year = int(week_str[:4])
-    week_number = int(week_str[4:])
+def iso_week_to_date(week: str) -> date:
+    match = ISO_WEEK_PATTERN.fullmatch(week)
+    if match is None:
+        raise WeekFormatError("week must be in ISO format YYYY-Www")
+
+    year = int(match.group(1))
+    week_number = int(match.group(2))
     if not 1 <= week_number <= 53:
         raise WeekFormatError("week number must be between 1 and 53")
-    return year, week_number
 
-
-def week_to_date(week: int) -> date:
-    year, week_number = _split_week(week)
     return date.fromisocalendar(year, week_number, 1)
 
 
-def date_to_week(value: date) -> int:
+def date_to_iso_week(value: date) -> str:
     iso = value.isocalendar()
-    return iso.year * 100 + iso.week
+    return f"{iso.year:04d}-W{iso.week:02d}"
 
 
-def add_weeks(week: int, delta: int) -> int:
-    base = week_to_date(week)
-    new_date = base + timedelta(weeks=delta)
-    return date_to_week(new_date)
+def subtract_days_from_week(week: str, days: int) -> str:
+    base_date = iso_week_to_date(week)
+    target_date = base_date - timedelta(days=days)
+    return date_to_iso_week(target_date)
 
 
-def subtract_weeks(week: int, delta: int) -> int:
-    return add_weeks(week, -delta)
+def iso_week_from_int(week: int) -> str:
+    iso_week = f"{week // 100:04d}-W{week % 100:02d}"
+    iso_week_to_date(iso_week)
+    return iso_week
 
 
-def weeks_from_days(days: int) -> int:
-    if days <= 0:
-        return 0
-    return (days + 6) // 7
-
-
-def current_week() -> int:
-    return date_to_week(date.today())
+def current_iso_week() -> str:
+    return date_to_iso_week(date.today())

@@ -20,13 +20,13 @@ class Crop(BaseModel):
 
 class RecommendationItem(BaseModel):
     crop: str
-    harvest_week: int
-    sowing_week: int
-    source: str
+    harvest_week: str
+    sowing_week: str
+    source: str = "internal"
 
 
 class RecommendResponse(BaseModel):
-    week: int
+    week: str
     region: Region
     items: list[RecommendationItem]
 

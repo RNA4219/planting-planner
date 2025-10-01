@@ -40,26 +40,26 @@ def _ensure_seeded(conn: sqlite3.Connection) -> None:
         seed.seed(conn)
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/crops", response_model=list[schemas.Crop])
+@app.get("/api/crops", response_model=list[schemas.Crop])
 def list_crops(conn: sqlite3.Connection = Depends(get_conn)) -> list[schemas.Crop]:
     rows = conn.execute("SELECT id, name, category FROM crops ORDER BY name").fetchall()
     return [schemas.Crop(id=row["id"], name=row["name"], category=row["category"]) for row in rows]
 
 
-@app.get("/recommend", response_model=schemas.RecommendResponse)
+@app.get("/api/recommend", response_model=schemas.RecommendResponse)
 def recommend(
-    week: int | None = Query(default=None, description="Sowing week in YYYYWW format"),
+    week: str | None = Query(default=None, description="Reference week in ISO format YYYY-Www"),
     region: schemas.Region = Query(default=schemas.Region.temperate),
     conn: sqlite3.Connection = Depends(get_conn),
 ) -> schemas.RecommendResponse:
-    target_week = week or utils_week.current_week()
+    reference_week = week or utils_week.current_iso_week()
     try:
-        utils_week.week_to_date(target_week)
+        utils_week.iso_week_to_date(reference_week)
     except utils_week.WeekFormatError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -69,36 +69,37 @@ def recommend(
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
         INNER JOIN prices AS p ON p.crop_id = c.id
+        ORDER BY p.week, c.name
         """,
         (region.value,),
     ).fetchall()
 
     items: list[schemas.RecommendationItem] = []
     for row in rows:
-        weeks_to_harvest = utils_week.weeks_from_days(int(row["days"]))
-        sowing_week = utils_week.subtract_weeks(int(row["harvest_week"]), weeks_to_harvest)
-        if sowing_week != target_week:
-            continue
+        harvest_week_iso = utils_week.iso_week_from_int(int(row["harvest_week"]))
+        sowing_week_iso = utils_week.subtract_days_from_week(
+            harvest_week_iso, int(row["days"])
+        )
+        source = row["source"] or "internal"
         items.append(
             schemas.RecommendationItem(
                 crop=row["name"],
-                harvest_week=int(row["harvest_week"]),
-                sowing_week=sowing_week,
-                source=row["source"],
+                harvest_week=harvest_week_iso,
+                sowing_week=sowing_week_iso,
+                source=source,
             )
         )
 
-    items.sort(key=lambda item: (item.harvest_week, item.crop))
-    return schemas.RecommendResponse(week=target_week, region=region, items=items)
+    return schemas.RecommendResponse(week=reference_week, region=region, items=items)
 
 
-@app.post("/refresh", response_model=schemas.RefreshResponse)
+@app.post("/api/refresh", response_model=schemas.RefreshResponse)
 def refresh(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
     etl.run(conn)
     return schemas.RefreshResponse(status="refresh started")
 
 
-@app.get("/refresh/status", response_model=schemas.RefreshStatusResponse)
+@app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)
 def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
     status = etl.latest_status(conn)
     return schemas.RefreshStatusResponse(
