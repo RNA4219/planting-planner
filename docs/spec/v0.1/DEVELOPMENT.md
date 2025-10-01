@@ -31,7 +31,10 @@ uvicorn app.main:app --reload
 ## 環境変数
 
 * `.env` ファイルを backend に置く（必須ではないが拡張用）
-* `DATABASE_URL=sqlite:///./planting.db`
+* `PLANTING_DB_PATH=/abs/path/to/planting.db`
+  * FastAPI バックエンドが参照する SQLite ファイルへの絶対パスを指定する。
+  * 上記の例は SQLite ファイルを想定したパスであり、他の RDBMS を使用する場合は別途ドライバ設定を行う。
+  * 旧 `DATABASE_URL` は使用しない（互換用に残す場合は、同一 SQLite ファイルを指すように設定する）。
 
 ---
 
