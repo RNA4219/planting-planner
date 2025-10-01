@@ -51,14 +51,6 @@ const fetchCrops = vi.fn<() => Promise<Crop[]>>()
 const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
 const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
-const fetchRecommend = vi.fn<
-  (input: { region: Region; week?: string }) => Promise<RecommendResponse>
->()
-
-fetchRecommendations.mockImplementation(async (region, week) =>
-  fetchRecommend({ region, week }),
-)
-
 vi.mock('./lib/api', () => ({
   fetchRecommendations,
   fetchRecommend,
@@ -112,6 +104,7 @@ describe('App', () => {
           harvest_week: '2024-W35',
           sowing_week: '2024-W30',
           source: 'local-db',
+          growth_days: 42,
         },
       ],
     }))
@@ -150,12 +143,14 @@ describe('App', () => {
           harvest_week: '2024-W35',
           sowing_week: '2024-W30',
           source: 'local-db',
+          growth_days: 35,
         },
         {
           crop: 'にんじん',
           harvest_week: '2024-W40',
           sowing_week: '2024-W32',
           source: 'local-db',
+          growth_days: 70,
         },
       ],
     })
@@ -189,18 +184,21 @@ describe('App', () => {
           harvest_week: '2024-W40',
           sowing_week: '2024-W31',
           source: 'local-db',
+          growth_days: 45,
         },
         {
           crop: 'にんじん',
           harvest_week: '2024-W39',
           sowing_week: '2024-W30',
           source: 'local-db',
+          growth_days: 65,
         },
         {
           crop: 'キャベツ',
           harvest_week: '2024-W42',
           sowing_week: '2024-W33',
           source: 'local-db',
+          growth_days: 60,
         },
       ],
     })
