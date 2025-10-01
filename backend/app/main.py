@@ -52,39 +52,34 @@ def list_crops(conn: sqlite3.Connection = Depends(get_conn)) -> list[schemas.Cro
 @app.get("/api/recommend", response_model=schemas.RecommendResponse)
 def recommend(
     week: str | None = Query(default=None, description="Reference week in ISO format YYYY-Www"),
-    region: schemas.Region = Query(default=schemas.Region.temperate),
+    region: schemas.Region = Query(default=schemas.DEFAULT_REGION),
     conn: sqlite3.Connection = Depends(get_conn),
 ) -> schemas.RecommendResponse:
     reference_week = week or utils_week.current_iso_week()
     try:
-        utils_week.iso_week_to_date(reference_week)
+        utils_week.iso_week_to_date_mid(reference_week)
     except utils_week.WeekFormatError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     rows = conn.execute(
         """
-        SELECT c.name, gd.days, pw.week AS harvest_week, pw.source
+        SELECT c.name, gd.days
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
-        INNER JOIN price_weekly AS pw ON pw.crop_id = c.id
-        ORDER BY pw.week, c.name
+        ORDER BY c.name
         """,
-        (region.value,),
+        (region,),
     ).fetchall()
 
-    items: list[schemas.RecommendationItem] = []
+    items: list[schemas.RecommendItem] = []
     for row in rows:
-        harvest_week_iso = utils_week.iso_week_from_int(int(row["harvest_week"]))
-        sowing_week_iso = utils_week.subtract_days_from_week(
-            harvest_week_iso, int(row["days"])
-        )
-        source = row["source"] or "internal"
+        days = int(row["days"])
         items.append(
-            schemas.RecommendationItem(
+            schemas.RecommendItem(
                 crop=row["name"],
-                harvest_week=harvest_week_iso,
-                sowing_week=sowing_week_iso,
-                source=source,
+                growth_days=days,
+                harvest_week=reference_week,
+                sowing_week=utils_week.subtract_days_to_iso_week(reference_week, days),
             )
         )
 
@@ -110,7 +105,7 @@ def refresh_legacy(_conn: sqlite3.Connection = Depends(get_conn)) -> schemas.Ref
 
 def _refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
     status = etl.get_last_status(conn)
-    return schemas.RefreshStatusResponse(**status)
+    return schemas.RefreshStatusResponse(**status.model_dump())
 
 
 @app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)

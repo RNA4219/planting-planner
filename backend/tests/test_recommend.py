@@ -63,6 +63,7 @@ def _assert_items(payload: dict[str, object], region: str) -> None:
         assert item["harvest_week"] == REFERENCE_WEEK
         expected_sowing = _subtract_days(REFERENCE_WEEK, days)
         assert item["sowing_week"] == expected_sowing
+        assert item["growth_days"] == days
         _assert_iso_week(item["harvest_week"])
         _assert_iso_week(item["sowing_week"])
 

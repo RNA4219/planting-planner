@@ -24,20 +24,25 @@ def iso_week_to_date(week: str) -> date:
     return date.fromisocalendar(year, week_number, 1)
 
 
+def iso_week_to_date_mid(week: str) -> date:
+    base = iso_week_to_date(week)
+    return base + timedelta(days=2)
+
+
 def date_to_iso_week(value: date) -> str:
     iso = value.isocalendar()
     return f"{iso.year:04d}-W{iso.week:02d}"
 
 
-def subtract_days_from_week(week: str, days: int) -> str:
-    base_date = iso_week_to_date(week)
+def subtract_days_to_iso_week(week: str, days: int) -> str:
+    base_date = iso_week_to_date_mid(week)
     target_date = base_date - timedelta(days=days)
     return date_to_iso_week(target_date)
 
 
 def iso_week_from_int(week: int) -> str:
     iso_week = f"{week // 100:04d}-W{week % 100:02d}"
-    iso_week_to_date(iso_week)
+    iso_week_to_date_mid(iso_week)
     return iso_week
 
 
