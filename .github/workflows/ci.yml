@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: frontend (vite+ts)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: planting-planner-frontend-dist
+          path: frontend/dist
+
+  backend:
+    name: backend (fastapi+pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: lint (ruff)
+        run: ruff check .
+      - name: format check (black)
+        run: black --check .
+      - name: type check (mypy)
+        run: mypy app
+      - name: test (pytest)
+        run: pytest -q
