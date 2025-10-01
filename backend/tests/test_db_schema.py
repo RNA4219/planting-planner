@@ -27,7 +27,15 @@ def test_init_db_creates_expected_tables(
         assert test_db.exists()
 
         price_columns = _column_names(conn, "price_weekly")
-        assert price_columns == ["id", "crop_id", "week", "price", "source"]
+        assert price_columns == [
+            "id",
+            "crop_id",
+            "week",
+            "avg_price",
+            "stddev",
+            "unit",
+            "source",
+        ]
 
         etl_columns = _column_names(conn, "etl_runs")
         assert etl_columns == [

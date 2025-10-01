@@ -3,7 +3,13 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Crop, RecommendResponse, Region } from './types'
+import type {
+  Crop,
+  RecommendResponse,
+  RefreshResponse,
+  RefreshStatusResponse,
+  Region,
+} from './types'
 
 vi.mock('./lib/week', () => ({
   getCurrentIsoWeek: () => '2024-W30',
@@ -42,17 +48,18 @@ const fetchRecommendations = vi.fn<
   (region: Region, week?: string) => Promise<RecommendResponse>
 >()
 const fetchCrops = vi.fn<() => Promise<Crop[]>>()
-const postRefresh = vi.fn<() => Promise<string>>()
+const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
+const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
 const fetchRecommendations = vi.fn<
   (region: Region, week?: string) => Promise<RecommendResponse>
 >(async (region, week) => fetchRecommend({ region, week }))
 
 vi.mock('./lib/api', () => ({
-  fetchRecommend,
   fetchRecommendations,
   fetchCrops,
   postRefresh,
+  fetchRefreshStatus,
 }))
 
 const resetSpies = () => {
@@ -62,11 +69,10 @@ const resetSpies = () => {
   saveRegion.mockClear()
   loadFavorites.mockClear()
   saveFavorites.mockClear()
-  fetchRecommend.mockReset()
   fetchRecommendations.mockReset()
   fetchCrops.mockReset()
   postRefresh.mockReset()
-  fetchRecommendations.mockImplementation(async (region, week) => fetchRecommend({ region, week }))
+  fetchRefreshStatus.mockReset()
 }
 
 describe('App', () => {
@@ -82,7 +88,7 @@ describe('App', () => {
     const App = (await import('./App')).default
     const user = userEvent.setup()
     render(<App />)
-    await waitFor(() => expect(fetchCrops).toHaveBeenCalled())
+    await waitFor(() => expect(fetchRecommendations).toHaveBeenCalled())
     return { user }
   }
 
@@ -106,14 +112,7 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
-    const submit = screen.getByRole('button', { name: 'この条件で見る' })
-    expect(fetchRecommendations).not.toHaveBeenCalled()
-
-    await user.click(submit)
-
-    await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
-    })
+    expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
 
     const select = screen.getByLabelText('地域')
     const weekInput = screen.getByLabelText('週')
@@ -202,15 +201,7 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
-    const submit = screen.getByRole('button', { name: 'この条件で見る' })
-    await user.click(submit)
-
-    await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenCalled()
-    })
-
-    fetchRecommendations.mockClear()
-    expect(fetchRecommendations).not.toHaveBeenCalled()
+    expect(fetchRefreshStatus).not.toHaveBeenCalled()
 
     const select = screen.getByLabelText('地域')
     await user.selectOptions(select, '寒冷地')
@@ -238,7 +229,8 @@ describe('App', () => {
     expect(secondRow).toHaveTextContent('春菊')
     expect(thirdRow).toHaveTextContent('キャベツ')
 
-    const favToggle = within(secondRow).getByRole('button', { name: '春菊をお気に入りに追加' })
+    const favToggle = within(rows[1]!).getByRole('button', { name: '春菊をお気に入りに追加' })
+
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])

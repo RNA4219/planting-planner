@@ -33,6 +33,14 @@ class RefreshResponse(TypedDict):
     state: Literal["success", "failure", "running", "stale"]
 
 
+class RecommendItem(RecommendationItem):
+    """Backward compatible alias for recommendation items."""
+
+
+class RefreshResponse(BaseModel):
+    state: Literal["success", "failure", "running", "stale"]
+
+
 class RefreshStatus(BaseModel):
     state: Literal["success", "failure", "running", "stale"]
     started_at: str | None = None
@@ -41,4 +49,19 @@ class RefreshStatus(BaseModel):
     last_error: str | None = None
 
 
-RefreshStatusResponse = RefreshStatus
+class RefreshStatusResponse(RefreshStatus):
+    """Alias for compatibility with existing endpoints."""
+
+
+class PricePoint(BaseModel):
+    week: str
+    avg_price: float | None = None
+    stddev: float | None = None
+
+
+class PriceSeries(BaseModel):
+    crop_id: int
+    crop: str
+    unit: str
+    source: str
+    prices: list[PricePoint]

@@ -52,6 +52,11 @@ body {
   background-color: #57a55b;
 }
 
+.app__refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .region-select {
   display: flex;
   flex-direction: column;
@@ -91,6 +96,28 @@ body {
   padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid #e5f0e3;
+}
+
+.recommend__table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.recommend__table tbody tr:hover {
+  background-color: #f1f8e9;
+}
+
+.recommend__row--selected {
+  background-color: #e0f2f1;
+}
+
+.recommend__chart {
+  margin-top: 2rem;
+}
+
+.recommend__chart-hint {
+  font-size: 0.85rem;
+  color: #607d8b;
 }
 
 .recommend__table thead {

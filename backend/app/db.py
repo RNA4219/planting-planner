@@ -57,8 +57,10 @@ def init_db(conn: sqlite3.Connection | None = None) -> None:
                 CREATE TABLE IF NOT EXISTS price_weekly (
                     id INTEGER PRIMARY KEY,
                     crop_id INTEGER NOT NULL,
-                    week INTEGER NOT NULL,
-                    price REAL NOT NULL,
+                    week TEXT NOT NULL,
+                    avg_price REAL,
+                    stddev REAL,
+                    unit TEXT NOT NULL DEFAULT '円/kg',
                     source TEXT NOT NULL,
                     UNIQUE (crop_id, week),
                     FOREIGN KEY (crop_id) REFERENCES crops(id) ON DELETE CASCADE

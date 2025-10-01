@@ -66,14 +66,19 @@ def recommend(
         SELECT c.name, gd.days
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
-        ORDER BY c.name
+        INNER JOIN price_weekly AS pw ON pw.crop_id = c.id AND pw.source != 'seed'
+        ORDER BY pw.week, c.name
         """,
         (region,),
     ).fetchall()
 
     items: list[schemas.RecommendItem] = []
     for row in rows:
-        days = int(row["days"])
+        harvest_week_iso = str(row["harvest_week"])
+        sowing_week_iso = utils_week.subtract_days_from_week(
+            harvest_week_iso, int(row["days"])
+        )
+        source = row["source"] or "internal"
         items.append(
             schemas.RecommendItem(
                 crop=row["name"],
@@ -84,6 +89,58 @@ def recommend(
         )
 
     return schemas.RecommendResponse(week=reference_week, region=region, items=items)
+
+
+@app.get("/api/price", response_model=schemas.PriceSeries)
+def price_series(
+    crop_id: int = Query(..., ge=1),
+    frm: str | None = Query(None, description="from ISO week e.g., 2025-W01"),
+    to: str | None = Query(None, description="to ISO week e.g., 2025-W52"),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> schemas.PriceSeries:
+    crop_row = conn.execute(
+        "SELECT id, name FROM crops WHERE id = ?",
+        (crop_id,),
+    ).fetchone()
+    if crop_row is None:
+        raise HTTPException(status_code=404, detail="crop_not_found")
+
+    params: list[object] = [crop_id]
+    cond = "WHERE crop_id = ?"
+    if frm:
+        cond += " AND week >= ?"
+        params.append(frm)
+    if to:
+        cond += " AND week <= ?"
+        params.append(to)
+
+    rows = conn.execute(
+        f"""
+        SELECT week, avg_price, stddev, unit, source
+        FROM price_weekly
+        {cond}
+        ORDER BY week ASC
+        """,
+        params,
+    ).fetchall()
+
+    unit = rows[0]["unit"] if rows else "円/kg"
+    source = rows[0]["source"] if rows else "seed"
+    prices = [
+        schemas.PricePoint(
+            week=row["week"],
+            avg_price=row["avg_price"],
+            stddev=row["stddev"],
+        )
+        for row in rows
+    ]
+    return schemas.PriceSeries(
+        crop_id=crop_row["id"],
+        crop=crop_row["name"],
+        unit=unit,
+        source=source,
+        prices=prices,
+    )
 
 
 def _start_refresh(_conn: sqlite3.Connection) -> schemas.RefreshResponse:
@@ -105,7 +162,9 @@ def refresh_legacy(_conn: sqlite3.Connection = Depends(get_conn)) -> schemas.Ref
 
 def _refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
     status = etl.get_last_status(conn)
-    return schemas.RefreshStatusResponse(**status.model_dump())
+    payload = status.model_dump() if hasattr(status, "model_dump") else status.dict()
+    return schemas.RefreshStatusResponse(**payload)
+
 
 
 @app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)
