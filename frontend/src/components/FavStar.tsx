@@ -16,7 +16,10 @@ export const FavStar = ({ active, cropName, onToggle }: Props) => {
       className={`fav-star${active ? ' fav-star--active' : ''}`}
       aria-pressed={active}
       aria-label={label}
-      onClick={onToggle}
+      onClick={(event) => {
+        event.stopPropagation()
+        onToggle()
+      }}
     >
       {active ? '★' : '☆'}
     </button>

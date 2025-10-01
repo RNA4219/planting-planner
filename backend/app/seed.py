@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from . import db
+from . import db, utils_week
 
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -19,12 +19,23 @@ def _load_json(path: Path) -> list[dict[str, Any]]:
     return [dict(item) for item in payload]
 
 
-def seed(conn: sqlite3.Connection) -> None:
+def seed(conn: sqlite3.Connection | None = None) -> None:
+    close_conn = False
+    if conn is None:
+        conn = db.get_conn()
+        close_conn = True
+
+    db.init_db(conn)
+
     crops_path = DATA_DIR / "crops.json"
     growth_days_path = DATA_DIR / "growth_days.json"
 
     crops_data = _load_json(crops_path)
     growth_days_data = _load_json(growth_days_path)
+    price_sample_path = DATA_DIR / "price_weekly.sample.json"
+    price_sample_data: list[dict[str, Any]] = []
+    if price_sample_path.exists():
+        price_sample_data = _load_json(price_sample_path)
 
     for crop in crops_data:
         crop_id = int(crop["id"])
@@ -40,10 +51,44 @@ def seed(conn: sqlite3.Connection) -> None:
         )
 
         for price in crop.get("price_weekly", []):
+            week_value = price["week"]
+            if isinstance(week_value, int):
+                week_iso = utils_week.iso_week_from_int(int(week_value))
+            else:
+                week_iso = str(week_value)
             conn.execute(
-                "INSERT OR REPLACE INTO price_weekly (crop_id, week, price, source) VALUES (?, ?, ?, ?)",
-                (crop_id, int(price["week"]), float(price["price"]), price["source"]),
+                """
+                INSERT OR REPLACE INTO price_weekly (
+                    crop_id, week, avg_price, stddev, unit, source
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    crop_id,
+                    week_iso,
+                    float(price.get("price")) if price.get("price") is not None else None,
+                    float(price.get("stddev")) if price.get("stddev") is not None else None,
+                    price.get("unit", "円/kg"),
+                    price.get("source", "seed"),
+                ),
             )
+
+    for row in price_sample_data:
+        week_iso = str(row["week"])
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO price_weekly (
+                crop_id, week, avg_price, stddev, unit, source
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(row["crop_id"]),
+                week_iso,
+                float(row.get("avg_price")) if row.get("avg_price") is not None else None,
+                float(row.get("stddev")) if row.get("stddev") is not None else None,
+                row.get("unit", "円/kg"),
+                row.get("source", "seed"),
+            ),
+        )
 
     for entry in growth_days_data:
         crop_id = int(entry["crop_id"])
@@ -57,6 +102,9 @@ def seed(conn: sqlite3.Connection) -> None:
         )
 
     conn.commit()
+
+    if close_conn:
+        conn.close()
 
 
 def seed_from_default_db() -> None:

@@ -1,8 +1,9 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FavStar, useFavorites } from './components/FavStar'
+import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
-import { fetchCrops, fetchRecommendations, postRefresh } from './lib/api'
+import { fetchCrops, fetchRecommendations, fetchRefreshStatus, postRefresh } from './lib/api'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { Crop, RecommendationItem, Region } from './types'
 import './App.css'
@@ -21,6 +22,8 @@ export const App = () => {
   const [activeWeek, setActiveWeek] = useState(() => normalizeIsoWeek(getCurrentIsoWeek()))
   const [items, setItems] = useState<RecommendationItem[]>([])
   const [crops, setCrops] = useState<Crop[]>([])
+  const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
 
   useEffect(() => {
@@ -73,8 +76,8 @@ export const App = () => {
   }, [items, cropIndex, favorites])
 
   const requestRecommendations = useCallback(
-    async (targetRegion: Region, inputWeek: string) => {
-      const normalizedWeek = normalizeIsoWeek(inputWeek, activeWeek)
+    async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
+      const normalizedWeek = normalizeIsoWeek(inputWeek, fallbackWeek)
       setQueryWeek(normalizedWeek)
       try {
         const response = await fetchRecommendations(targetRegion, normalizedWeek)
@@ -90,20 +93,48 @@ export const App = () => {
         setItems([])
       }
     },
-    [activeWeek],
+    [],
   )
+
+  const initialized = useRef(false)
+  useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+    void requestRecommendations(region, queryWeek, activeWeek)
+  }, [requestRecommendations, region, queryWeek, activeWeek])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    void requestRecommendations(region, queryWeek)
+    void requestRecommendations(region, queryWeek, activeWeek)
   }
 
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
   }, [])
 
-  const handleRefresh = useCallback(() => {
-    void postRefresh()
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await postRefresh()
+      const started = Date.now()
+      const poll = async () => {
+        try {
+          const status = await fetchRefreshStatus()
+          if (status.state === 'running' && Date.now() - started < 20000) {
+            window.setTimeout(poll, 2000)
+          } else {
+            window.alert(status.state === 'success' ? 'データ更新が完了しました' : 'データ更新に失敗/未完了です')
+          }
+        } catch {
+          window.alert('データ更新に失敗/未完了です')
+        }
+      }
+      window.setTimeout(poll, 1500)
+    } catch {
+      window.alert('更新開始に失敗しました')
+    } finally {
+      setRefreshing(false)
+    }
   }, [])
 
   const displayWeek = formatIsoWeek(activeWeek)
@@ -128,7 +159,7 @@ export const App = () => {
             />
           </label>
           <button type="submit">この条件で見る</button>
-          <button className="app__refresh" type="button" onClick={handleRefresh}>
+          <button className="app__refresh" type="button" onClick={() => void handleRefresh()} disabled={refreshing}>
             更新
           </button>
         </form>
@@ -149,8 +180,14 @@ export const App = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedRows.map((item) => (
-                <tr key={`${item.crop}-${item.sowing_week}-${item.harvest_week}`}>
+              {sortedRows.map((item) => {
+                const isSelected = item.cropId !== undefined && item.cropId === selectedCropId
+                return (
+                  <tr
+                    key={`${item.crop}-${item.sowing_week}-${item.harvest_week}`}
+                    className={`recommend__row${isSelected ? ' recommend__row--selected' : ''}`}
+                    onClick={() => setSelectedCropId(item.cropId ?? null)}
+                  >
                   <td>
                     <div className="recommend__crop">
                       <FavStar
@@ -165,7 +202,8 @@ export const App = () => {
                   <td>{formatIsoWeek(item.harvest_week)}</td>
                   <td>{item.source}</td>
                 </tr>
-              ))}
+                )
+              })}
               {sortedRows.length === 0 && (
                 <tr>
                   <td colSpan={4} className="recommend__empty">
@@ -175,6 +213,11 @@ export const App = () => {
               )}
             </tbody>
           </table>
+        </section>
+        <section className="recommend__chart">
+          <h2>価格推移</h2>
+          <PriceChart cropId={selectedCropId} range={{ from: undefined, to: undefined }} />
+          <p className="recommend__chart-hint">作物一覧で行をクリックすると、価格推移が表示されます。</p>
         </section>
       </main>
     </div>

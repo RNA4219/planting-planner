@@ -20,13 +20,19 @@ export interface RecommendResponse {
 }
 
 export interface RefreshResponse {
-  status: string
+  state: 'success' | 'failure' | 'running' | 'stale'
+  started_at?: string | null
+  finished_at?: string | null
+  updated_records?: number
+  last_error?: string | null
 }
 
 export interface RefreshStatusResponse {
-  last_run: string
-  status: 'success' | 'failure' | 'running' | 'stale'
+  state: 'success' | 'failure' | 'running' | 'stale'
+  started_at: string | null
+  finished_at: string | null
   updated_records: number
+  last_error: string | null
 }
 
 export interface RegionOption {

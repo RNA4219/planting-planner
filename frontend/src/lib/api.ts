@@ -64,3 +64,21 @@ export const fetchRefreshStatus = async (): Promise<RefreshStatusResponse> => {
   const url = buildUrl('/refresh/status')
   return request<RefreshStatusResponse>(url)
 }
+
+export const fetchPrice = async (
+  cropId: number,
+  frm?: string,
+  to?: string,
+): Promise<{
+  crop_id: number
+  crop: string
+  unit: string
+  source: string
+  prices: { week: string; avg_price: number | null; stddev?: number | null }[]
+}> => {
+  const params = new URLSearchParams({ crop_id: String(cropId) })
+  if (frm) params.set('frm', frm)
+  if (to) params.set('to', to)
+  const url = buildUrl('/price', params)
+  return request(url)
+}

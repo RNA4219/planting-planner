@@ -3,10 +3,16 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Crop, RecommendResponse, Region } from './types'
+import type {
+  Crop,
+  RecommendResponse,
+  RefreshResponse,
+  RefreshStatusResponse,
+  Region,
+} from './types'
 
 vi.mock('./lib/week', () => ({
-  currentIsoWeek: () => '2024-W30',
+  getCurrentIsoWeek: () => '2024-W30',
   normalizeIsoWeek: (value: string) => value,
   formatIsoWeek: (value: string) => value,
   compareIsoWeek: (a: string, b: string) => a.localeCompare(b),
@@ -38,16 +44,18 @@ vi.mock('./lib/storage', () => ({
   saveFavorites,
 }))
 
-const fetchRecommend = vi.fn<
-  (input: { region: Region; week?: string }) => Promise<RecommendResponse>
+const fetchRecommendations = vi.fn<
+  (region: Region, week?: string) => Promise<RecommendResponse>
 >()
 const fetchCrops = vi.fn<() => Promise<Crop[]>>()
-const postRefresh = vi.fn<() => Promise<string>>()
+const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
+const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
 vi.mock('./lib/api', () => ({
-  fetchRecommend,
+  fetchRecommendations,
   fetchCrops,
   postRefresh,
+  fetchRefreshStatus,
 }))
 
 const resetSpies = () => {
@@ -57,9 +65,10 @@ const resetSpies = () => {
   saveRegion.mockClear()
   loadFavorites.mockClear()
   saveFavorites.mockClear()
-  fetchRecommend.mockReset()
+  fetchRecommendations.mockReset()
   fetchCrops.mockReset()
   postRefresh.mockReset()
+  fetchRefreshStatus.mockReset()
 }
 
 describe('App', () => {
@@ -75,7 +84,7 @@ describe('App', () => {
     const App = (await import('./App')).default
     const user = userEvent.setup()
     render(<App />)
-    await waitFor(() => expect(fetchRecommend).toHaveBeenCalled())
+    await waitFor(() => expect(fetchRecommendations).toHaveBeenCalled())
     return { user }
   }
 
@@ -84,7 +93,7 @@ describe('App', () => {
       { id: 1, name: '春菊', category: 'leaf' },
       { id: 2, name: 'にんじん', category: 'root' },
     ])
-    fetchRecommend.mockImplementation(async ({ region }) => ({
+    fetchRecommendations.mockImplementation(async (region) => ({
       week: '2024-W30',
       region,
       items: [
@@ -99,10 +108,7 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
-    expect(fetchRecommend).toHaveBeenLastCalledWith({
-      region: 'temperate',
-      week: '2024-W30',
-    })
+    expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
 
     const select = screen.getByLabelText('地域')
     const weekInput = screen.getByLabelText('週')
@@ -112,7 +118,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommend).toHaveBeenLastCalledWith({ region: 'cold', week: '2024-W32' })
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
     })
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
     expect(screen.getByText('にんじん')).toBeInTheDocument()
@@ -125,7 +131,7 @@ describe('App', () => {
       { id: 1, name: '春菊', category: 'leaf' },
       { id: 2, name: 'にんじん', category: 'root' },
     ])
-    fetchRecommend.mockResolvedValue({
+    fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',
       items: [
@@ -161,7 +167,7 @@ describe('App', () => {
       { id: 3, name: 'キャベツ', category: 'leaf' },
     ])
 
-    fetchRecommend.mockResolvedValue({
+    fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',
 
@@ -189,7 +195,7 @@ describe('App', () => {
 
     const { user } = await renderApp()
 
-    expect(fetchRecommendations).not.toHaveBeenCalled()
+    expect(fetchRefreshStatus).not.toHaveBeenCalled()
 
     const select = screen.getByLabelText('地域')
     await user.selectOptions(select, '寒冷地')
@@ -212,7 +218,7 @@ describe('App', () => {
     expect(rows[1]).toHaveTextContent('春菊')
     expect(rows[2]).toHaveTextContent('キャベツ')
 
-    const favToggle = within(rows[1]).getByRole('button', { name: '春菊をお気に入りに追加' })
+    const favToggle = within(rows[1]!).getByRole('button', { name: '春菊をお気に入りに追加' })
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])
