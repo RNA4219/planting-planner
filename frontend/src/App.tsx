@@ -1,11 +1,12 @@
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
 import { fetchCrops, fetchRecommendations, fetchRefreshStatus, postRefresh } from './lib/api'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
+import type { RecommendationRow } from './hooks/useRecommendations'
 import type { Crop, RecommendationItem, Region } from './types'
 
 import './App.css'
@@ -25,8 +26,7 @@ export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
-  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
-    useRecommendations({ favorites })
+  const currentWeek = useMemo(() => getCurrentIsoWeek(), [])
 
   useEffect(() => {
     let active = true
@@ -77,6 +77,8 @@ export const App = () => {
       })
   }, [items, cropIndex, favorites])
 
+  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
+
   const requestRecommendations = useCallback(
     async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
       const normalizedWeek = normalizeIsoWeek(inputWeek, fallbackWeek)
@@ -113,6 +115,13 @@ export const App = () => {
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
   }, [])
+
+  const handleWeekChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setQueryWeek(event.target.value)
+    },
+    [setQueryWeek],
+  )
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)

@@ -53,7 +53,6 @@ const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
 vi.mock('./lib/api', () => ({
   fetchRecommendations,
-  fetchRecommend,
   fetchCrops,
   postRefresh,
   fetchRefreshStatus,
@@ -67,7 +66,6 @@ const resetSpies = () => {
   loadFavorites.mockClear()
   saveFavorites.mockClear()
   fetchRecommendations.mockReset()
-  fetchRecommend.mockReset()
   fetchCrops.mockReset()
   postRefresh.mockReset()
   fetchRefreshStatus.mockReset()
