@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import sqlite3
-from typing import Generator
+from collections.abc import Generator
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 
-from . import db, etl, seed, utils_week
-from . import schemas
-
+from . import db, etl, schemas, seed, utils_week
 
 app = FastAPI(title="planting-planner API")
 
@@ -93,16 +91,12 @@ def recommend(
 
 
 @app.post("/refresh", response_model=schemas.RefreshResponse)
-def refresh(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
-    etl.run(conn)
+def refresh(background_tasks: BackgroundTasks) -> schemas.RefreshResponse:
+    background_tasks.add_task(etl.start_etl_job)
     return schemas.RefreshResponse(status="refresh started")
 
 
 @app.get("/refresh/status", response_model=schemas.RefreshStatusResponse)
 def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
-    status = etl.latest_status(conn)
-    return schemas.RefreshStatusResponse(
-        last_run=status.get("last_run"),
-        status=status.get("status", "stale"),
-        updated_records=int(status.get("updated_records", 0)),
-    )
+    status = etl.get_last_status(conn)
+    return schemas.RefreshStatusResponse(**status)
