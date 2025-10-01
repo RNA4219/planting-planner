@@ -15,7 +15,7 @@ class Crop(BaseModel):
     category: str
 
 
-class RecommendItem(BaseModel):
+class RecommendationItem(BaseModel):
     crop: str
     growth_days: int
     harvest_week: str
@@ -26,7 +26,7 @@ class RecommendItem(BaseModel):
 class RecommendResponse(BaseModel):
     week: str
     region: Region
-    items: list[RecommendItem]
+    items: list[RecommendationItem]
 
 
 class RefreshResponse(TypedDict):
