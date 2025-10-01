@@ -1,5 +1,5 @@
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
@@ -17,17 +17,15 @@ const REGION_LABEL: Record<Region, string> = {
 }
 
 export const App = () => {
+  const currentWeekRef = useRef(getCurrentIsoWeek())
   const [region, setRegion] = useState<Region>('temperate')
-  const [queryWeek, setQueryWeek] = useState(() => getCurrentIsoWeek())
+  const [queryWeek, setQueryWeek] = useState(currentWeekRef.current)
   const [activeWeek, setActiveWeek] = useState(() => normalizeIsoWeek(getCurrentIsoWeek()))
   const [items, setItems] = useState<RecommendationItem[]>([])
   const [crops, setCrops] = useState<Crop[]>([])
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
-  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
-    useRecommendations({ favorites })
-
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -110,6 +108,10 @@ export const App = () => {
     void requestRecommendations(region, queryWeek, activeWeek)
   }
 
+  const handleWeekChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setQueryWeek(event.currentTarget.value)
+  }, [])
+
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
   }, [])
@@ -139,6 +141,8 @@ export const App = () => {
     }
   }, [])
 
+  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
+
   return (
     <div className="app">
       <header className="app__header">
@@ -153,7 +157,7 @@ export const App = () => {
               type="text"
               value={queryWeek}
               onChange={handleWeekChange}
-              placeholder={currentWeek}
+              placeholder={currentWeekRef.current}
               pattern="\d{4}-W\d{2}"
               inputMode="numeric"
             />

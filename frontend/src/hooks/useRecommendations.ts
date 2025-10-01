@@ -42,7 +42,12 @@ const resolveCurrentWeek = (): string => {
 const DEFAULT_WEEK = resolveCurrentWeek()
 const DEFAULT_ACTIVE_WEEK = normalizeIsoWeek(DEFAULT_WEEK)
 
-export type RecommendationRow = RecommendationItem & { cropId?: number }
+export type RecommendationRow = RecommendationItem & {
+  cropId?: number
+  rowKey: string
+  sowingWeekLabel: string
+  harvestWeekLabel: string
+}
 
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
@@ -59,14 +64,8 @@ export interface UseRecommendationsResult {
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
-export const useRecommendations = ({ favorites }: UseRecommendationsOptions): UseRecommendationsResult => {
-  const [region, setRegion] = useState<Region>('temperate')
-  const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
-  const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
-  const [items, setItems] = useState<RecommendationItem[]>([])
+const useCropIndex = (): Map<string, number> => {
   const [crops, setCrops] = useState<Crop[]>([])
-  const currentWeekRef = useRef<string>(DEFAULT_WEEK)
-  const initialFetchRef = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -88,37 +87,39 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     }
   }, [])
 
-  const cropIndex = useMemo(() => {
+  return useMemo(() => {
     const map = new Map<string, number>()
     crops.forEach((crop) => {
       map.set(crop.name, crop.id)
     })
     return map
   }, [crops])
+}
 
-  const sortedRows = useMemo<RecommendationRow[]>(() => {
-    const favoriteSet = new Set(favorites)
-    return items
-      .map((item) => ({
-        ...item,
-        cropId: cropIndex.get(item.crop),
-      }))
-      .sort((a, b) => {
-        const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
-        const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
-        if (aFav !== bFav) {
-          return bFav - aFav
-        }
-        const weekDiff = compareIsoWeek(a.sowing_week, b.sowing_week)
-        if (weekDiff !== 0) {
-          return weekDiff
-        }
-        return a.crop.localeCompare(b.crop, 'ja')
-      })
-  }, [items, cropIndex, favorites])
+interface UseRecommendationLoaderResult {
+  queryWeek: string
+  setQueryWeek: (week: string) => void
+  activeWeek: string
+  items: RecommendationItem[]
+  currentWeek: string
+  requestRecommendations: (inputWeek: string, options?: { preferLegacy?: boolean }) => Promise<void>
+}
+
+const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
+  const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
+  const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
+  const [items, setItems] = useState<RecommendationItem[]>([])
+  const currentWeekRef = useRef<string>(DEFAULT_WEEK)
+  const initialFetchRef = useRef(false)
+  const regionRef = useRef(region)
+
+  useEffect(() => {
+    regionRef.current = region
+  }, [region])
 
   const requestRecommendations = useCallback(
-    async (targetRegion: Region, inputWeek: string, options?: { preferLegacy?: boolean }) => {
+    async (inputWeek: string, options?: { preferLegacy?: boolean }) => {
+      const targetRegion = regionRef.current
       const normalizedWeek = normalizeIsoWeek(inputWeek, activeWeek)
       setQueryWeek(normalizedWeek)
       const preferLegacy = options?.preferLegacy ?? false
@@ -165,21 +166,61 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     [activeWeek],
   )
 
-  const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
-      void requestRecommendations(region, queryWeek)
-    },
-    [queryWeek, region, requestRecommendations],
-  )
-
   useEffect(() => {
     if (initialFetchRef.current) {
       return
     }
     initialFetchRef.current = true
-    void requestRecommendations(region, currentWeekRef.current, { preferLegacy: true })
-  }, [region, requestRecommendations])
+    void requestRecommendations(currentWeekRef.current, { preferLegacy: true })
+  }, [requestRecommendations])
+
+  return {
+    queryWeek,
+    setQueryWeek,
+    activeWeek,
+    items,
+    currentWeek: currentWeekRef.current,
+    requestRecommendations,
+  }
+}
+
+export const useRecommendations = ({ favorites }: UseRecommendationsOptions): UseRecommendationsResult => {
+  const [region, setRegion] = useState<Region>('temperate')
+  const cropIndex = useCropIndex()
+  const { queryWeek, setQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
+    useRecommendationLoader(region)
+
+  const sortedRows = useMemo<RecommendationRow[]>(() => {
+    const favoriteSet = new Set(favorites)
+    return items
+      .map<RecommendationRow>((item) => ({
+        ...item,
+        cropId: cropIndex.get(item.crop),
+        rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
+        sowingWeekLabel: formatIsoWeek(item.sowing_week),
+        harvestWeekLabel: formatIsoWeek(item.harvest_week),
+      }))
+      .sort((a, b) => {
+        const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
+        const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
+        if (aFav !== bFav) {
+          return bFav - aFav
+        }
+        const weekDiff = compareIsoWeek(a.sowing_week, b.sowing_week)
+        if (weekDiff !== 0) {
+          return weekDiff
+        }
+        return a.crop.localeCompare(b.crop, 'ja')
+      })
+  }, [items, cropIndex, favorites])
+
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      void requestRecommendations(queryWeek)
+    },
+    [queryWeek, requestRecommendations],
+  )
 
   const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
 
@@ -188,7 +229,7 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     setRegion,
     queryWeek,
     setQueryWeek,
-    currentWeek: currentWeekRef.current,
+    currentWeek,
     displayWeek,
     sortedRows,
     handleSubmit,
