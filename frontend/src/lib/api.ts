@@ -6,15 +6,12 @@ import type {
   Region,
 } from '../types'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
 const buildUrl = (path: string, searchParams?: URLSearchParams): string => {
-  const url = new URL(path.startsWith('/') ? path : `/${path}`, 'http://localhost')
-  url.pathname = `${API_BASE.replace(/\/$/, '')}${url.pathname}`
-  if (searchParams) {
-    url.search = searchParams.toString()
-  }
-  return url.pathname + url.search
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const search = searchParams?.toString()
+  return `${API_ENDPOINT}${normalizedPath}${search ? `?${search}` : ''}`
 }
 
 const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
@@ -44,19 +41,23 @@ export const fetchCrops = async (): Promise<Crop[]> => {
 
 export const fetchRecommendations = async (
   region: Region,
-  week?: number,
+  week?: string,
 ): Promise<RecommendResponse> => {
   const params = new URLSearchParams({ region })
-  if (typeof week === 'number') {
-    params.set('week', String(week))
+  if (week) {
+    params.set('week', week)
   }
   const url = buildUrl('/recommend', params)
   return request<RecommendResponse>(url)
 }
 
-export const triggerRefresh = async (): Promise<RefreshResponse> => {
+export const postRefresh = async (body?: unknown): Promise<RefreshResponse> => {
   const url = buildUrl('/refresh')
-  return request<RefreshResponse>(url, { method: 'POST' })
+  const init: RequestInit = { method: 'POST' }
+  if (body !== undefined) {
+    init.body = JSON.stringify(body)
+  }
+  return request<RefreshResponse>(url, init)
 }
 
 export const fetchRefreshStatus = async (): Promise<RefreshStatusResponse> => {

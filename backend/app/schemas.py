@@ -36,6 +36,10 @@ class RefreshResponse(BaseModel):
 
 
 class RefreshStatusResponse(BaseModel):
-    last_run: str | None
     status: Literal["success", "failure", "running", "stale"]
+    state: Literal["success", "failure", "running", "stale"]
+    last_run: str | None
+    started_at: str | None = None
+    finished_at: str | None = None
     updated_records: int
+    last_error: str | None = None
