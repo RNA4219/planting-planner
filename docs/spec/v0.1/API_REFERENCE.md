@@ -28,7 +28,6 @@
   {
     "id": 1,
     "name": "ほうれん草",
-    "growth_days": 40,
     "category": "leaf"
   },
   ...
@@ -47,13 +46,15 @@
 
 ```json
 {
-  "week": 2025,
+  "week": "2024-W40",
+  "region": "temperate",
   "items": [
     {
       "crop": "春菊",
-      "harvest_week": 2040,
-      "sowing_week": 2025,
-      "source": "e-Stat"
+      "growth_days": 56,
+      "harvest_week": "2024-W40",
+      "sowing_week": "2024-W32",
+      "source": "internal"
     }
   ]
 }
@@ -79,9 +80,11 @@
 
 ```json
 {
-  "last_run": "2025-10-01T10:30:00Z",
-  "status": "success",
-  "updated_records": 120
+  "state": "success",
+  "started_at": "2025-10-01T10:30:00Z",
+  "finished_at": "2025-10-01T10:32:45Z",
+  "updated_records": 120,
+  "last_error": null
 }
 ```
 
