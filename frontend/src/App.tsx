@@ -27,8 +27,6 @@ export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
-  const currentWeek = useMemo(() => getCurrentIsoWeek(), [])
-
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -60,9 +58,12 @@ export const App = () => {
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     const favoriteSet = new Set(favorites)
     return items
-      .map((item) => ({
+      .map<RecommendationRow>((item) => ({
         ...item,
         cropId: cropIndex.get(item.crop),
+        rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
+        sowingWeekLabel: formatIsoWeek(item.sowing_week),
+        harvestWeekLabel: formatIsoWeek(item.harvest_week),
       }))
       .sort((a, b) => {
         const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
@@ -77,8 +78,6 @@ export const App = () => {
         return a.crop.localeCompare(b.crop, 'ja')
       })
   }, [items, cropIndex, favorites])
-
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
 
   const requestRecommendations = useCallback(
     async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
@@ -113,6 +112,8 @@ export const App = () => {
     void requestRecommendations(region, queryWeek, activeWeek)
   }
 
+  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
+
   const handleWeekChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setQueryWeek(event.currentTarget.value)
   }, [])
@@ -120,13 +121,6 @@ export const App = () => {
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
   }, [])
-
-  const handleWeekChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setQueryWeek(event.target.value)
-    },
-    [setQueryWeek],
-  )
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -152,8 +146,6 @@ export const App = () => {
       setRefreshing(false)
     }
   }, [])
-
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
 
   return (
     <div className="app">
@@ -200,7 +192,7 @@ export const App = () => {
                 const isSelected = item.cropId !== undefined && item.cropId === selectedCropId
                 return (
                   <tr
-                    key={`${item.crop}-${item.sowing_week}-${item.harvest_week}`}
+                    key={item.rowKey}
                     className={`recommend__row${isSelected ? ' recommend__row--selected' : ''}`}
                     onClick={() => setSelectedCropId(item.cropId ?? null)}
                   >
@@ -214,8 +206,8 @@ export const App = () => {
                       <span>{item.crop}</span>
                     </div>
                   </td>
-                  <td>{formatIsoWeek(item.sowing_week)}</td>
-                  <td>{formatIsoWeek(item.harvest_week)}</td>
+                  <td>{item.sowingWeekLabel}</td>
+                  <td>{item.harvestWeekLabel}</td>
                   <td>{item.source}</td>
                 </tr>
                 )
