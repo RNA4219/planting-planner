@@ -3,51 +3,23 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 import * as apiModule from '../lib/api'
 import * as weekModule from '../lib/week'
 import type { Crop, RecommendResponse, RecommendationItem, Region } from '../types'
+import {
+  DEFAULT_ACTIVE_WEEK,
+  DEFAULT_WEEK,
+  RecommendationRow,
+  buildRecommendationRows,
+  formatWeekLabel,
+  normalizeRecommendationResponse,
+} from '../utils/recommendations'
 
-const week = weekModule as typeof import('../lib/week') & {
-  currentIsoWeek?: () => string
-}
+const week = weekModule as typeof import('../lib/week')
 
 const api = apiModule as typeof import('../lib/api') & {
   fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
 }
 
-const { compareIsoWeek, formatIsoWeek, normalizeIsoWeek } = week
+const { normalizeIsoWeek } = week
 const fetchCrops = api.fetchCrops
-
-const resolveCurrentWeek = (): string => {
-  let currentWeekFn: (() => string) | undefined
-  try {
-    currentWeekFn = week.getCurrentIsoWeek
-  } catch {
-    currentWeekFn = undefined
-  }
-  if (typeof currentWeekFn === 'function') {
-    return currentWeekFn()
-  }
-
-  let legacyWeekFn: (() => string) | undefined
-  try {
-    legacyWeekFn = week.currentIsoWeek
-  } catch {
-    legacyWeekFn = undefined
-  }
-  if (typeof legacyWeekFn === 'function') {
-    return legacyWeekFn()
-  }
-
-  return week.normalizeIsoWeek(undefined, '1970-W01')
-}
-
-const DEFAULT_WEEK = resolveCurrentWeek()
-const DEFAULT_ACTIVE_WEEK = normalizeIsoWeek(DEFAULT_WEEK)
-
-export type RecommendationRow = RecommendationItem & {
-  cropId?: number
-  rowKey: string
-  sowingWeekLabel: string
-  harvestWeekLabel: string
-}
 
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
@@ -96,7 +68,7 @@ const useCropIndex = (): Map<string, number> => {
   }, [crops])
 }
 
-interface UseRecommendationLoaderResult {
+export interface UseRecommendationLoaderResult {
   queryWeek: string
   setQueryWeek: (week: string) => void
   activeWeek: string
@@ -105,7 +77,7 @@ interface UseRecommendationLoaderResult {
   requestRecommendations: (inputWeek: string, options?: { preferLegacy?: boolean }) => Promise<void>
 }
 
-const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
+export const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
   const [items, setItems] = useState<RecommendationItem[]>([])
@@ -151,14 +123,12 @@ const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult 
             response = await callLegacy()
           }
         }
-        const resolvedWeek = normalizeIsoWeek(response.week, normalizedWeek)
-        const normalizedItems = response.items.map((item) => ({
-          ...item,
-          sowing_week: normalizeIsoWeek(item.sowing_week),
-          harvest_week: normalizeIsoWeek(item.harvest_week),
-        }))
+        const { week: responseWeek, items: normalizedItems } = normalizeRecommendationResponse(
+          response,
+          normalizedWeek,
+        )
         setItems(normalizedItems)
-        setActiveWeek(resolvedWeek)
+        setActiveWeek(responseWeek)
       } catch {
         setItems([])
       }
@@ -191,27 +161,7 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     useRecommendationLoader(region)
 
   const sortedRows = useMemo<RecommendationRow[]>(() => {
-    const favoriteSet = new Set(favorites)
-    return items
-      .map<RecommendationRow>((item) => ({
-        ...item,
-        cropId: cropIndex.get(item.crop),
-        rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
-        sowingWeekLabel: formatIsoWeek(item.sowing_week),
-        harvestWeekLabel: formatIsoWeek(item.harvest_week),
-      }))
-      .sort((a, b) => {
-        const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
-        const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
-        if (aFav !== bFav) {
-          return bFav - aFav
-        }
-        const weekDiff = compareIsoWeek(a.sowing_week, b.sowing_week)
-        if (weekDiff !== 0) {
-          return weekDiff
-        }
-        return a.crop.localeCompare(b.crop, 'ja')
-      })
+    return buildRecommendationRows({ items, favorites, cropIndex })
   }, [items, cropIndex, favorites])
 
   const handleSubmit = useCallback(
@@ -222,7 +172,7 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     [queryWeek, requestRecommendations],
   )
 
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
+  const displayWeek = useMemo(() => formatWeekLabel(activeWeek), [activeWeek])
 
   return {
     region,
