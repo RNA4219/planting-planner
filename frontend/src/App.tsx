@@ -27,6 +27,7 @@ export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
+
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -112,11 +113,6 @@ export const App = () => {
     void requestRecommendations(region, queryWeek, activeWeek)
   }
 
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
-
-  const handleWeekChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setQueryWeek(event.currentTarget.value)
-  }, [])
 
   const handleRegionChange = useCallback((next: Region) => {
     setRegion(next)
