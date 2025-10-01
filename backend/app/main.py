@@ -91,14 +91,13 @@ def recommend(
     return schemas.RecommendResponse(week=reference_week, region=region, items=items)
 
 
-@app.post("/api/refresh", response_model=schemas.RefreshResponse)
-def refresh(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshResponse:
-    etl.run(conn)
+@app.post("/api/refresh")
+def refresh(background_tasks: BackgroundTasks) -> dict[str, str]:
+    background_tasks.add_task(etl.start_etl_job)
 
-    return schemas.RefreshResponse(status="refresh started")
+    return {"state": etl.STATE_RUNNING}
 
 
-@app.get("/api/refresh/status", response_model=schemas.RefreshStatusResponse)
-def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatusResponse:
-    status = etl.get_last_status(conn)
-    return schemas.RefreshStatusResponse(**status)
+@app.get("/api/refresh/status", response_model=schemas.RefreshStatus)
+def refresh_status(conn: sqlite3.Connection = Depends(get_conn)) -> schemas.RefreshStatus:
+    return etl.get_last_status(conn)
