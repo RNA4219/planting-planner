@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -27,10 +27,6 @@ class RecommendResponse(BaseModel):
     week: str
     region: Region
     items: list[RecommendationItem]
-
-
-class RefreshResponse(TypedDict):
-    state: Literal["success", "failure", "running", "stale"]
 
 
 class RecommendItem(RecommendationItem):

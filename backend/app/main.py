@@ -145,7 +145,7 @@ def price_series(
 
 def _start_refresh(background_tasks: BackgroundTasks) -> schemas.RefreshResponse:
     background_tasks.add_task(etl.start_etl_job)
-    return {"state": etl.STATE_RUNNING}
+    return schemas.RefreshResponse(state=etl.STATE_RUNNING)
 
 
 @app.post("/api/refresh", response_model=schemas.RefreshResponse)
