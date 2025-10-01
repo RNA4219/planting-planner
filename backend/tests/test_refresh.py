@@ -10,6 +10,9 @@ from app.main import app
 
 client = TestClient(app)
 
+REFRESH_ENDPOINT = "/api/refresh"
+REFRESH_STATUS_ENDPOINT = f"{REFRESH_ENDPOINT}/status"
+
 
 def _reset_etl_runs() -> None:
     conn = db.connect()
@@ -40,7 +43,7 @@ def teardown_function(_: object) -> None:
 
 
 def test_refresh_status_returns_default_payload() -> None:
-    response = client.get("/api/refresh/status")
+    response = client.get(REFRESH_STATUS_ENDPOINT)
     assert response.status_code == 200
 
     payload = response.json()
@@ -54,11 +57,11 @@ def test_refresh_status_returns_default_payload() -> None:
 
 
 def test_refresh_triggers_background_job_and_updates_status() -> None:
-    response = client.post("/api/refresh")
+    response = client.post(REFRESH_ENDPOINT)
     assert response.status_code == 200
     assert response.json() == {"state": "running"}
 
-    status_response = client.get("/api/refresh/status")
+    status_response = client.get(REFRESH_STATUS_ENDPOINT)
     assert status_response.status_code == 200
 
     payload = status_response.json()
