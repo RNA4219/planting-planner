@@ -83,3 +83,16 @@ def test_recommend_allows_region_override() -> None:
 
     payload = response.json()
     _assert_items(payload, region="cold")
+
+
+def test_recommend_ignores_price_sources_for_metadata() -> None:
+    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+    assert response.status_code == 200
+
+    payload = response.json()
+    items = payload["items"]
+    assert isinstance(items, list)
+    assert items, "no recommendation items returned"
+
+    sources = {item["source"] for item in items}
+    assert sources == {"internal"}
