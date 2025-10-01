@@ -8,13 +8,13 @@ export interface Crop {
 
 export interface RecommendationItem {
   crop: string
-  sowing_week: number
-  harvest_week: number
+  sowing_week: string
+  harvest_week: string
   source: string
 }
 
 export interface RecommendResponse {
-  week: number
+  week: string
   region: Region
   items: RecommendationItem[]
 }
