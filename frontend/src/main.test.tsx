@@ -56,6 +56,7 @@ const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
 
 vi.mock('./lib/api', () => ({
   fetchRecommendations,
+  fetchRecommend,
   fetchCrops,
   postRefresh,
   fetchRefreshStatus,

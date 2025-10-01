@@ -235,5 +235,3 @@ export const useRecommendations = ({ favorites }: UseRecommendationsOptions): Us
     handleSubmit,
   }
 }
-
-export type { UseRecommendationsOptions, UseRecommendationsResult }
