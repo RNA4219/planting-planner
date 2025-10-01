@@ -75,81 +75,11 @@ describe('App', () => {
     const App = (await import('./App')).default
     const user = userEvent.setup()
     render(<App />)
-    await waitFor(() => expect(fetchRecommendations).toHaveBeenCalled())
+    await waitFor(() => expect(fetchCrops).toHaveBeenCalled())
     return { user }
   }
 
-  it('地域選択と週入力でAPIが手動フェッチされる', async () => {
-    fetchCrops.mockResolvedValue([
-      { id: 1, name: '春菊', category: 'leaf' },
-      { id: 2, name: 'にんじん', category: 'root' },
-    ])
-    fetchRecommendations.mockImplementation(async (region) => ({
-      week: '2024-W30',
-      region,
-      items: [
-        {
-          crop: region === 'temperate' ? '春菊' : 'にんじん',
-          harvest_week: '2024-W35',
-          sowing_week: '2024-W30',
-          source: 'local-db',
-        },
-      ],
-    }))
-
-    const { user } = await renderApp()
-
-    expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
-
-    const select = screen.getByLabelText('地域')
-    const weekInput = screen.getByLabelText('週')
-    await user.selectOptions(select, '寒冷地')
-    await user.clear(weekInput)
-    await user.type(weekInput, '2024-W32')
-    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
-
-    await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
-    })
-    expect(saveRegion).toHaveBeenLastCalledWith('cold')
-    expect(screen.getByText('にんじん')).toBeInTheDocument()
-  })
-
-  it('お気に入りトグルで保存内容が更新される', async () => {
-    storageState.favorites = [1]
-
-    fetchCrops.mockResolvedValue([
-      { id: 1, name: '春菊', category: 'leaf' },
-      { id: 2, name: 'にんじん', category: 'root' },
-    ])
-    fetchRecommendations.mockResolvedValue({
-      week: '2024-W30',
-      region: 'temperate',
-      items: [
-        {
-          crop: '春菊',
-          harvest_week: '2024-W35',
-          sowing_week: '2024-W30',
-          source: 'local-db',
-        },
-        {
-          crop: 'にんじん',
-          harvest_week: '2024-W40',
-          sowing_week: '2024-W32',
-          source: 'local-db',
-        },
-      ],
-    })
-
-    const { user } = await renderApp()
-
-    const toggle = screen.getByRole('button', { name: 'にんじんをお気に入りに追加' })
-    await user.click(toggle)
-
-    expect(saveFavorites).toHaveBeenLastCalledWith([1, 2])
-  })
-
-  it('推奨表がお気に入りを優先して描画される', async () => {
+  it('地域と週を指定して手動フェッチし、お気に入りを優先して表示する', async () => {
     storageState.favorites = [2]
 
     fetchCrops.mockResolvedValue([
@@ -159,36 +89,58 @@ describe('App', () => {
     ])
 
     fetchRecommendations.mockResolvedValue({
-      week: '2024-W30',
-      region: 'temperate',
+      week: '2024-W32',
+      region: 'cold',
       items: [
         {
           crop: '春菊',
-          harvest_week: '2024-W35',
-          sowing_week: '2024-W30',
-          source: 'local-db',
-        },
-        {
-          crop: 'にんじん',
-          harvest_week: '2024-W38',
+          harvest_week: '2024-W40',
           sowing_week: '2024-W31',
           source: 'local-db',
         },
         {
+          crop: 'にんじん',
+          harvest_week: '2024-W39',
+          sowing_week: '2024-W30',
+          source: 'local-db',
+        },
+        {
           crop: 'キャベツ',
-          harvest_week: '2024-W40',
-          sowing_week: '2024-W32',
+          harvest_week: '2024-W42',
+          sowing_week: '2024-W33',
           source: 'local-db',
         },
       ],
     })
 
-    await renderApp()
+    const { user } = await renderApp()
 
-    const table = screen.getByRole('table')
+    expect(fetchRecommendations).not.toHaveBeenCalled()
+
+    const select = screen.getByLabelText('地域')
+    await user.selectOptions(select, '寒冷地')
+    await waitFor(() => expect(saveRegion).toHaveBeenLastCalledWith('cold'))
+
+    const weekInput = screen.getByLabelText('週')
+    await user.clear(weekInput)
+    await user.type(weekInput, '2024-W32')
+
+    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
+    })
+
+    const table = await screen.findByRole('table')
     const rows = within(table).getAllByRole('row').slice(1)
+
     expect(rows[0]).toHaveTextContent('にんじん')
     expect(rows[1]).toHaveTextContent('春菊')
     expect(rows[2]).toHaveTextContent('キャベツ')
+
+    const favToggle = within(rows[1]).getByRole('button', { name: '春菊をお気に入りに追加' })
+    await user.click(favToggle)
+
+    expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])
   })
 })
