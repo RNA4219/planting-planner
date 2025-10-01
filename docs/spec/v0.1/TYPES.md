@@ -31,10 +31,10 @@ export interface GrowthDays {
 ```ts
 export interface RecommendationItem {
   crop: string
-  harvest_week: string
   sowing_week: string
+  harvest_week: string
   source: string
-  growth_days: number
+  growth_days: number // 播種から収穫までの推定日数
 }
 ```
 
