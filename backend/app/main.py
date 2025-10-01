@@ -169,19 +169,28 @@ def price_series(
     )
 
 
-def _start_refresh(background_tasks: BackgroundTasks) -> schemas.RefreshResponse:
+def _start_refresh(
+    background_tasks: BackgroundTasks,
+    _payload: schemas.RefreshTriggerPayload | None = None,
+) -> schemas.RefreshResponse:
     background_tasks.add_task(etl.start_etl_job)
     return schemas.RefreshResponse(state=etl.STATE_RUNNING)
 
 
 @app.post("/api/refresh", response_model=schemas.RefreshResponse)
-def refresh(background_tasks: BackgroundTasks) -> schemas.RefreshResponse:
-    return _start_refresh(background_tasks)
+def refresh(
+    background_tasks: BackgroundTasks,
+    payload: schemas.RefreshTriggerPayload | None = None,
+) -> schemas.RefreshResponse:
+    return _start_refresh(background_tasks, payload)
 
 
 @app.post("/refresh", response_model=schemas.RefreshResponse)
-def refresh_legacy(background_tasks: BackgroundTasks) -> schemas.RefreshResponse:
-    return _start_refresh(background_tasks)
+def refresh_legacy(
+    background_tasks: BackgroundTasks,
+    payload: schemas.RefreshTriggerPayload | None = None,
+) -> schemas.RefreshResponse:
+    return _start_refresh(background_tasks, payload)
 
 
 def _refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:

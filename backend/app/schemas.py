@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel
 
@@ -31,6 +31,12 @@ class RecommendResponse(BaseModel):
 
 class RecommendItem(RecommendationItem):
     """Backward compatible alias for recommendation items."""
+
+
+class RefreshTriggerPayload(TypedDict, total=False):
+    """Payload accepted by the refresh trigger endpoints."""
+
+    force: NotRequired[bool]
 
 
 class RefreshResponse(BaseModel):
