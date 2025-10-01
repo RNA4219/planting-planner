@@ -68,7 +68,7 @@ def recommend(
         SELECT c.name, gd.days, p.week AS harvest_week, p.source
         FROM crops AS c
         INNER JOIN growth_days AS gd ON gd.crop_id = c.id AND gd.region = ?
-        INNER JOIN prices AS p ON p.crop_id = c.id
+        INNER JOIN price_weekly AS p ON p.crop_id = c.id
         """,
         (region.value,),
     ).fetchall()

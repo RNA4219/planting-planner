@@ -27,34 +27,26 @@ def seed(conn: sqlite3.Connection) -> None:
     growth_days_data = _load_json(growth_days_path)
 
     conn.execute("DELETE FROM growth_days")
-    conn.execute("DELETE FROM prices")
     conn.execute("DELETE FROM crops")
 
-    name_to_id: dict[str, int] = {}
+    valid_crop_ids: set[int] = set()
     for crop in crops_data:
-        name = crop["name"]
-        category = crop["category"]
-        cursor = conn.execute(
-            "INSERT INTO crops (name, category) VALUES (?, ?)",
-            (name, category),
+        crop_id = int(crop["id"])
+        name = str(crop["name"])
+        category = str(crop["category"])
+        conn.execute(
+            "INSERT INTO crops (id, name, category) VALUES (?, ?, ?)",
+            (crop_id, name, category),
         )
-        crop_id = int(cursor.lastrowid)
-        name_to_id[name] = crop_id
-
-        for price in crop.get("prices", []):
-            conn.execute(
-                "INSERT INTO prices (crop_id, week, price, source) VALUES (?, ?, ?, ?)",
-                (crop_id, int(price["week"]), float(price["price"]), price["source"]),
-            )
+        valid_crop_ids.add(crop_id)
 
     for entry in growth_days_data:
-        crop_name = entry["crop"]
-        crop_id = name_to_id.get(crop_name)
-        if crop_id is None:
-            raise KeyError(f"growth_days refers to unknown crop '{crop_name}'")
+        crop_id = int(entry["crop_id"])
+        if crop_id not in valid_crop_ids:
+            raise KeyError(f"growth_days refers to unknown crop id '{crop_id}'")
         conn.execute(
-            "INSERT OR REPLACE INTO growth_days (crop_id, region, days) VALUES (?, ?, ?)",
-            (crop_id, entry["region"], int(entry["days"])),
+            "INSERT INTO growth_days (crop_id, region, days) VALUES (?, ?, ?)",
+            (crop_id, str(entry["region"]), int(entry["days"])),
         )
 
     conn.commit()

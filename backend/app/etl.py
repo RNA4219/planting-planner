@@ -9,7 +9,7 @@ def _utc_now() -> str:
 
 
 def run(conn: Any) -> int:
-    updated_records = conn.execute("SELECT COUNT(*) FROM prices").fetchone()[0]
+    updated_records = conn.execute("SELECT COUNT(*) FROM price_weekly").fetchone()[0]
     conn.execute(
         "INSERT INTO etl_runs (run_at, status, updated_records, error_message) VALUES (?, ?, ?, ?)",
         (_utc_now(), "success", int(updated_records), None),
