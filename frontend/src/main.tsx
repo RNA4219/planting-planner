@@ -1,9 +1,15 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 
-function App() {
-  return <div>planting-planner: CI OK</div>
+import App from './App'
+
+const container = document.getElementById('root')
+if (!container) {
+  throw new Error('#root element not found')
 }
 
-const root = document.getElementById('root')!
-createRoot(root).render(<App />)
+createRoot(container).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)

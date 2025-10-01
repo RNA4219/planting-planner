@@ -1,0 +1,138 @@
+:root {
+  color-scheme: light;
+  font-family: 'Noto Sans JP', system-ui, sans-serif;
+  background-color: #f9fbf7;
+  color: #1f2a1c;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #f3f8ee 0%, #ffffff 60%);
+}
+
+.app__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.app__title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.app__controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.app__refresh {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: #66bb6a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app__refresh:hover {
+  background-color: #57a55b;
+}
+
+.region-select {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.region-select__label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.region-select__select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid #c5d6c3;
+  background-color: #fff;
+}
+
+.recommend__meta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.recommend__table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.08);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.recommend__table th,
+.recommend__table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5f0e3;
+}
+
+.recommend__table thead {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+}
+
+.recommend__crop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recommend__empty,
+.recommend__loading,
+.recommend__status,
+.recommend__error {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.recommend__status {
+  color: #1b5e20;
+}
+
+.recommend__error {
+  color: #c62828;
+}
+
+.fav-star {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #c5c5c5;
+  transition: color 0.2s ease;
+}
+
+.fav-star--active {
+  color: #fdd835;
+}
+
+.fav-star:hover {
+  color: #fbc02d;
+}
