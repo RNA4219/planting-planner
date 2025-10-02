@@ -4,14 +4,13 @@ import { ChangeEvent, useCallback, useRef, useState } from 'react'
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
-import { useRecommendations } from './hooks/useRecommendations'
-import * as api from './lib/api'
+import { postRefresh } from './lib/api'
 import { loadRegion } from './lib/storage'
+import { normalizeIsoWeek } from './lib/week'
+import { useRecommendations } from './hooks/useRecommendations'
 import type { Region } from './types'
 
 import './App.css'
-
-const { postRefresh } = api
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -33,7 +32,7 @@ export const App = () => {
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      setQueryWeek(event.currentTarget.value)
+      setQueryWeek(normalizeIsoWeek(event.target.value, currentWeek))
     },
     [setQueryWeek],
   )
