@@ -57,10 +57,6 @@ export interface RecommendResponse {
 
 export interface RefreshResponse {
   state: "success" | "failure" | "running" | "stale"
-  started_at?: string | null
-  finished_at?: string | null
-  updated_records?: number
-  last_error?: string | null
 }
 
 export interface RefreshStatusResponse {
@@ -83,5 +79,25 @@ export interface FavoritesStorage {
 
 export interface RegionStorage {
   region: Region
+}
+```
+
+---
+
+## 価格関連
+
+```ts
+export interface PricePoint {
+  week: string
+  avg_price: number | null
+  stddev: number | null
+}
+
+export interface PriceSeries {
+  crop_id: number
+  crop: string
+  unit: string
+  source: string
+  prices: PricePoint[]
 }
 ```

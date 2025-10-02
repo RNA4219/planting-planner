@@ -60,10 +60,6 @@ describe('App refresh', () => {
           resolveRefresh = () =>
             resolve({
               state: 'success',
-              started_at: null,
-              finished_at: null,
-              updated_records: 0,
-              last_error: null,
             })
         }),
     )

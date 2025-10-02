@@ -23,10 +23,6 @@ export interface RecommendResponse {
 
 export interface RefreshResponse {
   state: 'success' | 'failure' | 'running' | 'stale'
-  started_at?: string | null
-  finished_at?: string | null
-  updated_records?: number
-  last_error?: string | null
 }
 
 export interface RefreshStatusResponse {
