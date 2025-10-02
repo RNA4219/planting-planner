@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useSta
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
-import { fetchCrops, fetchRecommendations, fetchRefreshStatus, postRefresh } from './lib/api'
+import { fetchCrops, fetchRecommendations, postRefresh } from './lib/api'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { RecommendationRow } from './hooks/useRecommendations'
 import type { Crop, RecommendationItem, Region } from './types'
@@ -26,6 +26,8 @@ export const App = () => {
   const [crops, setCrops] = useState<Crop[]>([])
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
+  const [refreshFailed, setRefreshFailed] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
 
   useEffect(() => {
@@ -128,24 +130,14 @@ export const App = () => {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
+    setRefreshFailed(false)
     try {
       await postRefresh()
-      const started = Date.now()
-      const poll = async () => {
-        try {
-          const status = await fetchRefreshStatus()
-          if (status.state === 'running' && Date.now() - started < 20000) {
-            window.setTimeout(poll, 2000)
-          } else {
-            window.alert(status.state === 'success' ? 'データ更新が完了しました' : 'データ更新に失敗/未完了です')
-          }
-        } catch {
-          window.alert('データ更新に失敗/未完了です')
-        }
-      }
-      window.setTimeout(poll, 1500)
+      setRefreshMessage('更新リクエストを受け付けました。自動ステータス更新は未実装です。')
+      setRefreshFailed(false)
     } catch {
-      window.alert('更新開始に失敗しました')
+      setRefreshMessage('更新リクエストに失敗しました。自動ステータス更新は未実装です。')
+      setRefreshFailed(true)
     } finally {
       setRefreshing(false)
     }
@@ -177,6 +169,14 @@ export const App = () => {
         </form>
       </header>
       <main className="app__main">
+        {refreshMessage && (
+          <div
+            className={`app__refresh-message${refreshFailed ? ' app__refresh-message--error' : ''}`}
+            role={refreshFailed ? 'alert' : 'status'}
+          >
+            {refreshMessage}
+          </div>
+        )}
         <section className="recommend">
           <div className="recommend__meta">
             <span>対象地域: {REGION_LABEL[region]}</span>
