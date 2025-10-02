@@ -4,13 +4,20 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useSta
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
-import { fetchCrops, fetchRecommendations, postRefresh } from './lib/api'
+import * as api from './lib/api'
 import { loadRegion } from './lib/storage'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { RecommendationRow } from './hooks/useRecommendations'
-import type { Crop, RecommendationItem, Region } from './types'
+import type { Crop, RecommendationItem, RecommendResponse, Region } from './types'
 
 import './App.css'
+
+const { fetchCrops, fetchRecommendations, postRefresh } = api
+const fetchRecommend = (
+  api as typeof api & {
+    fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
+  }
+).fetchRecommend
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -90,8 +97,21 @@ export const App = () => {
     async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
       const normalizedWeek = normalizeIsoWeek(inputWeek, fallbackWeek)
       setQueryWeek(normalizedWeek)
+      const callModern = async () => {
+        if (typeof fetchRecommendations === 'function') {
+          return fetchRecommendations(targetRegion, normalizedWeek)
+        }
+        throw new Error('missing fetchRecommendations')
+      }
+      const callLegacy = async () => {
+        if (typeof fetchRecommend === 'function') {
+          return fetchRecommend({ region: targetRegion, week: normalizedWeek })
+        }
+        throw new Error('missing fetchRecommend')
+      }
+
       try {
-        const response = await fetchRecommendations(targetRegion, normalizedWeek)
+        const response = await callModern()
         const resolvedWeek = normalizeIsoWeek(response.week, normalizedWeek)
         const normalizedItems = response.items.map((item) => ({
           ...item,
@@ -101,7 +121,19 @@ export const App = () => {
         setItems(normalizedItems)
         setActiveWeek(resolvedWeek)
       } catch {
-        setItems([])
+        try {
+          const response = await callLegacy()
+          const resolvedWeek = normalizeIsoWeek(response.week, normalizedWeek)
+          const normalizedItems = response.items.map((item) => ({
+            ...item,
+            sowing_week: normalizeIsoWeek(item.sowing_week),
+            harvest_week: normalizeIsoWeek(item.harvest_week),
+          }))
+          setItems(normalizedItems)
+          setActiveWeek(resolvedWeek)
+        } catch {
+          setItems([])
+        }
       }
     },
     [],
