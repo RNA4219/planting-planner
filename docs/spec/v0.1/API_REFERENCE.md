@@ -68,8 +68,10 @@
 * **レスポンス**
 
 ```json
-{ "status": "refresh started" }
+{ "state": "running" }
 ```
+
+  * `state`: 更新ジョブの最新状態（`running`/`success`/`failure`/`stale`）
 
 ---
 
