@@ -49,3 +49,23 @@ def test_init_db_creates_expected_tables(tmp_path: Path, monkeypatch: pytest.Mon
         ]
     finally:
         conn.close()
+
+
+def test_tables_use_autoincrement(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    test_db = tmp_path / "schema.db"
+    monkeypatch.setattr(db, "DATABASE_FILE", test_db)
+
+    conn = db.get_conn()
+    try:
+        db.init_db(conn)
+
+        cursor = conn.execute(
+            "SELECT name, sql FROM sqlite_master WHERE type = 'table'"
+        )
+        rows = cursor.fetchall()
+        table_sql = {row["name"]: str(row["sql"]) for row in rows}
+
+        for table in ("crops", "growth_days", "price_weekly", "etl_runs"):
+            assert "AUTOINCREMENT" in table_sql[table]
+    finally:
+        conn.close()
