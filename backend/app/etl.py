@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from . import etl_runner as _etl_runner
 from . import utils_week
@@ -62,7 +62,10 @@ def _scaled_number(value: Any, factor: float) -> float | None:
 
 
 def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) -> int:
-    loader = load_price_feed if data_loader is None else data_loader
+    if data_loader is None:
+        loader = cast(DataLoader, load_price_feed)
+    else:
+        loader = data_loader
     records = list(loader())
     if not records:
         return 0
