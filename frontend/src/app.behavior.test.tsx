@@ -22,6 +22,23 @@ describe('App behavior', () => {
     cleanup()
   })
 
+  it('保存済み地域で初回フェッチされる', async () => {
+    storageState.region = 'cold'
+
+    fetchCrops.mockResolvedValue([])
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'cold',
+      items: [],
+    })
+
+    await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'cold', '2024-W30')
+    })
+  })
+
   it('地域選択と週入力でAPIが手動フェッチされる', async () => {
     fetchCrops.mockResolvedValue([
       { id: 1, name: '春菊', category: 'leaf' },
