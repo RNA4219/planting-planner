@@ -4,7 +4,9 @@ import sqlite3
 import time
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
-from typing import Any, Final, Protocol, cast
+from typing import TYPE_CHECKING, Any, Final, TypeAlias, cast
+
+from typing_extensions import Protocol
 
 from . import db, schemas
 
@@ -20,7 +22,7 @@ _STATE_LOOKUP: dict[str, schemas.RefreshState] = {
     STATE_STALE: STATE_STALE,
 }
 
-DataLoader = Callable[[], Iterable[dict[str, Any]]]
+DataLoader: TypeAlias = Callable[[], Iterable[dict[str, Any]]]
 
 
 class _RunEtlFunc(Protocol):
@@ -33,10 +35,18 @@ def _utc_now() -> str:
     return datetime.now(tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _load_run_etl() -> _RunEtlFunc:
-    from . import etl as _etl_module
+if TYPE_CHECKING:
+    from .etl import run_etl as _typed_run_etl
 
-    return _etl_module.run_etl
+    def _load_run_etl() -> _RunEtlFunc:
+        return _typed_run_etl
+
+else:
+
+    def _load_run_etl() -> _RunEtlFunc:
+        from . import etl as _etl_module
+
+        return cast(_RunEtlFunc, _etl_module.run_etl)
 
 
 def _ensure_schema(conn: sqlite3.Connection) -> None:
@@ -72,7 +82,11 @@ def start_etl_job(
     max_retries: int = 3,
     retry_delay: float = 0.1,
 ) -> None:
-    factory = conn_factory if conn_factory is not None else db.get_conn
+    factory: Callable[[], sqlite3.Connection]
+    if conn_factory is not None:
+        factory = conn_factory
+    else:
+        factory = db.get_conn
     conn = factory()
     try:
         _ensure_schema(conn)
@@ -102,7 +116,7 @@ def start_etl_job(
             attempt = 0
             while True:
                 try:
-                    run_etl = _load_run_etl()
+                    run_etl: _RunEtlFunc = _load_run_etl()
                     updated_records = run_etl(conn, data_loader=data_loader)
                     break
                 except sqlite3.DatabaseError:
