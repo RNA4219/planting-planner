@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from .. import schemas
+from .. import schemas, utils_week
 from ..dependencies import ConnDependency, FromWeekQuery, PriceCropQuery, ToWeekQuery
 
 router = APIRouter(prefix="/api/price")
@@ -22,6 +22,14 @@ def price_series(
     ).fetchone()
     if crop_row is None:
         raise HTTPException(status_code=404, detail="crop_not_found")
+
+    try:
+        if frm:
+            utils_week.iso_week_to_date_mid(frm)
+        if to:
+            utils_week.iso_week_to_date_mid(to)
+    except utils_week.WeekFormatError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     params: list[object] = [crop_id]
     cond = "WHERE crop_id = ?"
