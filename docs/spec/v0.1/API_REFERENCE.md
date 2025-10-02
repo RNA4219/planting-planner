@@ -62,6 +62,40 @@
 
 ---
 
+### `GET /price`
+
+* **概要**: 指定した作物の週次価格推移を返す
+* **クエリパラメータ**
+
+  * `crop_id` (必須): 価格を取得したい作物ID
+  * `frm` (任意): 取得開始週（ISO週形式 `YYYY-Www`）
+  * `to` (任意): 取得終了週（ISO週形式 `YYYY-Www`）
+* **レスポンス (`PriceSeries`)**
+
+```json
+{
+  "crop_id": 1,
+  "crop": "ほうれん草",
+  "unit": "円/kg",
+  "source": "seed",
+  "prices": [
+    {
+      "week": "2024-W01",
+      "avg_price": 350.5,
+      "stddev": 12.3
+    }
+  ]
+}
+```
+
+* **404 レスポンス例**
+
+```json
+{ "detail": "crop_not_found" }
+```
+
+---
+
 ### `POST /refresh`
 
 * **概要**: データ更新を非同期でトリガー
