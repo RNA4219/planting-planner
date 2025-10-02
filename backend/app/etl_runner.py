@@ -4,7 +4,7 @@ import sqlite3
 import time
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
-from typing import Any, Final, cast
+from typing import Any, Final, Protocol, cast
 
 from . import db, schemas
 
@@ -21,6 +21,13 @@ _STATE_LOOKUP: dict[str, schemas.RefreshState] = {
 }
 
 DataLoader = Callable[[], Iterable[dict[str, Any]]]
+
+
+class _ETLModule(Protocol):
+    def run_etl(
+        self, conn: sqlite3.Connection, *, data_loader: DataLoader | None = None
+    ) -> int:
+        ...
 
 
 def _utc_now() -> str:
@@ -92,7 +99,10 @@ def start_etl_job(
                 try:
                     from . import etl as _etl
 
-                    updated_records = _etl.run_etl(conn, data_loader=data_loader)
+                    etl_module = cast(_ETLModule, _etl)
+                    updated_records = etl_module.run_etl(
+                        conn, data_loader=data_loader
+                    )
                     break
                 except sqlite3.DatabaseError:
                     attempt += 1
