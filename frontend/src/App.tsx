@@ -5,6 +5,7 @@ import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
 import { fetchCrops, fetchRecommendations, postRefresh } from './lib/api'
+import { loadRegion } from './lib/storage'
 import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
 import type { RecommendationRow } from './hooks/useRecommendations'
 import type { Crop, RecommendationItem, Region } from './types'
@@ -19,7 +20,7 @@ const REGION_LABEL: Record<Region, string> = {
 
 export const App = () => {
   const currentWeekRef = useRef(getCurrentIsoWeek())
-  const [region, setRegion] = useState<Region>('temperate')
+  const [region, setRegion] = useState<Region>(() => loadRegion())
   const [queryWeek, setQueryWeek] = useState(currentWeekRef.current)
   const [activeWeek, setActiveWeek] = useState(() => normalizeIsoWeek(getCurrentIsoWeek()))
   const [items, setItems] = useState<RecommendationItem[]>([])
