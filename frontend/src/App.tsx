@@ -4,13 +4,20 @@ import { ChangeEvent, useCallback, useRef, useState } from 'react'
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
-import { postRefresh } from './lib/api'
+import * as api from './lib/api'
 import { loadRegion } from './lib/storage'
-import { normalizeIsoWeek } from './lib/week'
-import { useRecommendations } from './hooks/useRecommendations'
-import type { Region } from './types'
+import { compareIsoWeek, formatIsoWeek, getCurrentIsoWeek, normalizeIsoWeek } from './lib/week'
+import type { RecommendationRow } from './hooks/useRecommendations'
+import type { Crop, RecommendationItem, RecommendResponse, Region } from './types'
 
 import './App.css'
+
+const { fetchCrops, fetchRecommendations, postRefresh } = api
+const fetchRecommend = (
+  api as typeof api & {
+    fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
+  }
+).fetchRecommend
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -30,9 +37,75 @@ export const App = () => {
   const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
     useRecommendations({ favorites, initialRegion: initialRegionRef.current })
 
-  const handleWeekChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setQueryWeek(normalizeIsoWeek(event.target.value, currentWeek))
+  const sortedRows = useMemo<RecommendationRow[]>(() => {
+    const favoriteSet = new Set(favorites)
+    return items
+      .map<RecommendationRow>((item) => {
+        const cropId = cropIndex.get(item.crop)
+        return {
+          ...item,
+          cropId,
+          rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
+          sowingWeekLabel: formatIsoWeek(item.sowing_week),
+          harvestWeekLabel: formatIsoWeek(item.harvest_week),
+        }
+      })
+      .sort((a, b) => {
+        const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
+        const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
+        if (aFav !== bFav) {
+          return bFav - aFav
+        }
+        const weekDiff = compareIsoWeek(a.sowing_week, b.sowing_week)
+        if (weekDiff !== 0) {
+          return weekDiff
+        }
+        return a.crop.localeCompare(b.crop, 'ja')
+      })
+  }, [items, cropIndex, favorites])
+
+  const requestRecommendations = useCallback(
+    async (targetRegion: Region, inputWeek: string, fallbackWeek: string) => {
+      const normalizedWeek = normalizeIsoWeek(inputWeek, fallbackWeek)
+      setQueryWeek(normalizedWeek)
+      const callModern = async () => {
+        if (typeof fetchRecommendations === 'function') {
+          return fetchRecommendations(targetRegion, normalizedWeek)
+        }
+        throw new Error('missing fetchRecommendations')
+      }
+      const callLegacy = async () => {
+        if (typeof fetchRecommend === 'function') {
+          return fetchRecommend({ region: targetRegion, week: normalizedWeek })
+        }
+        throw new Error('missing fetchRecommend')
+      }
+
+      try {
+        const response = await callModern()
+        const resolvedWeek = normalizeIsoWeek(response.week, normalizedWeek)
+        const normalizedItems = response.items.map((item) => ({
+          ...item,
+          sowing_week: normalizeIsoWeek(item.sowing_week),
+          harvest_week: normalizeIsoWeek(item.harvest_week),
+        }))
+        setItems(normalizedItems)
+        setActiveWeek(resolvedWeek)
+      } catch {
+        try {
+          const response = await callLegacy()
+          const resolvedWeek = normalizeIsoWeek(response.week, normalizedWeek)
+          const normalizedItems = response.items.map((item) => ({
+            ...item,
+            sowing_week: normalizeIsoWeek(item.sowing_week),
+            harvest_week: normalizeIsoWeek(item.harvest_week),
+          }))
+          setItems(normalizedItems)
+          setActiveWeek(resolvedWeek)
+        } catch {
+          setItems([])
+        }
+      }
     },
     [currentWeek, setQueryWeek],
   )
