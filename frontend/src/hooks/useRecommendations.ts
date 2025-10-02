@@ -97,7 +97,6 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       setQueryWeek(normalizedWeek)
       const preferLegacy = options?.preferLegacy ?? false
       try {
-        let response: RecommendResponse | undefined
         const callModern = async (): Promise<RecommendResponse | undefined> => {
           if (typeof api.fetchRecommendations !== 'function') {
             return undefined
@@ -122,7 +121,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
         const primary = preferLegacy ? callLegacy : callModern
         const secondary = preferLegacy ? callModern : callLegacy
 
-        response = (await primary()) ?? (await secondary())
+        const response = (await primary()) ?? (await secondary())
         if (!response) {
           setItems([])
           return
