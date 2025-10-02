@@ -36,7 +36,7 @@ def _utc_now() -> str:
 def _load_run_etl() -> _RunEtlFunc:
     from . import etl as _etl_module
 
-    return _etl_module.run_etl
+    return cast(_RunEtlFunc, _etl_module.run_etl)
 
 
 def _ensure_schema(conn: sqlite3.Connection) -> None:
