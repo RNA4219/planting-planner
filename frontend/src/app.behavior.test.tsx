@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { MockInstance } from 'vitest'
+
+type UseRecommendationsModule = typeof import('./hooks/useRecommendations')
 
 import {
   fetchCrops,
@@ -15,11 +18,18 @@ import {
 } from '../tests/utils/renderApp'
 
 describe('App behavior', () => {
-  beforeEach(() => {
+  let useRecommendationsModule: UseRecommendationsModule
+  let useRecommendationsSpy: MockInstance
+
+  beforeEach(async () => {
     resetAppSpies()
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    useRecommendationsModule = await import('./hooks/useRecommendations')
+    useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
   })
 
   afterEach(() => {
+    useRecommendationsSpy.mockRestore()
     cleanup()
   })
 
@@ -38,6 +48,7 @@ describe('App behavior', () => {
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'cold', '2024-W30')
     })
+    expect(useRecommendationsSpy).toHaveBeenCalled()
   })
 
   it('fetchRecommendations が失敗しても fetchRecommend で初期描画される', async () => {
@@ -92,6 +103,7 @@ describe('App behavior', () => {
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
     })
+    expect(useRecommendationsSpy).toHaveBeenCalled()
 
     const select = screen.getByLabelText('地域')
     const weekInput = screen.getByLabelText('週')
@@ -103,6 +115,7 @@ describe('App behavior', () => {
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
     })
+    expect(useRecommendationsSpy).toHaveBeenCalled()
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
     expect(screen.getByText('にんじん')).toBeInTheDocument()
   })
@@ -217,5 +230,6 @@ describe('App behavior', () => {
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])
+    expect(useRecommendationsSpy).toHaveBeenCalled()
   })
 })

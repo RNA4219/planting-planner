@@ -1,5 +1,5 @@
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useRef, useState } from 'react'
 
 import { FavStar, useFavorites } from './components/FavStar'
 import { PriceChart } from './components/PriceChart'
@@ -26,45 +26,16 @@ const REGION_LABEL: Record<Region, string> = {
 }
 
 export const App = () => {
-  const currentWeekRef = useRef(getCurrentIsoWeek())
-  const [region, setRegion] = useState<Region>(() => loadRegion())
-  const [queryWeek, setQueryWeek] = useState(currentWeekRef.current)
-  const [activeWeek, setActiveWeek] = useState(() => normalizeIsoWeek(getCurrentIsoWeek()))
-  const [items, setItems] = useState<RecommendationItem[]>([])
-  const [crops, setCrops] = useState<Crop[]>([])
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
 
-  useEffect(() => {
-    let active = true
-    const load = async () => {
-      try {
-        const response = await fetchCrops()
-        if (active) {
-          setCrops(response)
-        }
-      } catch {
-        if (active) {
-          setCrops([])
-        }
-      }
-    }
-    void load()
-    return () => {
-      active = false
-    }
-  }, [])
+  const initialRegionRef = useRef<Region>(loadRegion())
 
-  const cropIndex = useMemo(() => {
-    const map = new Map<string, number>()
-    crops.forEach((crop) => {
-      map.set(crop.name, crop.id)
-    })
-    return map
-  }, [crops])
+  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
+    useRecommendations({ favorites, initialRegion: initialRegionRef.current })
 
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     const favoriteSet = new Set(favorites)
@@ -136,30 +107,15 @@ export const App = () => {
         }
       }
     },
-    [],
+    [currentWeek, setQueryWeek],
   )
 
-  const initialized = useRef(false)
-  useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
-    void requestRecommendations(region, queryWeek, activeWeek)
-  }, [requestRecommendations, region, queryWeek, activeWeek])
-
-  const handleWeekChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setQueryWeek(normalizeIsoWeek(event.target.value, currentWeekRef.current))
-  }, [])
-
-  const displayWeek = useMemo(() => formatIsoWeek(activeWeek), [activeWeek])
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    void requestRecommendations(region, queryWeek, activeWeek)
-  }
-
-  const handleRegionChange = useCallback((next: Region) => {
-    setRegion(next)
-  }, [])
+  const handleRegionChange = useCallback(
+    (next: Region) => {
+      setRegion(next)
+    },
+    [setRegion],
+  )
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -190,7 +146,7 @@ export const App = () => {
               type="text"
               value={queryWeek}
               onChange={handleWeekChange}
-              placeholder={currentWeekRef.current}
+              placeholder={currentWeek}
               pattern="\d{4}-W\d{2}"
               inputMode="numeric"
             />
