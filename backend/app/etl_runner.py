@@ -29,12 +29,14 @@ class _RunEtlFunc(Protocol):
     ) -> int: ...
 
 
-class _ETLModule(Protocol):
-    run_etl: _RunEtlFunc
-
-
 def _utc_now() -> str:
     return datetime.now(tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _load_run_etl() -> _RunEtlFunc:
+    from . import etl as _etl_module
+
+    return _etl_module.run_etl
 
 
 def _ensure_schema(conn: sqlite3.Connection) -> None:
@@ -100,10 +102,8 @@ def start_etl_job(
             attempt = 0
             while True:
                 try:
-                    from . import etl as _etl
-
-                    etl_module = cast(_ETLModule, _etl)
-                    updated_records = etl_module.run_etl(conn, data_loader=data_loader)
+                    run_etl = _load_run_etl()
+                    updated_records = run_etl(conn, data_loader=data_loader)
                     break
                 except sqlite3.DatabaseError:
                     attempt += 1
