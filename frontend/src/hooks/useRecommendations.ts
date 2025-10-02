@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 
 import * as apiModule from '../lib/api'
 import * as weekModule from '../lib/week'
+import { loadRegion } from '../lib/storage'
 import type { Crop, RecommendResponse, RecommendationItem, Region } from '../types'
 import {
   DEFAULT_ACTIVE_WEEK,
@@ -141,7 +142,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       return
     }
     initialFetchRef.current = true
-    void requestRecommendations(currentWeekRef.current, { preferLegacy: true })
+    void requestRecommendations(currentWeekRef.current)
   }, [requestRecommendations])
 
   return {
@@ -155,7 +156,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
 }
 
 export const useRecommendations = ({ favorites }: UseRecommendationsOptions): UseRecommendationsResult => {
-  const [region, setRegion] = useState<Region>('temperate')
+  const [region, setRegion] = useState<Region>(() => loadRegion())
   const cropIndex = useCropIndex()
   const { queryWeek, setQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
