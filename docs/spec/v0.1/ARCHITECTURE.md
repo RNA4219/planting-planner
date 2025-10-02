@@ -5,8 +5,8 @@
   - UI 表示、操作（更新・お気に入り）、API 呼び出し
   - localStorage にお気に入りを保存し、並び替えを実現
 
-- **Backend (FastAPI + Python)**  
-  - REST API 提供 `/api/crops`, `/api/recommend`, `/api/refresh`
+- **Backend (FastAPI + Python)**
+  - REST API 提供 `/api/crops`, `/api/recommend`, `/api/refresh`, `/api/price`
   - ETL バッチを実行し SQLite に価格データを保存
   - API で週ごとの推奨作物を返す
 
@@ -33,8 +33,8 @@
 
 ## 失敗時の挙動
 - ETL が失敗した場合：前回の DB 内容を利用
-- API レスポンスが欠損：`status=stale` を返す
-- フロント UI は「データ更新に失敗しました」をトースト表示
+- API レスポンスが欠損または処理中：`state` フィールドで `running` / `success` / `failure` / `stale` を返す
+- フロント UI はメインエリアのメッセージでユーザーに失敗・処理中を通知
 
 ---
 
