@@ -23,10 +23,14 @@ _STATE_LOOKUP: dict[str, schemas.RefreshState] = {
 DataLoader = Callable[[], Iterable[dict[str, Any]]]
 
 
-class _ETLModule(Protocol):
-    def run_etl(
+class _RunEtlFunc(Protocol):
+    def __call__(
         self, conn: sqlite3.Connection, *, data_loader: DataLoader | None = None
     ) -> int: ...
+
+
+class _ETLModule(Protocol):
+    run_etl: _RunEtlFunc
 
 
 def _utc_now() -> str:
