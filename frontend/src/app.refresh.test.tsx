@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   fetchCrops,
+  fetchRecommend,
   fetchRefreshStatus,
   fetchRecommendations,
   postRefresh,
@@ -14,6 +15,7 @@ import {
 describe('App refresh', () => {
   beforeEach(() => {
     resetAppSpies()
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
   })
 
   afterEach(() => {

@@ -1,16 +1,26 @@
 import { cleanup, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { MockInstance } from 'vitest'
+
+type UseRecommendationsModule = typeof import('../src/hooks/useRecommendations')
 
 import {
   fetchCrops,
+  fetchRecommend,
   fetchRecommendations,
   renderApp,
   resetAppSpies,
 } from './utils/renderApp'
 
 describe('App snapshot', () => {
-  beforeEach(() => {
+  let useRecommendationsModule: UseRecommendationsModule
+  let useRecommendationsSpy: MockInstance
+
+  beforeEach(async () => {
     resetAppSpies()
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    useRecommendationsModule = await import('../src/hooks/useRecommendations')
+    useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
     fetchCrops.mockResolvedValue([
       {
         id: 1,
@@ -46,6 +56,7 @@ describe('App snapshot', () => {
   })
 
   afterEach(() => {
+    useRecommendationsSpy.mockRestore()
     cleanup()
     resetAppSpies()
   })
@@ -60,5 +71,6 @@ describe('App snapshot', () => {
     const container = document.body.firstElementChild
     expect(container).not.toBeNull()
     expect(container).toMatchSnapshot()
+    expect(useRecommendationsSpy).toHaveBeenCalled()
   })
 })
