@@ -26,8 +26,7 @@ DataLoader = Callable[[], Iterable[dict[str, Any]]]
 class _ETLModule(Protocol):
     def run_etl(
         self, conn: sqlite3.Connection, *, data_loader: DataLoader | None = None
-    ) -> int:
-        ...
+    ) -> int: ...
 
 
 def _utc_now() -> str:
@@ -100,9 +99,7 @@ def start_etl_job(
                     from . import etl as _etl
 
                     etl_module = cast(_ETLModule, _etl)
-                    updated_records = etl_module.run_etl(
-                        conn, data_loader=data_loader
-                    )
+                    updated_records = etl_module.run_etl(conn, data_loader=data_loader)
                     break
                 except sqlite3.DatabaseError:
                     attempt += 1
