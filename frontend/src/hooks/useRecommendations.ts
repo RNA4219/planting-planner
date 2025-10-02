@@ -23,6 +23,7 @@ const fetchCrops = api.fetchCrops
 
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
+  initialRegion?: Region
 }
 
 export interface UseRecommendationsResult {
@@ -154,11 +155,19 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
   }
 }
 
-export const useRecommendations = ({ favorites }: UseRecommendationsOptions): UseRecommendationsResult => {
-  const [region, setRegion] = useState<Region>('temperate')
+export const useRecommendations = ({ favorites, initialRegion }: UseRecommendationsOptions): UseRecommendationsResult => {
+  const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
+  const [region, setRegion] = useState<Region>(initialRegionRef.current)
   const cropIndex = useCropIndex()
   const { queryWeek, setQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
+
+  useEffect(() => {
+    if (initialRegion !== undefined && initialRegion !== initialRegionRef.current) {
+      initialRegionRef.current = initialRegion
+      setRegion(initialRegion)
+    }
+  }, [initialRegion, setRegion])
 
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     return buildRecommendationRows({ items, favorites, cropIndex })
