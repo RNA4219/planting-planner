@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import json
 import sqlite3
-from datetime import UTC, datetime
+import time
+from collections import defaultdict
+from collections.abc import Callable, Iterable
+from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Any, Final, cast
 
-from . import db, schemas
+from . import db, schemas, utils_week
 
 STATE_RUNNING: Final[schemas.RefreshState] = "running"
 STATE_SUCCESS: Final[schemas.RefreshState] = "success"
@@ -17,6 +22,12 @@ _STATE_LOOKUP: dict[str, schemas.RefreshState] = {
     STATE_FAILURE: STATE_FAILURE,
     STATE_STALE: STATE_STALE,
 }
+
+_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+_DEFAULT_PRICE_SOURCE = _DATA_DIR / "price_weekly.sample.json"
+_UNIT_FACTORS: dict[str, float] = {"円/kg": 1.0, "円/100g": 10.0, "円/500g": 2.0, "円/g": 1000.0}
+
+DataLoader = Callable[[], Iterable[dict[str, Any]]]
 
 
 def _utc_now() -> str:
@@ -49,18 +60,100 @@ def _coerce_state(value: Any) -> schemas.RefreshState:
     return STATE_STALE
 
 
-def run_etl(conn: Any) -> int:
-    row = conn.execute("SELECT COUNT(*) FROM price_weekly").fetchone()
-    if row is None:
-        return 0
-    value = row[0]
+def load_price_feed(path: Path | None = None) -> list[dict[str, Any]]:
+    target = _DEFAULT_PRICE_SOURCE if path is None else path
+    if not target.exists():
+        return []
+    with target.open("r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    if not isinstance(payload, list):
+        raise ValueError(f"Expected list payload in {target}")
+    return [dict(item) for item in payload]
+
+
+def _normalize_week(value: Any) -> str:
+    if isinstance(value, int):
+        return utils_week.iso_week_from_int(int(value))
+    if isinstance(value, str):
+        raw = value.strip()
+        try:
+            utils_week.iso_week_to_date_mid(raw)
+        except utils_week.WeekFormatError:
+            try:
+                parsed = date.fromisoformat(raw)
+            except ValueError as exc:  # pragma: no cover - defensive
+                raise ValueError(f"Unsupported week value: {value!r}") from exc
+            return utils_week.date_to_iso_week(parsed)
+        return raw
+    raise TypeError(f"Unsupported week value: {value!r}")
+
+
+def _scaled_number(value: Any, factor: float) -> float | None:
     if value is None:
+        return None
+    if isinstance(value, int | float):
+        return float(value) * factor
+    raise TypeError(f"Unsupported numeric value: {value!r}")
+
+
+def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) -> int:
+    loader = load_price_feed if data_loader is None else data_loader
+    records = list(loader())
+    if not records:
         return 0
-    return int(value)
+
+    converted: list[tuple[int, str, float | None, float | None, str]] = []
+    for record in records:
+        unit_raw = str(record.get("unit", "円/kg")).strip()
+        factor = _UNIT_FACTORS.get(unit_raw)
+        if factor is None:
+            raise ValueError(f"Unsupported unit: {unit_raw}")
+        converted.append(
+            (
+                int(record["crop_id"]),
+                _normalize_week(record.get("week")),
+                _scaled_number(record.get("avg_price"), factor),
+                _scaled_number(record.get("stddev"), factor),
+                str(record.get("source", "external")),
+            )
+        )
+
+    converted.sort(key=lambda item: (item[0], utils_week.iso_week_to_date_mid(item[1])))
+    history: dict[int, list[float | None]] = defaultdict(list)
+    transformed: list[tuple[int, str, float | None, float | None, str, str]] = []
+    for crop_id, week_iso, avg_price, stddev, source in converted:
+        recent = [value for value in history[crop_id][-3:] if value is not None]
+        if avg_price is None and recent:
+            avg_price = sum(recent) / len(recent)
+        history[crop_id].append(avg_price)
+        transformed.append((crop_id, week_iso, avg_price, stddev, "円/kg", source))
+
+    conn.executemany(
+        """
+        INSERT INTO price_weekly (
+            crop_id, week, avg_price, stddev, unit, source
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(crop_id, week) DO UPDATE SET
+            avg_price = excluded.avg_price,
+            stddev = excluded.stddev,
+            unit = excluded.unit,
+            source = excluded.source
+        """,
+        transformed,
+    )
+    conn.commit()
+    return len(transformed)
 
 
-def start_etl_job() -> None:
-    conn = db.get_conn()
+def start_etl_job(
+    *,
+    data_loader: DataLoader | None = None,
+    conn_factory: Callable[[], sqlite3.Connection] | None = None,
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+) -> None:
+    factory = conn_factory if conn_factory is not None else db.get_conn
+    conn = factory()
     try:
         _ensure_schema(conn)
         started_at = _utc_now()
@@ -86,7 +179,17 @@ def start_etl_job() -> None:
         conn.commit()
 
         try:
-            updated_records = run_etl(conn)
+            attempt = 0
+            while True:
+                try:
+                    updated_records = run_etl(conn, data_loader=data_loader)
+                    break
+                except sqlite3.DatabaseError:
+                    attempt += 1
+                    if attempt >= max_retries:
+                        raise
+                    if retry_delay:
+                        time.sleep(retry_delay)
         except Exception as exc:  # pragma: no cover - defensive path
             finished_at = _utc_now()
             error_message = str(exc)
