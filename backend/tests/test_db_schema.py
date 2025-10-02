@@ -59,9 +59,7 @@ def test_tables_use_autoincrement(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     try:
         db.init_db(conn)
 
-        cursor = conn.execute(
-            "SELECT name, sql FROM sqlite_master WHERE type = 'table'"
-        )
+        cursor = conn.execute("SELECT name, sql FROM sqlite_master WHERE type = 'table'")
         rows = cursor.fetchall()
         table_sql = {row["name"]: str(row["sql"]) for row in rows}
 
