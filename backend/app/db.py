@@ -64,9 +64,8 @@ _TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
 )
 
 _INDEX_DEFINITIONS: Final[tuple[str, ...]] = (
-    "CREATE INDEX IF NOT EXISTS idx_growth_days_crop_region" " ON growth_days(crop_id, region);",
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_price_weekly_crop_week"
-    " ON price_weekly(crop_id, week);",
+    "CREATE INDEX IF NOT EXISTS idx_growth_days_crop_region ON growth_days(crop_id, region);",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_price_weekly_crop_week ON price_weekly(crop_id, week);",
 )
 
 
