@@ -79,6 +79,37 @@ describe('App behavior', () => {
     expect(screen.getByText('春菊')).toBeInTheDocument()
   })
 
+  it('初期ロードで fetchRecommendations が失敗したら fetchRecommend にフォールバックする', async () => {
+    fetchCrops.mockResolvedValue([
+      { id: 1, name: '春菊', category: 'leaf' },
+      { id: 2, name: 'にんじん', category: 'root' },
+    ])
+    fetchRecommendations.mockRejectedValueOnce(new Error('network error'))
+    fetchRecommend.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [
+        {
+          crop: '春菊',
+          harvest_week: '2024-W35',
+          sowing_week: '2024-W30',
+          source: 'legacy',
+          growth_days: 42,
+        },
+      ],
+    })
+
+    await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenCalledTimes(1)
+      expect(fetchRecommend).toHaveBeenCalledTimes(1)
+    })
+    expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'temperate', '2024-W30')
+    expect(fetchRecommend).toHaveBeenCalledWith({ region: 'temperate', week: '2024-W30' })
+    expect(screen.getByText('春菊')).toBeInTheDocument()
+  })
+
   it('地域選択と週入力でAPIが手動フェッチされる', async () => {
     fetchCrops.mockResolvedValue([
       { id: 1, name: '春菊', category: 'leaf' },

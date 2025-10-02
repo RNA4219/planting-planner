@@ -97,32 +97,35 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       setQueryWeek(normalizedWeek)
       const preferLegacy = options?.preferLegacy ?? false
       try {
-        let response: RecommendResponse
-        const callModern = async () => {
-          if (typeof api.fetchRecommendations === 'function') {
-            return api.fetchRecommendations(targetRegion, normalizedWeek)
+        let response: RecommendResponse | undefined
+        const callModern = async (): Promise<RecommendResponse | undefined> => {
+          if (typeof api.fetchRecommendations !== 'function') {
+            return undefined
           }
-          throw new Error('missing fetchRecommendations')
+          try {
+            return await api.fetchRecommendations(targetRegion, normalizedWeek)
+          } catch {
+            return undefined
+          }
         }
-        const callLegacy = async () => {
-          if (typeof api.fetchRecommend === 'function') {
-            return api.fetchRecommend({ region: targetRegion, week: normalizedWeek })
+        const callLegacy = async (): Promise<RecommendResponse | undefined> => {
+          if (typeof api.fetchRecommend !== 'function') {
+            return undefined
           }
-          throw new Error('missing fetchRecommend')
+          try {
+            return await api.fetchRecommend({ region: targetRegion, week: normalizedWeek })
+          } catch {
+            return undefined
+          }
         }
 
-        if (preferLegacy) {
-          try {
-            response = await callLegacy()
-          } catch {
-            response = await callModern()
-          }
-        } else {
-          try {
-            response = await callModern()
-          } catch {
-            response = await callLegacy()
-          }
+        const primary = preferLegacy ? callLegacy : callModern
+        const secondary = preferLegacy ? callModern : callLegacy
+
+        response = (await primary()) ?? (await secondary())
+        if (!response) {
+          setItems([])
+          return
         }
         const { week: responseWeek, items: normalizedItems } = normalizeRecommendationResponse(
           response,
@@ -142,7 +145,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       return
     }
     initialFetchRef.current = true
-    void requestRecommendations(currentWeekRef.current, { preferLegacy: true })
+    void requestRecommendations(currentWeekRef.current)
   }, [requestRecommendations])
 
   return {
