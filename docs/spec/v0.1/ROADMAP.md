@@ -1,5 +1,9 @@
 # ロードマップ - planting-planner v0.1
 
+## 進捗メモ (2025-10-03)
+- ✅ 価格ETLで欠損時に直近3件平均を補完するロジックを追加し、欠損データ処理タスクを完了と判断。
+- ✅ MVP版をPages/Renderへ公開し、デプロイ手順書も整備済み。
+
 ## Day 1〜3: MVP開発
 - [x] リポジトリ初期化（README, License, .gitignore）
 - [x] CI 構築（Frontend/Backend lint, test, build）
@@ -9,14 +13,15 @@
 - [x] API `/crops`, `/recommend`, `/health` 実装
 - [x] フロントUI（リスト表示・☆お気に入り）
 - [x] 更新ボタン → `/refresh` API 呼び出し
-- [ ] MVP版公開（Pages/Render）
+- [x] MVP版公開（Pages/Render）
+  - デプロイ設定（Render/GitHub Pages）の雛形を追加し、Secrets/環境変数の整理を行う。
 
 ---
 
 ## v0.2: 実用化拡張
 - [ ] 花きデータ取り込み追加
 - [x] `/refresh/status` 実装（トースト通知は未実装）
-- [ ] 欠損データ処理（過去平均補完）
+- [x] 欠損データ処理（過去平均補完）
 - [x] API `/price` 実装（価格履歴表示）
 - [x] Backend ユニットテスト充実
 - [ ] UI 検索フィルタ追加
