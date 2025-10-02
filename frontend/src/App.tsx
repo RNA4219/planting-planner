@@ -34,7 +34,7 @@ export const App = () => {
     (event: ChangeEvent<HTMLInputElement>) => {
       setQueryWeek(normalizeIsoWeek(event.target.value, currentWeek))
     },
-    [currentWeek, setQueryWeek],
+    [setQueryWeek],
   )
 
   const handleRegionChange = useCallback(

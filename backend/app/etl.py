@@ -108,5 +108,3 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
     )
     conn.commit()
     return len(transformed)
-
-
