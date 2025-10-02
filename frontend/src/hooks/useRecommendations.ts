@@ -161,8 +161,15 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
   const [region, setRegion] = useState<Region>(initialRegionRef.current)
   const cropIndex = useCropIndex()
-  const { queryWeek, setQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
+  const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
+
+  const setQueryWeek = useCallback(
+    (nextWeek: string) => {
+      setRawQueryWeek(normalizeIsoWeek(nextWeek, currentWeek))
+    },
+    [currentWeek, setRawQueryWeek],
+  )
 
   useEffect(() => {
     if (initialRegion !== undefined && initialRegion !== initialRegionRef.current) {
