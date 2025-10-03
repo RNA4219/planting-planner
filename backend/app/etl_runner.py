@@ -31,6 +31,9 @@ class _RunEtlFunc(Protocol):
     ) -> int: ...
 
 
+_RunEtlFactory: TypeAlias = Callable[[], _RunEtlFunc]
+
+
 def _utc_now() -> str:
     return datetime.now(tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -75,6 +78,97 @@ def _coerce_state(value: Any) -> schemas.RefreshState:
     return STATE_STALE
 
 
+def _resolve_conn_factory(
+    conn_factory: Callable[[], sqlite3.Connection] | None,
+) -> Callable[[], sqlite3.Connection]:
+    return conn_factory if conn_factory is not None else db.get_conn
+
+
+def _open_connection(factory: Callable[[], sqlite3.Connection]) -> sqlite3.Connection:
+    return factory()
+
+
+def _insert_run_metadata(conn: sqlite3.Connection, started_at: str) -> int:
+    cursor = conn.execute(
+        """
+        INSERT INTO etl_runs (
+            run_at,
+            status,
+            updated_records,
+            error_message,
+            state,
+            started_at,
+            finished_at,
+            last_error
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (started_at, STATE_RUNNING, 0, None, STATE_RUNNING, started_at, None, None),
+    )
+    run_id_raw = cursor.lastrowid
+    if run_id_raw is None:  # pragma: no cover - SQLite guarantees an id for AUTOINCREMENT
+        raise RuntimeError("Failed to persist ETL run metadata")
+    conn.commit()
+    return int(run_id_raw)
+
+
+def _mark_run_failure(
+    conn: sqlite3.Connection, run_id: int, *, finished_at: str, error_message: str
+) -> None:
+    conn.execute(
+        """
+        UPDATE etl_runs
+        SET status = ?,
+            state = ?,
+            finished_at = ?,
+            last_error = ?,
+            error_message = ?
+        WHERE id = ?
+        """,
+        (STATE_FAILURE, STATE_FAILURE, finished_at, error_message, error_message, run_id),
+    )
+    conn.commit()
+
+
+def _mark_run_success(
+    conn: sqlite3.Connection, run_id: int, *, finished_at: str, updated_records: int
+) -> None:
+    conn.execute(
+        """
+        UPDATE etl_runs
+        SET status = ?,
+            state = ?,
+            finished_at = ?,
+            updated_records = ?,
+            last_error = NULL,
+            error_message = NULL
+        WHERE id = ?
+        """,
+        (STATE_SUCCESS, STATE_SUCCESS, finished_at, updated_records, run_id),
+    )
+    conn.commit()
+
+
+def _run_etl_with_retries(
+    *,
+    load_run_etl: _RunEtlFactory,
+    conn: sqlite3.Connection,
+    data_loader: DataLoader | None,
+    max_retries: int,
+    retry_delay: float,
+) -> int:
+    attempt = 0
+    while True:
+        try:
+            run_etl = load_run_etl()
+            return run_etl(conn, data_loader=data_loader)
+        except sqlite3.DatabaseError:
+            attempt += 1
+            if attempt >= max_retries:
+                raise
+            if retry_delay:
+                time.sleep(retry_delay)
+
+
 def start_etl_job(
     *,
     data_loader: DataLoader | None = None,
@@ -82,82 +176,32 @@ def start_etl_job(
     max_retries: int = 3,
     retry_delay: float = 0.1,
 ) -> None:
-    factory: Callable[[], sqlite3.Connection]
-    if conn_factory is not None:
-        factory = conn_factory
-    else:
-        factory = db.get_conn
-    conn = factory()
+    factory = _resolve_conn_factory(conn_factory)
+    conn = _open_connection(factory)
     try:
         _ensure_schema(conn)
         started_at = _utc_now()
-        cursor = conn.execute(
-            """
-            INSERT INTO etl_runs (
-                run_at,
-                status,
-                updated_records,
-                error_message,
-                state,
-                started_at,
-                finished_at,
-                last_error
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (started_at, STATE_RUNNING, 0, None, STATE_RUNNING, started_at, None, None),
-        )
-        run_id_raw = cursor.lastrowid
-        if run_id_raw is None:  # pragma: no cover - SQLite guarantees an id for AUTOINCREMENT
-            raise RuntimeError("Failed to persist ETL run metadata")
-        run_id = int(run_id_raw)
-        conn.commit()
-
+        run_id = _insert_run_metadata(conn, started_at)
         try:
-            attempt = 0
-            while True:
-                try:
-                    run_etl: _RunEtlFunc = _load_run_etl()
-                    updated_records = run_etl(conn, data_loader=data_loader)
-                    break
-                except sqlite3.DatabaseError:
-                    attempt += 1
-                    if attempt >= max_retries:
-                        raise
-                    if retry_delay:
-                        time.sleep(retry_delay)
+            updated_records = _run_etl_with_retries(
+                load_run_etl=_load_run_etl,
+                conn=conn,
+                data_loader=data_loader,
+                max_retries=max_retries,
+                retry_delay=retry_delay,
+            )
         except Exception as exc:  # pragma: no cover - defensive path
             finished_at = _utc_now()
-            error_message = str(exc)
-            conn.execute(
-                """
-                UPDATE etl_runs
-                SET status = ?,
-                    state = ?,
-                    finished_at = ?,
-                    last_error = ?,
-                    error_message = ?
-                WHERE id = ?
-                """,
-                (STATE_FAILURE, STATE_FAILURE, finished_at, error_message, error_message, run_id),
-            )
-            conn.commit()
+            _mark_run_failure(conn, run_id, finished_at=finished_at, error_message=str(exc))
             raise
         else:
             finished_at = _utc_now()
-            conn.execute(
-                """
-                UPDATE etl_runs
-                SET status = ?,
-                    state = ?,
-                    finished_at = ?,
-                    updated_records = ?,
-                    last_error = NULL,
-                    error_message = NULL
-                WHERE id = ?
-                """,
-                (STATE_SUCCESS, STATE_SUCCESS, finished_at, updated_records, run_id),
+            _mark_run_success(
+                conn,
+                run_id,
+                finished_at=finished_at,
+                updated_records=updated_records,
             )
-            conn.commit()
     finally:
         conn.close()
 
