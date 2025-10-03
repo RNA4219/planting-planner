@@ -66,6 +66,21 @@ export const fetchRecommendations = async (
   return request<RecommendResponse>(url)
 }
 
+export const fetchRecommend = async ({
+  region,
+  week,
+}: {
+  region: Region
+  week?: string
+}): Promise<RecommendResponse> => {
+  const params = new URLSearchParams({ region })
+  if (week) {
+    params.set('week', week)
+  }
+  const url = buildUrl('/recommend', params)
+  return request<RecommendResponse>(url)
+}
+
 export const postRefresh = async (body?: unknown): Promise<RefreshResponse> => {
   const url = buildUrl('/refresh')
   const init: RequestInit = { method: 'POST' }

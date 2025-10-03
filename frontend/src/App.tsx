@@ -6,7 +6,6 @@ import { PriceChart } from './components/PriceChart'
 import { RegionSelect } from './components/RegionSelect'
 import { postRefresh } from './lib/api'
 import { loadRegion } from './lib/storage'
-import { normalizeIsoWeek } from './lib/week'
 import { useRecommendations } from './hooks/useRecommendations'
 import type { Region } from './types'
 
@@ -32,7 +31,7 @@ export const App = () => {
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      setQueryWeek(normalizeIsoWeek(event.target.value, currentWeek))
+      setQueryWeek(event.target.value)
     },
     [setQueryWeek],
   )
