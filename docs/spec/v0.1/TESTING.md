@@ -2,7 +2,8 @@
 
 ## 対象範囲
 - **Backend (FastAPI)**
-  - 単体テスト: API レスポンス（/health, /crops, /recommend, /refresh）
+  - 単体テスト: API レスポンス（/api/health, /api/crops, /api/recommend, /api/refresh, /api/refresh/status, /api/price）
+    - 価格 API は不正な週指定時に 400 を返すバリデーションも含めて検証
   - 結合テスト: ETL 実行 → DB 更新 → API 返却の一連動作
   - 静的解析: ruff, black, mypy
 
