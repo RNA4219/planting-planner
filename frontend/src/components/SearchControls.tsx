@@ -23,7 +23,7 @@ export const SearchControls = ({
   refreshing,
 }: SearchControlsProps) => {
   return (
-    <form className="app__controls" onSubmit={onSubmit}>
+    <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
       <label className="app__week" htmlFor="week-input">
         週
