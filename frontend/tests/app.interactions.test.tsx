@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 import type { FormEvent } from 'react'
+import type { RecommendResponse } from '../src/types'
 
 import {
   fetchCrops,
@@ -13,6 +14,16 @@ import {
 } from './utils/renderApp'
 
 type UseRecommendationsModule = typeof import('../src/hooks/useRecommendations')
+
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
 
 describe('App interactions', () => {
   let useRecommendationsModule: UseRecommendationsModule
@@ -119,6 +130,67 @@ describe('App interactions', () => {
     await waitFor(() => {
       expect(favButton.getAttribute('aria-pressed')).toBe('true')
     })
+  })
+
+  test('地域切替時に遅延レスポンスが上書きされない', async () => {
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    fetchCrops.mockResolvedValue([
+      { id: 1, name: 'トマト', category: '果菜類' },
+      { id: 2, name: 'キャベツ', category: '葉菜類' },
+    ])
+
+    const firstRequest = createDeferred<RecommendResponse>()
+    const secondRequest = createDeferred<RecommendResponse>()
+
+    fetchRecommendations.mockImplementationOnce(() => firstRequest.promise)
+    fetchRecommendations.mockImplementationOnce(() => secondRequest.promise)
+
+    const { user } = await renderApp()
+
+    const regionSelect = await screen.findByLabelText('地域')
+    await user.selectOptions(regionSelect, 'cold')
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(2, 'cold', '2024-W30')
+    })
+
+    secondRequest.resolve({
+      week: '2024-W30',
+      region: 'cold',
+      items: [
+        {
+          crop: 'キャベツ',
+          sowing_week: '2024-W29',
+          harvest_week: '2024-W35',
+          source: 'テストデータ',
+          growth_days: 60,
+        },
+      ],
+    })
+
+    const table = await screen.findByRole('table')
+    await within(table).findByText('キャベツ')
+    expect(within(table).queryByText('トマト')).toBeNull()
+
+    firstRequest.resolve({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [
+        {
+          crop: 'トマト',
+          sowing_week: '2024-W28',
+          harvest_week: '2024-W35',
+          source: 'テストデータ',
+          growth_days: 70,
+        },
+      ],
+    })
+
+    await waitFor(() => {
+      const currentTable = screen.getByRole('table')
+      expect(within(currentTable).queryByText('トマト')).toBeNull()
+    })
+    await within(screen.getByRole('table')).findByText('キャベツ')
   })
 
   test('価格チャート用の行選択で fetchPrice が呼び出される', async () => {
