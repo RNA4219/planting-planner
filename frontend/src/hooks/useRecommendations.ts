@@ -7,6 +7,7 @@ import {
   DEFAULT_ACTIVE_WEEK,
   DEFAULT_WEEK,
   RecommendationRow,
+  NormalizeRecommendationResult,
   buildRecommendationRows,
   formatWeekLabel,
   normalizeRecommendationResponse,
@@ -35,6 +36,55 @@ export interface UseRecommendationsResult {
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
+}
+
+interface RecommendationFetchInput {
+  region: Region
+  week: string
+  preferLegacy?: boolean
+}
+
+export type RecommendationFetcher = (
+  input: RecommendationFetchInput,
+) => Promise<NormalizeRecommendationResult | null>
+
+export const useRecommendationFetcher = (): RecommendationFetcher => {
+  return useCallback<RecommendationFetcher>(
+    async ({ region, week, preferLegacy = false }) => {
+      const callModern = async (): Promise<RecommendResponse | undefined> => {
+        if (typeof api.fetchRecommendations !== 'function') {
+          return undefined
+        }
+        try {
+          return await api.fetchRecommendations(region, week)
+        } catch {
+          return undefined
+        }
+      }
+
+      const callLegacy = async (): Promise<RecommendResponse | undefined> => {
+        if (typeof api.fetchRecommend !== 'function') {
+          return undefined
+        }
+        try {
+          return await api.fetchRecommend({ region, week })
+        } catch {
+          return undefined
+        }
+      }
+
+      const primary = preferLegacy ? callLegacy : callModern
+      const secondary = preferLegacy ? callModern : callLegacy
+
+      const response = (await primary()) ?? (await secondary())
+      if (!response) {
+        return null
+      }
+
+      return normalizeRecommendationResponse(response, week)
+    },
+    [],
+  )
 }
 
 const useCropIndex = (): Map<string, number> => {
@@ -85,58 +135,39 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
   const regionRef = useRef(region)
+  const fetchRecommendationsWithFallback = useRecommendationFetcher()
 
   useEffect(() => {
     regionRef.current = region
   }, [region])
 
+  const normalizeWeek = useCallback(
+    (value: string) => normalizeIsoWeek(value, activeWeek),
+    [activeWeek],
+  )
+
   const requestRecommendations = useCallback(
     async (inputWeek: string, options?: { preferLegacy?: boolean }) => {
       const targetRegion = regionRef.current
-      const normalizedWeek = normalizeIsoWeek(inputWeek, activeWeek)
+      const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
-      const preferLegacy = options?.preferLegacy ?? false
       try {
-        const callModern = async (): Promise<RecommendResponse | undefined> => {
-          if (typeof api.fetchRecommendations !== 'function') {
-            return undefined
-          }
-          try {
-            return await api.fetchRecommendations(targetRegion, normalizedWeek)
-          } catch {
-            return undefined
-          }
-        }
-        const callLegacy = async (): Promise<RecommendResponse | undefined> => {
-          if (typeof api.fetchRecommend !== 'function') {
-            return undefined
-          }
-          try {
-            return await api.fetchRecommend({ region: targetRegion, week: normalizedWeek })
-          } catch {
-            return undefined
-          }
-        }
-
-        const primary = preferLegacy ? callLegacy : callModern
-        const secondary = preferLegacy ? callModern : callLegacy
-
-        const response = (await primary()) ?? (await secondary())
-        if (!response) {
+        const result = await fetchRecommendationsWithFallback({
+          region: targetRegion,
+          week: normalizedWeek,
+          preferLegacy: options?.preferLegacy,
+        })
+        if (!result) {
           setItems([])
           return
         }
-        const { week: responseWeek, items: normalizedItems } = normalizeRecommendationResponse(
-          response,
-          normalizedWeek,
-        )
-        setItems(normalizedItems)
-        setActiveWeek(responseWeek)
+        setItems(result.items)
+        setActiveWeek(result.week)
       } catch {
         setItems([])
       }
     },
-    [activeWeek],
+    [fetchRecommendationsWithFallback, normalizeWeek],
   )
 
   useEffect(() => {
