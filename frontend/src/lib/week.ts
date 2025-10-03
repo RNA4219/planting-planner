@@ -74,7 +74,7 @@ export const normalizeIsoWeek = (
   }
 
   const digits = upper.replace(/[^0-9]/g, '')
-  if (digits.length === 6) {
+  if (digits.length === 5 || digits.length === 6) {
     const year = Number(digits.slice(0, 4))
     const week = Number(digits.slice(4))
     if (!Number.isNaN(year) && !Number.isNaN(week)) {
