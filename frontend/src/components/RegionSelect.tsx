@@ -24,6 +24,7 @@ export const RegionSelect = ({ onChange, options = DEFAULT_OPTIONS, disabled }: 
 
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value as Region
+    onChange(next)
     setSelected(next)
     saveRegion(next)
   }
@@ -34,6 +35,7 @@ export const RegionSelect = ({ onChange, options = DEFAULT_OPTIONS, disabled }: 
       <select
         aria-label="地域"
         className="region-select__select"
+        name="region"
         value={selected}
         onChange={handleChange}
         disabled={disabled}
