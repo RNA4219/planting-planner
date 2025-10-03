@@ -10,7 +10,7 @@ type FetchPriceMock = ReturnType<typeof vi.fn<FetchPrice>>
 const fetchPrice = vi.hoisted(() => vi.fn<FetchPrice>()) as FetchPriceMock
 const recordLineProps = vi.hoisted(() =>
   vi.fn((props: { data: { labels: string[] } }) => {
-    return undefined
+    return props
   }),
 )
 
