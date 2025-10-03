@@ -218,6 +218,47 @@ describe('App behavior', () => {
     expect(screen.getByText('にんじん')).toBeInTheDocument()
   })
 
+  it('地域変更で即時フェッチされテーブルが更新される', async () => {
+    fetchCrops.mockResolvedValue([
+      { id: 1, name: '春菊', category: 'leaf' },
+      { id: 2, name: 'にんじん', category: 'root' },
+    ])
+    fetchRecommendations.mockImplementation(async (region) => ({
+      week: '2024-W30',
+      region,
+      items: [
+        {
+          crop: region === 'temperate' ? '春菊' : 'にんじん',
+          harvest_week: '2024-W35',
+          sowing_week: '2024-W30',
+          source: 'local-db',
+          growth_days: 42,
+        },
+      ],
+    }))
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'temperate', '2024-W30')
+    })
+
+    expect(screen.getByText('春菊')).toBeInTheDocument()
+
+    const select = screen.getByLabelText('地域')
+    await user.selectOptions(select, '寒冷地')
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(2, 'cold', '2024-W30')
+    })
+
+    const table = await screen.findByRole('table')
+    const rows = within(table).getAllByRole('row').slice(1)
+    const coldRow = rows.find((row) => within(row).queryByText('にんじん'))
+    expect(coldRow).toBeDefined()
+    expect(within(rows[0]!).queryByText('春菊')).not.toBeInTheDocument()
+  })
+
   it('行選択で価格データが取得される', async () => {
     fetchCrops.mockResolvedValue([
       { id: 1, name: '春菊', category: 'leaf' },
