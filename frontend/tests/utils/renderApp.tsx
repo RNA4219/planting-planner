@@ -53,6 +53,19 @@ export const fetchRecommend = vi.fn<
 export const fetchCrops = vi.fn<() => Promise<Crop[]>>()
 export const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
 export const fetchRefreshStatus = vi.fn<() => Promise<RefreshStatusResponse>>()
+export const fetchPrice = vi.fn<
+  (
+    cropId: number,
+    frm?: string,
+    to?: string,
+  ) => Promise<{
+    crop_id: number
+    crop: string
+    unit: string
+    source: string
+    prices: { week: string; avg_price: number | null; stddev?: number | null }[]
+  }>
+>()
 
 vi.mock('../../src/lib/api', () => ({
   fetchRecommendations,
@@ -60,6 +73,7 @@ vi.mock('../../src/lib/api', () => ({
   fetchCrops,
   postRefresh,
   fetchRefreshStatus,
+  fetchPrice,
 }))
 
 export const resetAppSpies = () => {
@@ -74,6 +88,7 @@ export const resetAppSpies = () => {
   fetchCrops.mockReset()
   postRefresh.mockReset()
   fetchRefreshStatus.mockReset()
+  fetchPrice.mockReset()
 }
 
 export const renderApp = async () => {

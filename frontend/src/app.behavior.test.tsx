@@ -9,6 +9,7 @@ import {
   fetchCrops,
   fetchRecommend,
   fetchRecommendations,
+  fetchPrice,
   renderApp,
   resetAppSpies,
   saveFavorites,
@@ -149,6 +150,57 @@ describe('App behavior', () => {
     expect(useRecommendationsSpy).toHaveBeenCalled()
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
     expect(screen.getByText('にんじん')).toBeInTheDocument()
+  })
+
+  it('行選択で価格データが取得される', async () => {
+    fetchCrops.mockResolvedValue([
+      { id: 1, name: '春菊', category: 'leaf' },
+      { id: 2, name: 'にんじん', category: 'root' },
+    ])
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [
+        {
+          crop: '春菊',
+          harvest_week: '2024-W35',
+          sowing_week: '2024-W30',
+          source: 'local-db',
+          growth_days: 42,
+        },
+        {
+          crop: 'にんじん',
+          harvest_week: '2024-W36',
+          sowing_week: '2024-W31',
+          source: 'local-db',
+          growth_days: 60,
+        },
+      ],
+    })
+    fetchPrice.mockResolvedValue({
+      crop_id: 1,
+      crop: '春菊',
+      unit: 'kg',
+      source: 'local-db',
+      prices: [],
+    })
+
+    const { user } = await renderApp()
+
+    const table = await screen.findByRole('table')
+    const rows = within(table).getAllByRole('row').slice(1)
+    const targetRow = rows.find((row) => within(row).queryByText('春菊'))
+    if (!targetRow) {
+      throw new Error('春菊の行が見つかりません')
+    }
+
+    await user.click(targetRow)
+
+    await waitFor(() => {
+      expect(fetchPrice).toHaveBeenCalledTimes(1)
+    })
+    expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined)
+    expect(screen.getByText('価格データがありません。')).toBeInTheDocument()
   })
 
   it('お気に入りトグルで保存内容が更新される', async () => {
