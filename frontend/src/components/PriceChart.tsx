@@ -23,16 +23,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
+  const [isLoading, setIsLoading] = React.useState(false)
 
   React.useEffect(() => {
     if (!cropId) {
       setLabels([])
       setValues([])
       setTitle('')
+      setIsLoading(false)
       return
     }
 
     let active = true
+    setIsLoading(true)
+    setLabels([])
+    setValues([])
+    setTitle('')
     ;(async () => {
       try {
         const res = await fetchPrice(cropId, range?.from, range?.to)
@@ -42,10 +48,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
         setLabels(points.map((p) => p.week))
         setValues(points.map((p) => (p.avg_price ?? NaN)))
       } catch {
-        if (!active) return
-        setLabels([])
-        setValues([])
-        setTitle('')
+        if (active) {
+          setLabels([])
+          setValues([])
+          setTitle('')
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
       }
     })()
 
@@ -56,6 +67,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
 
   if (!cropId) {
     return <p>作物を選択すると価格推移が表示されます。</p>
+  }
+
+  if (isLoading) {
+    return <p>価格データを読み込み中です…</p>
   }
 
   if (labels.length === 0) {
