@@ -26,7 +26,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   const [isLoading, setIsLoading] = React.useState(false)
 
   React.useEffect(() => {
-    if (!cropId) {
+    if (cropId == null) {
       setLabels([])
       setValues([])
       setTitle('')
@@ -65,7 +65,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
     }
   }, [cropId, range?.from, range?.to])
 
-  if (!cropId) {
+  if (cropId == null) {
     return <p>作物を選択すると価格推移が表示されます。</p>
   }
 
