@@ -206,6 +206,8 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
 export const useRecommendations = ({ favorites, initialRegion }: UseRecommendationsOptions): UseRecommendationsResult => {
   const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
   const [region, setRegion] = useState<Region>(initialRegionRef.current)
+  const regionSyncRef = useRef<Region>(initialRegionRef.current)
+  const regionFetchSkipRef = useRef<Region | null>(null)
   const cropIndex = useCropIndex()
   const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
@@ -224,6 +226,18 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
     }
   }, [initialRegion, setRegion])
 
+  useEffect(() => {
+    if (regionSyncRef.current === region) {
+      return
+    }
+    regionSyncRef.current = region
+    if (regionFetchSkipRef.current === region) {
+      regionFetchSkipRef.current = null
+      return
+    }
+    void requestRecommendations(currentWeek, { regionOverride: region })
+  }, [currentWeek, region, requestRecommendations])
+
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     return buildRecommendationRows({ items, favorites, cropIndex })
   }, [items, cropIndex, favorites])
@@ -239,9 +253,17 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
       if (submittedRegion && submittedRegion !== region) {
         setRegion(submittedRegion)
       }
-      void requestRecommendations(submittedWeek, { regionOverride: submittedRegion ?? region })
+      const regionChanged = submittedRegion !== undefined && submittedRegion !== region
+      const targetRegion = submittedRegion ?? region
+      const shouldRequest = !regionChanged || submittedWeek !== currentWeek
+      if (regionChanged && shouldRequest) {
+        regionFetchSkipRef.current = submittedRegion
+      }
+      if (shouldRequest) {
+        void requestRecommendations(submittedWeek, { regionOverride: targetRegion })
+      }
     },
-    [queryWeek, region, requestRecommendations, setRegion],
+    [currentWeek, queryWeek, region, requestRecommendations, setRegion],
   )
 
   const displayWeek = useMemo(() => formatWeekLabel(activeWeek), [activeWeek])
