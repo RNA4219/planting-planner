@@ -67,6 +67,106 @@ const useCropIndex = (): Map<string, number> => {
   }, [crops])
 }
 
+export interface UseRecommendationLoaderResult {
+  queryWeek: string
+  setQueryWeek: (week: string) => void
+  activeWeek: string
+  items: RecommendationItem[]
+  currentWeek: string
+  requestRecommendations: (
+    inputWeek: string,
+    options?: { preferLegacy?: boolean; regionOverride?: Region },
+  ) => Promise<void>
+}
+
+export const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
+  const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
+  const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
+  const [items, setItems] = useState<RecommendationItem[]>([])
+  const currentWeekRef = useRef<string>(DEFAULT_WEEK)
+  const initialFetchRef = useRef(false)
+  const requestTrackerRef = useRef<{ id: number; region: Region; week: string }>({
+    id: 0,
+    region,
+    week: currentWeekRef.current,
+  })
+  const fetchRecommendationsWithFallback = useRecommendationFetcher()
+
+  const normalizeWeek = useCallback(
+    (value: string) => {
+      const trimmed = value.trim()
+      if (trimmed) {
+        const digits = trimmed.replace(/[^0-9]/g, '')
+        if (digits.length === 6) {
+          const year = digits.slice(0, 4)
+          const weekPart = digits.slice(4).padStart(2, '0')
+          return `${year}-W${weekPart}`
+        }
+      }
+      return normalizeIsoWeek(value, activeWeek)
+    },
+    [activeWeek],
+  )
+
+  const requestRecommendations = useCallback(
+    async (
+      inputWeek: string,
+      options?: { preferLegacy?: boolean; regionOverride?: Region },
+    ) => {
+      const targetRegion = options?.regionOverride ?? region
+      const normalizedWeek = normalizeWeek(inputWeek)
+      setQueryWeek(normalizedWeek)
+      currentWeekRef.current = normalizedWeek
+      const requestId = requestTrackerRef.current.id + 1
+      const requestMeta = { id: requestId, region: targetRegion, week: normalizedWeek }
+      requestTrackerRef.current = requestMeta
+      try {
+        const result = await fetchRecommendationsWithFallback({
+          region: targetRegion,
+          week: normalizedWeek,
+          preferLegacy: options?.preferLegacy,
+        })
+        const latest = requestTrackerRef.current
+        if (latest.id !== requestMeta.id || latest.region !== requestMeta.region || latest.week !== requestMeta.week) {
+          return
+        }
+        if (!result) {
+          setItems([])
+          return
+        }
+        const resolvedWeek = normalizeWeek(result.week)
+        setItems(result.items)
+        setActiveWeek(resolvedWeek)
+        currentWeekRef.current = resolvedWeek
+      } catch {
+        const latest = requestTrackerRef.current
+        if (latest.id !== requestMeta.id || latest.region !== requestMeta.region || latest.week !== requestMeta.week) {
+          return
+        }
+        setItems([])
+      }
+    },
+    [fetchRecommendationsWithFallback, normalizeWeek, region],
+  )
+
+  useEffect(() => {
+    if (initialFetchRef.current) {
+      return
+    }
+    initialFetchRef.current = true
+    void requestRecommendations(currentWeekRef.current)
+  }, [requestRecommendations])
+
+  return {
+    queryWeek,
+    setQueryWeek,
+    activeWeek,
+    items,
+    currentWeek: currentWeekRef.current,
+    requestRecommendations,
+  }
+}
+
 export const useRecommendations = ({ favorites, initialRegion }: UseRecommendationsOptions): UseRecommendationsResult => {
   const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
   const [region, setRegion] = useState<Region>(initialRegionRef.current)
