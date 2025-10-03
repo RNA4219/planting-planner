@@ -125,7 +125,10 @@ export interface UseRecommendationLoaderResult {
   activeWeek: string
   items: RecommendationItem[]
   currentWeek: string
-  requestRecommendations: (inputWeek: string, options?: { preferLegacy?: boolean }) => Promise<void>
+  requestRecommendations: (
+    inputWeek: string,
+    options?: { preferLegacy?: boolean; regionOverride?: Region },
+  ) => Promise<void>
 }
 
 export const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
@@ -134,23 +137,33 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
   const [items, setItems] = useState<RecommendationItem[]>([])
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
-  const regionRef = useRef(region)
   const fetchRecommendationsWithFallback = useRecommendationFetcher()
 
-  useEffect(() => {
-    regionRef.current = region
-  }, [region])
-
   const normalizeWeek = useCallback(
-    (value: string) => normalizeIsoWeek(value, activeWeek),
+    (value: string) => {
+      const trimmed = value.trim()
+      if (trimmed) {
+        const digits = trimmed.replace(/[^0-9]/g, '')
+        if (digits.length === 6) {
+          const year = digits.slice(0, 4)
+          const weekPart = digits.slice(4).padStart(2, '0')
+          return `${year}-W${weekPart}`
+        }
+      }
+      return normalizeIsoWeek(value, activeWeek)
+    },
     [activeWeek],
   )
 
   const requestRecommendations = useCallback(
-    async (inputWeek: string, options?: { preferLegacy?: boolean }) => {
-      const targetRegion = regionRef.current
+    async (
+      inputWeek: string,
+      options?: { preferLegacy?: boolean; regionOverride?: Region },
+    ) => {
+      const targetRegion = options?.regionOverride ?? region
       const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
+      currentWeekRef.current = normalizedWeek
       try {
         const result = await fetchRecommendationsWithFallback({
           region: targetRegion,
@@ -161,13 +174,15 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
           setItems([])
           return
         }
+        const resolvedWeek = normalizeWeek(result.week)
         setItems(result.items)
-        setActiveWeek(result.week)
+        setActiveWeek(resolvedWeek)
+        currentWeekRef.current = resolvedWeek
       } catch {
         setItems([])
       }
     },
-    [fetchRecommendationsWithFallback, normalizeWeek],
+    [fetchRecommendationsWithFallback, normalizeWeek, region],
   )
 
   useEffect(() => {
@@ -197,9 +212,9 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
 
   const setQueryWeek = useCallback(
     (nextWeek: string) => {
-      setRawQueryWeek(normalizeIsoWeek(nextWeek, currentWeek))
+      setRawQueryWeek(nextWeek)
     },
-    [currentWeek, setRawQueryWeek],
+    [setRawQueryWeek],
   )
 
   useEffect(() => {
@@ -216,9 +231,17 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
-      void requestRecommendations(queryWeek)
+      const form = event.currentTarget
+      const weekField = form.elements.namedItem('week') as HTMLInputElement | null
+      const regionField = form.elements.namedItem('region') as HTMLSelectElement | null
+      const submittedWeek = weekField?.value ?? queryWeek
+      const submittedRegion = (regionField?.value as Region | undefined) ?? region
+      if (submittedRegion && submittedRegion !== region) {
+        setRegion(submittedRegion)
+      }
+      void requestRecommendations(submittedWeek, { regionOverride: submittedRegion ?? region })
     },
-    [queryWeek, requestRecommendations],
+    [queryWeek, region, requestRecommendations, setRegion],
   )
 
   const displayWeek = useMemo(() => formatWeekLabel(activeWeek), [activeWeek])

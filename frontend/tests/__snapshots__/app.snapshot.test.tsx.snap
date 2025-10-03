@@ -15,6 +15,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
       </h1>
       <form
         class="app__controls"
+        novalidate=""
       >
         <label
           class="region-select"
@@ -27,6 +28,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
           <select
             aria-label="地域"
             class="region-select__select"
+            name="region"
           >
             <option
               value="cold"
