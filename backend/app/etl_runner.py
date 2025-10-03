@@ -81,7 +81,9 @@ def _coerce_state(value: Any) -> schemas.RefreshState:
 def _resolve_conn_factory(
     conn_factory: Callable[[], sqlite3.Connection] | None,
 ) -> Callable[[], sqlite3.Connection]:
-    return conn_factory if conn_factory is not None else db.get_conn
+    if conn_factory is not None:
+        return conn_factory
+    return lambda: db.get_conn()
 
 
 def _open_connection(factory: Callable[[], sqlite3.Connection]) -> sqlite3.Connection:
