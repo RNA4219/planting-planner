@@ -24,7 +24,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
   const [isLoading, setIsLoading] = React.useState(false)
-  const [loadedCropId, setLoadedCropId] = React.useState<number | null>(null)
 
   React.useEffect(() => {
     if (!cropId) {
@@ -32,13 +31,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
       setValues([])
       setTitle('')
       setIsLoading(false)
-      setLoadedCropId(null)
       return
     }
 
     let active = true
     setIsLoading(true)
-    setLoadedCropId(null)
+    setLabels([])
+    setValues([])
+    setTitle('')
     ;(async () => {
       try {
         const res = await fetchPrice(cropId, range?.from, range?.to)
@@ -50,12 +50,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
         setLoadedCropId(cropId)
         setIsLoading(false)
       } catch {
-        if (!active) return
-        setLabels([])
-        setValues([])
-        setTitle('')
-        setLoadedCropId(cropId)
-        setIsLoading(false)
+        if (active) {
+          setLabels([])
+          setValues([])
+          setTitle('')
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
       }
     })()
 
@@ -68,7 +71,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
     return <p>作物を選択すると価格推移が表示されます。</p>
   }
 
-  if (isLoading || loadedCropId !== cropId) {
+  if (isLoading) {
     return <p>価格データを読み込み中です…</p>
   }
 

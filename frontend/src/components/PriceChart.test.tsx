@@ -1,19 +1,33 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import '@testing-library/jest-dom/vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PriceChart } from './PriceChart'
-import { fetchPrice } from '../lib/api'
+
+type FetchPrice = typeof import('../lib/api')['fetchPrice']
+type FetchPriceMock = ReturnType<typeof vi.fn<FetchPrice>>
+
+const fetchPrice = vi.hoisted(() => vi.fn<FetchPrice>()) as FetchPriceMock
 
 vi.mock('../lib/api', () => ({
-  fetchPrice: vi.fn(),
+  fetchPrice,
 }))
 
 describe('PriceChart', () => {
-  it('選択直後は未取得メッセージを表示しない', () => {
-    vi.mocked(fetchPrice).mockReturnValue(new Promise(() => {}) as never)
+  beforeEach(() => {
+    fetchPrice.mockReset()
+  })
+
+  it('作物選択直後は価格データ未取得メッセージを表示しない', async () => {
+    fetchPrice.mockReturnValue(new Promise(() => {}) as ReturnType<FetchPrice>)
 
     render(<PriceChart cropId={1} />)
 
-    expect(screen.queryByText('価格データがありません。')).toBeNull()
+    await waitFor(() => {
+      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined)
+    })
+
+    expect(screen.queryByText('価格データがありません。')).not.toBeInTheDocument()
+    expect(screen.getByText('価格データを読み込み中です…')).toBeInTheDocument()
   })
 })
