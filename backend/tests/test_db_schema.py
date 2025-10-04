@@ -67,3 +67,46 @@ def test_tables_use_autoincrement(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
             assert "AUTOINCREMENT" in table_sql[table]
     finally:
         conn.close()
+
+
+def test_get_conn_creates_db_with_foreign_keys(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    test_db = tmp_path / "nested" / "schema.db"
+    monkeypatch.setattr(db, "DATABASE_FILE", test_db)
+
+    conn = db.get_conn()
+    try:
+        assert test_db.parent.exists()
+        assert conn.row_factory is sqlite3.Row
+
+        pragma_cursor = conn.execute("PRAGMA foreign_keys")
+        pragma_value = pragma_cursor.fetchone()
+        assert pragma_value is not None
+        assert pragma_value[0] == 1
+
+        conn.execute("CREATE TABLE example(id INTEGER PRIMARY KEY AUTOINCREMENT)")
+    finally:
+        conn.close()
+
+
+def test_get_conn_readonly_rejects_writes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    test_db = tmp_path / "schema.db"
+    monkeypatch.setattr(db, "DATABASE_FILE", test_db)
+
+    writer = db.get_conn()
+    try:
+        writer.execute("CREATE TABLE example(id INTEGER PRIMARY KEY AUTOINCREMENT)")
+        writer.execute("INSERT INTO example DEFAULT VALUES")
+        writer.commit()
+    finally:
+        writer.close()
+
+    reader = db.get_conn(readonly=True)
+    try:
+        assert reader.row_factory is sqlite3.Row
+        rows = reader.execute("SELECT id FROM example").fetchall()
+        assert [row["id"] for row in rows] == [1]
+
+        with pytest.raises(sqlite3.OperationalError):
+            reader.execute("INSERT INTO example DEFAULT VALUES")
+    finally:
+        reader.close()
