@@ -87,7 +87,9 @@ export const resetAppSpies = () => {
 
 export const renderApp = async () => {
   const App = (await import('../../src/App')).default
-  const user = userEvent.setup()
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTime,
+  })
   render(<App />)
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {

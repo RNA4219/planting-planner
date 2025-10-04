@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, type MockInstance } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 
 import {
   fetchCrops,
@@ -22,10 +22,12 @@ describe('App recommendations / お気に入り並び替え', () => {
   let useRecommendationsSpy: MockInstance
 
   beforeEach(async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
     ;({ useRecommendationsSpy } = await setupRecommendationsTest())
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     useRecommendationsSpy.mockRestore()
     cleanup()
   })
@@ -57,6 +59,13 @@ describe('App recommendations / お気に入り並び替え', () => {
         ],
       }),
     )
+    fetchRefreshStatus.mockResolvedValue({
+      state: 'running',
+      started_at: '2024-07-01T00:00:00Z',
+      finished_at: null,
+      updated_records: 0,
+      last_error: null,
+    })
 
     const { user } = await renderApp()
 
@@ -88,11 +97,30 @@ describe('App recommendations / お気に入り並び替え', () => {
       expect(thirdRow).toHaveTextContent('キャベツ')
     })
 
+    const pollingTimer = setInterval(() => {
+      void fetchRefreshStatus()
+    }, 15_000)
+
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(fetchRefreshStatus.mock.calls.length).toBeGreaterThanOrEqual(1)
+
+    const rowsAfterPolling = within(table).getAllByRole('row').slice(1)
+    const [firstRowAfterPolling, secondRowAfterPolling, thirdRowAfterPolling] = rowsAfterPolling
+    if (!firstRowAfterPolling || !secondRowAfterPolling || !thirdRowAfterPolling) {
+      throw new Error('ポーリング後の推奨テーブルの行が不足しています')
+    }
+    expect(firstRowAfterPolling).toHaveTextContent('にんじん')
+    expect(secondRowAfterPolling).toHaveTextContent('春菊')
+    expect(thirdRowAfterPolling).toHaveTextContent('キャベツ')
+
     const rows = within(table).getAllByRole('row').slice(1)
     const favToggle = within(rows[1]!).getByRole('button', { name: '春菊をお気に入りに追加' })
     await user.click(favToggle)
 
     expect(saveFavorites).toHaveBeenLastCalledWith([2, 1])
     expect(useRecommendationsSpy).toHaveBeenCalled()
+
+    clearInterval(pollingTimer)
   })
 })
