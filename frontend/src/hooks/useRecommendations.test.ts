@@ -59,6 +59,38 @@ describe('useRecommendationLoader', () => {
     expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W06')
   })
 
+  it('requestRecommendations は日付形式 (YYYY-MM-DD) を ISO 週へ変換して API へ渡す', async () => {
+    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    fetchRecommendationsMock.mockClear()
+
+    await act(async () => {
+      await result.current.requestRecommendations('2024-07-01')
+    })
+
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+  })
+
+  it('requestRecommendations は日付形式 (YYYY/MM/DD) を ISO 週へ変換して API へ渡す', async () => {
+    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    fetchRecommendationsMock.mockClear()
+
+    await act(async () => {
+      await result.current.requestRecommendations('2024/07/01')
+    })
+
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+  })
+
   it('requestRecommendations は 6 桁の数値入力を最終週へクランプして API へ渡す', async () => {
     const { result } = renderHook(() => useRecommendationLoader('temperate'))
 
