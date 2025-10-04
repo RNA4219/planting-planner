@@ -12,7 +12,7 @@ const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/
 const API_ENDPOINT_URL = (() => {
   try {
     return new URL(API_ENDPOINT)
-  } catch (error) {
+  } catch {
     return undefined
   }
 })()
