@@ -9,6 +9,19 @@ import type {
 
 const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
+const API_ENDPOINT_URL = (() => {
+  try {
+    return new URL(API_ENDPOINT)
+  } catch {
+    return undefined
+  }
+})()
+
+const API_ENDPOINT_ORIGIN = API_ENDPOINT_URL?.origin ?? ''
+const API_ENDPOINT_PREFIX = API_ENDPOINT_URL
+  ? `${API_ENDPOINT_ORIGIN}${API_ENDPOINT_URL.pathname.replace(/\/$/, '')}`
+  : API_ENDPOINT
+
 type BuildUrlOptions = {
   readonly includePrefix?: boolean
 }
@@ -20,7 +33,7 @@ const buildUrl = (
 ): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const search = searchParams?.toString()
-  const prefix = options?.includePrefix === false ? '' : API_ENDPOINT
+  const prefix = options?.includePrefix === false ? API_ENDPOINT_ORIGIN : API_ENDPOINT_PREFIX
   return `${prefix}${normalizedPath}${search ? `?${search}` : ''}`
 }
 

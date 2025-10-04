@@ -2,13 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RecommendResponse } from '../types'
 
-import { fetchRecommend } from './api'
+type FetchRecommend = typeof import('./api')['fetchRecommend']
+
+let fetchRecommend: FetchRecommend
+let apiEndpoint: string
 
 describe('fetchRecommend', () => {
   let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
 
   beforeEach(() => {
-    vi.stubEnv('VITE_API_ENDPOINT', '/api')
+    vi.resetModules()
+    apiEndpoint = '/api'
     fetchMock = vi.fn<typeof fetch>()
     vi.stubGlobal('fetch', fetchMock)
   })
@@ -17,6 +21,11 @@ describe('fetchRecommend', () => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
   })
+
+  const loadFetchRecommend = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchRecommend } = await import('./api'))
+  }
 
   it('request を通じて /recommend エンドポイントへ GET する', async () => {
     const payload: RecommendResponse = {
@@ -31,10 +40,37 @@ describe('fetchRecommend', () => {
       }),
     )
 
+    await loadFetchRecommend()
     const result = await fetchRecommend({ region: 'temperate', week: '2024-W30' })
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/recommend?region=temperate&week=2024-W30',
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
+    expect(result).toEqual(payload)
+  })
+
+  it('絶対 URL のエンドポイントでも同一ホストの /recommend へフォールバックする', async () => {
+    apiEndpoint = 'https://api.example.com/v1'
+    const payload: RecommendResponse = {
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchRecommend()
+    const result = await fetchRecommend({ region: 'temperate', week: '2024-W30' })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/recommend?region=temperate&week=2024-W30',
       {
         headers: { 'Content-Type': 'application/json' },
       },
@@ -50,6 +86,7 @@ describe('fetchRecommend', () => {
       }),
     )
 
+    await loadFetchRecommend()
     await expect(fetchRecommend({ region: 'temperate' })).rejects.toThrow(
       'internal error',
     )
