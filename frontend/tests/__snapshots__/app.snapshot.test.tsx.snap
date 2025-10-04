@@ -50,6 +50,14 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         <div
           class="app__controls-group"
         >
+          <input
+            aria-label="作物検索"
+            id="search-input"
+            name="search"
+            placeholder="作物名・カテゴリで検索"
+            type="search"
+            value=""
+          />
           <label
             class="app__week"
             for="week-input"

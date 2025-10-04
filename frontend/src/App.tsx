@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useCallback, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useMemo, useRef, useState } from 'react'
 
 import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
@@ -18,6 +18,7 @@ export const App = () => {
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   const initialRegionRef = useRef<Region>(loadRegion())
 
@@ -29,6 +30,13 @@ export const App = () => {
       setQueryWeek(event.target.value)
     },
     [setQueryWeek],
+  )
+
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setSearchKeyword(event.target.value)
+    },
+    [],
   )
 
   const handleRegionChange = useCallback(
@@ -53,6 +61,25 @@ export const App = () => {
     }
   }, [])
 
+  const normalizedSearchKeyword = useMemo(
+    () => searchKeyword.normalize('NFKC').trim().toLowerCase(),
+    [searchKeyword],
+  )
+
+  const filteredRows = useMemo(() => {
+    if (!normalizedSearchKeyword) {
+      return sortedRows
+    }
+    return sortedRows.filter((row) => {
+      const cropName = row.crop.normalize('NFKC').toLowerCase()
+      const category = row.category?.normalize('NFKC').toLowerCase() ?? ''
+      return (
+        cropName.includes(normalizedSearchKeyword) ||
+        category.includes(normalizedSearchKeyword)
+      )
+    })
+  }, [normalizedSearchKeyword, sortedRows])
+
   return (
     <div className="app">
       <header className="app__header">
@@ -62,6 +89,8 @@ export const App = () => {
           currentWeek={currentWeek}
           onWeekChange={handleWeekChange}
           onRegionChange={handleRegionChange}
+          searchKeyword={searchKeyword}
+          onSearchChange={handleSearchChange}
           onSubmit={handleSubmit}
           onRefresh={handleRefresh}
           refreshing={refreshing}
@@ -79,7 +108,7 @@ export const App = () => {
         <RecommendationsTable
           region={region}
           displayWeek={displayWeek}
-          rows={sortedRows}
+          rows={filteredRows}
           selectedCropId={selectedCropId}
           onSelect={setSelectedCropId}
           onToggleFavorite={toggleFavorite}

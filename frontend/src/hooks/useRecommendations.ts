@@ -187,9 +187,9 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   const regionFetchSkipRef = useRef<Region | null>(null)
   const { catalog: cropCatalog } = useCropCatalog()
   const cropIndex = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, { id: number; category?: string }>()
     cropCatalog.forEach((entry, cropName) => {
-      map.set(cropName, entry.id)
+      map.set(cropName, { id: entry.id, category: entry.category })
     })
     return map
   }, [cropCatalog])

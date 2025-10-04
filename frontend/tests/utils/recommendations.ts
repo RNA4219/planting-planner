@@ -11,7 +11,11 @@ export const defaultCrops = [
   { id: 1, name: '春菊', category: 'leaf' },
   { id: 2, name: 'にんじん', category: 'root' },
   { id: 3, name: 'キャベツ', category: 'leaf' },
+  { id: 4, name: 'トルコギキョウ', category: 'flower' },
 ] as const
+
+export const toFullWidthAscii = (value: string): string =>
+  value.replace(/[!-~]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0xfee0))
 
 export const createRecommendResponse = (
   overrides: Partial<RecommendResponse> = {},
