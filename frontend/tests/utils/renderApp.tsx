@@ -4,17 +4,16 @@ import { afterEach, beforeEach, vi } from 'vitest'
 
 import type {
   Crop,
+  FavoritesStorage,
   PriceSeries,
   RecommendResponse,
   RefreshResponse,
   RefreshStatusResponse,
   Region,
+  RegionStorage,
 } from '../../src/types'
 
-interface StorageState {
-  region: Region
-  favorites: number[]
-}
+type StorageState = FavoritesStorage & RegionStorage
 
 export const storageState: StorageState = {
   region: 'temperate',

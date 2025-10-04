@@ -51,3 +51,13 @@ export interface PriceSeries {
   source: string
   prices: PricePoint[]
 }
+
+/** 地域設定を保存するストレージ構造 */
+export interface RegionStorage {
+  region: Region
+}
+
+/** お気に入り作物IDを保存するストレージ構造 */
+export interface FavoritesStorage {
+  favorites: number[]
+}
