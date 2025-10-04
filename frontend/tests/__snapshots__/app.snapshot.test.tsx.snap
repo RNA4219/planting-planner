@@ -47,32 +47,40 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </option>
           </select>
         </label>
-        <label
-          class="app__week"
-          for="week-input"
+        <div
+          class="app__controls-group"
         >
-          週
-          <input
-            id="week-input"
-            inputmode="numeric"
-            name="week"
-            pattern="\\d{4}-W\\d{2}"
-            placeholder="2024-W30"
-            type="text"
-            value="2024-W30"
-          />
-        </label>
-        <button
-          type="submit"
-        >
-          この条件で見る
-        </button>
-        <button
-          class="app__refresh"
-          type="button"
-        >
-          更新
-        </button>
+          <label
+            class="app__week"
+            for="week-input"
+          >
+            週
+            <input
+              id="week-input"
+              inputmode="numeric"
+              name="week"
+              pattern="\\d{4}-W\\d{2}"
+              placeholder="2024-W30"
+              type="text"
+              value="2024-W30"
+            />
+          </label>
+          <div
+            class="app__controls-actions"
+          >
+            <button
+              type="submit"
+            >
+              この条件で見る
+            </button>
+            <button
+              class="app__refresh"
+              type="button"
+            >
+              更新
+            </button>
+          </div>
+        </div>
       </form>
     </header>
     <main
