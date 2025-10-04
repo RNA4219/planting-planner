@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { FormEvent } from 'react'
 
 import type { RecommendResponse, Region } from '../types'
 
@@ -233,6 +234,11 @@ describe('useRecommendations', () => {
     expect(result.current.region).toBe('temperate')
     expect(result.current.currentWeek).toBe('2024-W05')
     expect(result.current.sortedRows.map((row) => row.cropId)).toEqual([1, 2])
+    expect(result.current.sortedRows[0]).toMatchObject({
+      rowKey: 'Carrot-2024-W04-2024-W14',
+      sowingWeekLabel: '2024-W04',
+      harvestWeekLabel: '2024-W14',
+    })
 
     await act(async () => {
       result.current.setQueryWeek('2024-W06')
@@ -240,5 +246,93 @@ describe('useRecommendations', () => {
 
     expect(result.current.queryWeek).toBe('2024-W06')
     expect(typeof result.current.handleSubmit).toBe('function')
+  })
+
+  it('setRegion で地域を更新すると現在週のまま再フェッチされる', async () => {
+    fetchRecommendationsMock.mockReset()
+    fetchCropsMock.mockReset()
+    fetchCropsMock.mockResolvedValueOnce([])
+    fetchRecommendationsMock
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'temperate',
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'cold',
+        items: [],
+      })
+
+    const { result } = renderHook(() =>
+      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const initialCall = fetchRecommendationsMock.mock.calls.at(-1)
+    expect(initialCall?.[0]).toBe('temperate')
+    const baselineWeek = result.current.currentWeek
+
+    await act(async () => {
+      result.current.setRegion('cold')
+      await Promise.resolve()
+    })
+
+    expect(result.current.region).toBe('cold')
+    expect(result.current.currentWeek).toBe('2024-W05')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', baselineWeek)
+  })
+
+  it('handleSubmit で週を変更すると正規化済みの週で再検索される', async () => {
+    fetchRecommendationsMock.mockReset()
+    fetchCropsMock.mockReset()
+    fetchCropsMock.mockResolvedValueOnce([])
+    fetchRecommendationsMock
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'temperate',
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        week: '2024-W07',
+        region: 'temperate',
+        items: [],
+      })
+
+    const { result } = renderHook(() =>
+      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const event = {
+      preventDefault: () => {},
+      currentTarget: {
+        elements: {
+          namedItem: (name: string) => {
+            if (name === 'week') {
+              return { value: '2024-w7' }
+            }
+            if (name === 'region') {
+              return { value: 'temperate' }
+            }
+            return null
+          },
+        },
+      },
+    } as unknown as FormEvent<HTMLFormElement>
+
+    await act(async () => {
+      await result.current.handleSubmit(event)
+    })
+
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('temperate', '2024-W07')
+    expect(result.current.currentWeek).toBe('2024-W07')
+    expect(result.current.displayWeek).toBe('2024-W07')
   })
 })
