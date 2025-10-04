@@ -126,14 +126,21 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       const requestId = requestTrackerRef.current.id + 1
       const requestMeta = { id: requestId, region: targetRegion, week: normalizedWeek }
       requestTrackerRef.current = requestMeta
+      const isLatestRequest = (): boolean => {
+        const latest = requestTrackerRef.current
+        return (
+          latest.id === requestMeta.id &&
+          latest.region === requestMeta.region &&
+          latest.week === requestMeta.week
+        )
+      }
       try {
         const result = await fetchRecommendationsWithFallback({
           region: targetRegion,
           week: normalizedWeek,
           preferLegacy: options?.preferLegacy,
         })
-        const latest = requestTrackerRef.current
-        if (latest.id !== requestMeta.id || latest.region !== requestMeta.region || latest.week !== requestMeta.week) {
+        if (!isLatestRequest()) {
           return
         }
         if (!result) {
@@ -147,8 +154,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
         setActiveWeek(resolvedWeek)
         currentWeekRef.current = resolvedWeek
       } catch {
-        const latest = requestTrackerRef.current
-        if (latest.id !== requestMeta.id || latest.region !== requestMeta.region || latest.week !== requestMeta.week) {
+        if (!isLatestRequest()) {
           return
         }
         setItems([])
