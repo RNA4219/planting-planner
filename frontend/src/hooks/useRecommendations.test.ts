@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RecommendResponse, Region } from '../types'
 
-import { useRecommendationLoader } from './useRecommendations'
+import { useRecommendationLoader } from './useRecommendationLoader'
+import { useRecommendations } from './useRecommendations'
 
 type FetchRecommendationsMock = (region: Region, week: string) => Promise<RecommendResponse>
 
@@ -189,5 +190,55 @@ describe('useRecommendationLoader', () => {
 
     expect(result.current.activeWeek).toBe('2024-W02')
     expect(result.current.items).toEqual(latestItems)
+  })
+})
+
+describe('useRecommendations', () => {
+  it('favorites を優先した並びと既存 API を維持する', async () => {
+    fetchRecommendationsMock.mockReset()
+    fetchCropsMock.mockReset()
+    fetchCropsMock.mockResolvedValueOnce([
+      { id: 1, name: 'Carrot', category: 'root' },
+      { id: 2, name: 'Tomato', category: 'fruit' },
+    ])
+    fetchRecommendationsMock.mockResolvedValueOnce({
+      week: '2024-W05',
+      region: 'temperate',
+      items: [
+        {
+          crop: 'Tomato',
+          sowing_week: '2024-W06',
+          harvest_week: '2024-W16',
+          source: 'test',
+          growth_days: 70,
+        },
+        {
+          crop: 'Carrot',
+          sowing_week: '2024-W04',
+          harvest_week: '2024-W14',
+          source: 'test',
+          growth_days: 60,
+        },
+      ],
+    })
+
+    const { result } = renderHook(() =>
+      useRecommendations({ favorites: [1], initialRegion: 'temperate' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(result.current.region).toBe('temperate')
+    expect(result.current.currentWeek).toBe('2024-W05')
+    expect(result.current.sortedRows.map((row) => row.cropId)).toEqual([1, 2])
+
+    await act(async () => {
+      result.current.setQueryWeek('2024-W06')
+    })
+
+    expect(result.current.queryWeek).toBe('2024-W06')
+    expect(typeof result.current.handleSubmit).toBe('function')
   })
 })
