@@ -40,6 +40,13 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       if (weekPart && yearPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
     }
 
+    const englishLeadingMatch = upper.match(/^W(?:EEK|KS?)?\D*(\d{1,2})\D+(\d{4})$/)
+    if (englishLeadingMatch) {
+      const weekPart = englishLeadingMatch[1]
+      const yearPart = englishLeadingMatch[2]
+      if (weekPart && yearPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
+    }
+
     const digits = upper.replace(/[^0-9]/g, '')
     if (digits.length >= 5 && digits.length <= 6) {
       const yearPart = digits.slice(0, 4)
