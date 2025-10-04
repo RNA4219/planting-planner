@@ -6,20 +6,22 @@ from typing import Annotated
 
 from fastapi import Depends, Query
 
-from . import db, schemas, seed
+from . import schemas, seed
+from .db.connection import get_conn as get_db_conn
+from .db.migrations import init_db
 
 
 def prepare_database() -> None:
-    conn = db.get_conn()
+    conn = get_db_conn()
     try:
-        db.init_db(conn)
+        init_db(conn)
         seed.seed(conn)
     finally:
         conn.close()
 
 
 def get_conn() -> Generator[sqlite3.Connection, None, None]:
-    conn = db.get_conn()
+    conn = get_db_conn()
     _ensure_seeded(conn)
     try:
         yield conn
@@ -32,7 +34,7 @@ def _ensure_seeded(conn: sqlite3.Connection) -> None:
         "SELECT name FROM sqlite_master WHERE type='table' AND name='crops'"
     ).fetchone()
     if exists is None:
-        db.init_db(conn)
+        init_db(conn)
         seed.seed(conn)
 
 

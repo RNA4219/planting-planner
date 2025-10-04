@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from .. import db
+from .. import db as db_legacy
 from .data_loader import DEFAULT_DATA_DIR, SeedPayload, load_seed_payload
 from .writers import write_crops, write_growth_days, write_price_samples, write_seed_payload
 
@@ -47,3 +47,6 @@ def seed_from_default_db() -> None:
         seed(conn)
     finally:
         conn.close()
+
+
+db = db_legacy
