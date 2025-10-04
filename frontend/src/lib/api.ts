@@ -9,10 +9,19 @@ import type {
 
 const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
-const buildUrl = (path: string, searchParams?: URLSearchParams): string => {
+type BuildUrlOptions = {
+  readonly includePrefix?: boolean
+}
+
+const buildUrl = (
+  path: string,
+  searchParams?: URLSearchParams,
+  options?: BuildUrlOptions,
+): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const search = searchParams?.toString()
-  return `${API_ENDPOINT}${normalizedPath}${search ? `?${search}` : ''}`
+  const prefix = options?.includePrefix === false ? '' : API_ENDPOINT
+  return `${prefix}${normalizedPath}${search ? `?${search}` : ''}`
 }
 
 const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
@@ -63,7 +72,7 @@ export const fetchRecommend = async ({
   if (week) {
     params.set('week', week)
   }
-  const url = buildUrl('/recommend', params)
+  const url = buildUrl('/recommend', params, { includePrefix: false })
   return request<RecommendResponse>(url)
 }
 

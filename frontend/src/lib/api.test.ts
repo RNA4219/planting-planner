@@ -34,7 +34,7 @@ describe('fetchRecommend', () => {
     const result = await fetchRecommend({ region: 'temperate', week: '2024-W30' })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/recommend?region=temperate&week=2024-W30',
+      '/recommend?region=temperate&week=2024-W30',
       {
         headers: { 'Content-Type': 'application/json' },
       },
