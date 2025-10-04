@@ -4,6 +4,7 @@ export interface Crop {
   id: number
   name: string
   category: string
+  variety?: string
 }
 
 /** 作物の生育期間メタデータ */
@@ -36,16 +37,26 @@ export interface RecommendResponse {
   items: RecommendationItem[]
 }
 
+export type RefreshState = 'success' | 'failure' | 'running' | 'stale'
+
 export interface RefreshResponse {
-  state: 'success' | 'failure' | 'running' | 'stale'
+  state: RefreshState
 }
 
 export interface RefreshStatusResponse {
-  state: 'success' | 'failure' | 'running' | 'stale'
+  state: RefreshState
   started_at: string | null
   finished_at: string | null
   updated_records: number
   last_error: string | null
+}
+
+export interface RefreshStatus {
+  state: RefreshState
+  startedAt: string | null
+  finishedAt: string | null
+  updatedRecords: number
+  lastError: string | null
 }
 
 export interface RegionOption {
@@ -75,4 +86,8 @@ export interface RegionStorage {
 /** お気に入り作物IDを保存するストレージ構造 */
 export interface FavoritesStorage {
   favorites: number[]
+}
+
+export interface SearchFilter {
+  keyword: string
 }
