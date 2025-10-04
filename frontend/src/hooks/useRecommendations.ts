@@ -98,15 +98,23 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
     (value: string) => {
       const trimmed = value.trim()
       if (trimmed) {
-        const digits = trimmed.replace(/[^0-9]/g, '')
-        if (digits.length === 5 || digits.length === 6) {
-          const normalizedDigits = normalizeIsoWeek(digits, activeWeek)
-          if (/^\d{4}-W\d{2}$/.test(normalizedDigits)) {
-            return normalizedDigits
+        const upper = trimmed.toUpperCase()
+        const weekFirstMatch = upper.match(/^W?(\d{1,2})\D+(\d{4})$/)
+        if (weekFirstMatch) {
+          const weekPart = weekFirstMatch[1]
+          const yearPart = weekFirstMatch[2]
+          if (weekPart && yearPart) {
+            return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
           }
+        }
+
+        const digits = upper.replace(/[^0-9]/g, '')
+        if (digits.length === 5 || digits.length === 6) {
           const year = digits.slice(0, 4)
           const weekPart = digits.slice(4)
-          return normalizeIsoWeek(`${year}-W${weekPart.padStart(2, '0')}`, activeWeek)
+          if (year && weekPart) {
+            return normalizeIsoWeek(`${year}-W${weekPart.padStart(2, '0')}`, activeWeek)
+          }
         }
       }
       return normalizeIsoWeek(value, activeWeek)
