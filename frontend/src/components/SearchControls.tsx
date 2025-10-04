@@ -8,6 +8,8 @@ interface SearchControlsProps {
   currentWeek: string
   onWeekChange: (event: ChangeEvent<HTMLInputElement>) => void
   onRegionChange: (region: Region) => void
+  searchKeyword: string
+  onSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
@@ -18,6 +20,8 @@ export const SearchControls = ({
   currentWeek,
   onWeekChange,
   onRegionChange,
+  searchKeyword,
+  onSearchChange,
   onSubmit,
   onRefresh,
   refreshing,
@@ -26,6 +30,15 @@ export const SearchControls = ({
     <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
       <div className="app__controls-group">
+        <input
+          id="search-input"
+          name="search"
+          type="search"
+          value={searchKeyword}
+          onChange={onSearchChange}
+          placeholder="作物名・カテゴリで検索"
+          aria-label="作物検索"
+        />
         <label className="app__week" htmlFor="week-input">
           週
           <input

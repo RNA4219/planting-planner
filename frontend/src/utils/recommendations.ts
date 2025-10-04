@@ -9,6 +9,7 @@ const { compareIsoWeek, formatIsoWeek, normalizeIsoWeek } = week
 
 export type RecommendationRow = RecommendationItem & {
   cropId?: number
+  category?: string
   rowKey: string
   sowingWeekLabel: string
   harvestWeekLabel: string
@@ -65,7 +66,7 @@ export const normalizeRecommendationResponse = (
 interface BuildRecommendationRowsArgs {
   items: RecommendationItem[]
   favorites: readonly number[]
-  cropIndex: Map<string, number>
+  cropIndex: Map<string, { id: number; category?: string }>
 }
 
 export const buildRecommendationRows = ({
@@ -75,13 +76,17 @@ export const buildRecommendationRows = ({
 }: BuildRecommendationRowsArgs): RecommendationRow[] => {
   const favoriteSet = new Set(favorites)
   return items
-    .map<RecommendationRow>((item) => ({
-      ...item,
-      cropId: cropIndex.get(item.crop),
-      rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
-      sowingWeekLabel: formatIsoWeek(item.sowing_week),
-      harvestWeekLabel: formatIsoWeek(item.harvest_week),
-    }))
+    .map<RecommendationRow>((item) => {
+      const catalogEntry = cropIndex.get(item.crop)
+      return {
+        ...item,
+        cropId: catalogEntry?.id,
+        category: catalogEntry?.category,
+        rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
+        sowingWeekLabel: formatIsoWeek(item.sowing_week),
+        harvestWeekLabel: formatIsoWeek(item.harvest_week),
+      }
+    })
     .sort((a, b) => {
       const aFav = a.cropId !== undefined && favoriteSet.has(a.cropId) ? 1 : 0
       const bFav = b.cropId !== undefined && favoriteSet.has(b.cropId) ? 1 : 0
