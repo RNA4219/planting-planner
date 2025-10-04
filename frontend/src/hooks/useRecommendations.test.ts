@@ -48,4 +48,20 @@ describe('useRecommendationLoader', () => {
 
     expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W06')
   })
+
+  it('requestRecommendations は 6 桁の数値入力を最終週へクランプして API へ渡す', async () => {
+    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    fetchRecommendationsMock.mockClear()
+
+    await act(async () => {
+      await result.current.requestRecommendations('202460')
+    })
+
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W53')
+  })
 })
