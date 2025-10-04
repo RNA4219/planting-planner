@@ -33,6 +33,14 @@ const buildUrl = (
 ): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const search = searchParams?.toString()
+
+  if (options?.includePrefix === false && API_ENDPOINT_URL) {
+    const url = new URL(API_ENDPOINT_URL.href)
+    url.pathname = normalizedPath
+    url.search = search ?? ''
+    return url.toString()
+  }
+
   const prefix = options?.includePrefix === false ? API_ENDPOINT_ORIGIN : API_ENDPOINT_PREFIX
   return `${prefix}${normalizedPath}${search ? `?${search}` : ''}`
 }

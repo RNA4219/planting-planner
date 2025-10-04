@@ -78,6 +78,42 @@ describe('fetchRecommend', () => {
     expect(result).toEqual(payload)
   })
 
+  it('includePrefix=false でも API エンドポイントのオリジンを維持する', async () => {
+    const payload: RecommendResponse = {
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const originalEndpoint = import.meta.env.VITE_API_ENDPOINT
+    vi.resetModules()
+    ;(import.meta.env as Record<string, string | undefined>).VITE_API_ENDPOINT =
+      'https://api.example.com/v1'
+
+    try {
+      ;({ fetchRecommend } = await import('./api'))
+      const result = await fetchRecommend({ region: 'temperate', week: '2024-W30' })
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.example.com/recommend?region=temperate&week=2024-W30',
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+      expect(result).toEqual(payload)
+    } finally {
+      vi.resetModules()
+      ;(import.meta.env as Record<string, string | undefined>).VITE_API_ENDPOINT =
+        originalEndpoint
+    }
+  })
+
   it('レスポンスが失敗した場合は例外を送出する', async () => {
     fetchMock.mockResolvedValue(
       new Response('internal error', {
