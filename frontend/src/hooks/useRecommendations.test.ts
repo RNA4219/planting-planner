@@ -107,6 +107,27 @@ describe('useRecommendationLoader', () => {
     expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W53')
   })
 
+  it('API が不正な週を返した場合でも activeWeek はリクエスト週を保持する', async () => {
+    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    fetchRecommendationsMock.mockClear()
+    fetchRecommendationsMock.mockImplementationOnce(async () => ({
+      week: 'invalid',
+      region: 'temperate',
+      items: [],
+    }))
+
+    await act(async () => {
+      await result.current.requestRecommendations('2024-W10')
+    })
+
+    expect(result.current.activeWeek).toBe('2024-W10')
+  })
+
   it('並列実行時に古いリクエスト結果を無視する', async () => {
     const initial = createDeferred<RecommendResponse>()
     const first = createDeferred<RecommendResponse>()

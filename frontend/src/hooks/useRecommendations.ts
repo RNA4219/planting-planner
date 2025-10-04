@@ -183,7 +183,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
           currentWeekRef.current = normalizedWeek
           return
         }
-        const resolvedWeek = normalizeWeek(result.week)
+        const resolvedWeek = normalizeIsoWeek(result.week, normalizedWeek)
         setItems(result.items)
         setActiveWeek(resolvedWeek)
         currentWeekRef.current = resolvedWeek
