@@ -50,6 +50,21 @@ export const RecommendationsTable = ({
                 key={item.rowKey}
                 className={`recommend__row${isSelected ? ' recommend__row--selected' : ''}`}
                 onClick={() => onSelect(item.cropId ?? null)}
+                tabIndex={0}
+                role="row"
+                aria-selected={isSelected}
+                onKeyDown={(event) => {
+                  if (event.defaultPrevented) {
+                    return
+                  }
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    onSelect(item.cropId ?? null)
+                  } else if (event.key === ' ') {
+                    event.preventDefault()
+                    onToggleFavorite(item.cropId)
+                  }
+                }}
               >
                 <td>
                   <div className="recommend__crop">

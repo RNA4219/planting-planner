@@ -160,8 +160,19 @@ body {
   background-color: #f1f8e9;
 }
 
+.recommend__row:focus-visible {
+  outline: 3px solid #66bb6a;
+  outline-offset: -3px;
+  background-color: #f1f8e9;
+}
+
 .recommend__row--selected {
   background-color: #e0f2f1;
+}
+
+.recommend__row--selected:focus-visible {
+  background-color: #e0f2f1;
+  outline-color: #26a69a;
 }
 
 .recommend__chart {
