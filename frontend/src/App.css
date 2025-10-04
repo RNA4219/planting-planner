@@ -35,6 +35,21 @@ body {
 .app__controls {
   display: flex;
   gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.app__controls-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex: 1;
+  min-width: 260px;
+}
+
+.app__controls-actions {
+  display: flex;
+  gap: 0.5rem;
   align-items: center;
 }
 
@@ -46,6 +61,11 @@ body {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
 }
 
 .app__refresh:hover {
@@ -55,6 +75,25 @@ body {
 .app__refresh:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.app__refresh--loading::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  animation: app-refresh-spin 0.75s linear infinite;
+}
+
+@keyframes app-refresh-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .region-select {
@@ -73,6 +112,20 @@ body {
   border-radius: 0.5rem;
   border: 1px solid #c5d6c3;
   background-color: #fff;
+}
+
+.app__week {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.app__week input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid #c5d6c3;
 }
 
 .recommend__meta {
@@ -162,4 +215,86 @@ body {
 
 .fav-star:hover {
   color: #fbc02d;
+}
+
+.toast-stack {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 1000;
+}
+
+.toast {
+  min-width: 260px;
+  max-width: 360px;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  background-color: #1f2937;
+  color: #f9fafb;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+.toast--info {
+  background-color: #2563eb;
+}
+
+.toast--success {
+  background-color: #16a34a;
+}
+
+.toast--warning {
+  background-color: #d97706;
+}
+
+.toast--error {
+  background-color: #dc2626;
+}
+
+@media (max-width: 640px) {
+  .app__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  .app__controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app__controls-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .app__controls-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .app__controls-actions button {
+    width: 100%;
+  }
+
+  .toast-stack {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+  }
+
+  .toast {
+    max-width: none;
+    width: 100%;
+  }
 }

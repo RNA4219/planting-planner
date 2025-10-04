@@ -25,30 +25,34 @@ export const SearchControls = ({
   return (
     <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
-      <label className="app__week" htmlFor="week-input">
-        週
-        <input
-          id="week-input"
-          name="week"
-          type="text"
-          value={queryWeek}
-          onChange={onWeekChange}
-          placeholder={currentWeek}
-          pattern="\d{4}-W\d{2}"
-          inputMode="numeric"
-        />
-      </label>
-      <button type="submit">この条件で見る</button>
-      <button
-        className="app__refresh"
-        type="button"
-        onClick={() => {
-          void onRefresh()
-        }}
-        disabled={refreshing}
-      >
-        更新
-      </button>
+      <div className="app__controls-group">
+        <label className="app__week" htmlFor="week-input">
+          週
+          <input
+            id="week-input"
+            name="week"
+            type="text"
+            value={queryWeek}
+            onChange={onWeekChange}
+            placeholder={currentWeek}
+            pattern="\d{4}-W\d{2}"
+            inputMode="numeric"
+          />
+        </label>
+        <div className="app__controls-actions">
+          <button type="submit">この条件で見る</button>
+          <button
+            className={`app__refresh${refreshing ? ' app__refresh--loading' : ''}`}
+            type="button"
+            onClick={() => {
+              void onRefresh()
+            }}
+            disabled={refreshing}
+          >
+            {refreshing ? '更新中...' : '更新'}
+          </button>
+        </div>
+      </div>
     </form>
   )
 }
