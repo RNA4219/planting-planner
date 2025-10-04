@@ -37,3 +37,17 @@ export interface RegionOption {
   label: string
   value: Region
 }
+
+export interface PricePoint {
+  week: string
+  avg_price: number | null
+  stddev: number | null
+}
+
+export interface PriceSeries {
+  crop_id: number
+  crop: string
+  unit: string
+  source: string
+  prices: PricePoint[]
+}

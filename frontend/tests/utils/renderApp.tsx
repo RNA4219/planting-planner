@@ -4,6 +4,7 @@ import { vi } from 'vitest'
 
 import type {
   Crop,
+  PriceSeries,
   RecommendResponse,
   RefreshResponse,
   RefreshStatusResponse,
@@ -58,13 +59,7 @@ export const fetchPrice = vi.fn<
     cropId: number,
     frm?: string,
     to?: string,
-  ) => Promise<{
-    crop_id: number
-    crop: string
-    unit: string
-    source: string
-    prices: { week: string; avg_price: number | null; stddev?: number | null }[]
-  }>
+  ) => Promise<PriceSeries>
 >()
 
 vi.mock('../../src/lib/api', () => ({
