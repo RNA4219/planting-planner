@@ -1,41 +1,32 @@
-import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
-import {
-  fetchCrops,
-  fetchPrice,
-  fetchRecommend,
-  fetchRecommendations,
-  renderApp as baseRenderApp,
-  resetAppSpies,
-} from './renderApp'
+import { createAppTestHarness } from './renderApp'
 
 type UseRecommendationsModule = typeof import('../../src/hooks/useRecommendations')
+type AppHarness = ReturnType<typeof createAppTestHarness>
 
 interface InteractionsHarness {
-  readonly renderApp: typeof baseRenderApp
-  readonly fetchRecommendations: typeof fetchRecommendations
-  readonly fetchRecommend: typeof fetchRecommend
-  readonly fetchCrops: typeof fetchCrops
-  readonly fetchPrice: typeof fetchPrice
+  readonly renderApp: AppHarness['setup']
+  readonly fetchRecommendations: AppHarness['fetchRecommendations']
+  readonly fetchRecommend: AppHarness['fetchRecommend']
+  readonly fetchCrops: AppHarness['fetchCrops']
+  readonly fetchPrice: AppHarness['fetchPrice']
   readonly useRecommendationsSpy: MockInstance
 }
 
 export const createInteractionsHarness = (): InteractionsHarness => {
+  const appHarness = createAppTestHarness()
   let module: UseRecommendationsModule | undefined
   let spy: MockInstance | undefined
 
   beforeEach(async () => {
-    resetAppSpies()
     module = await import('../../src/hooks/useRecommendations')
     spy = vi.spyOn(module, 'useRecommendations')
   })
 
   afterEach(() => {
     spy?.mockRestore()
-    cleanup()
-    resetAppSpies()
   })
 
   const ensureSpy = () => {
@@ -46,11 +37,11 @@ export const createInteractionsHarness = (): InteractionsHarness => {
   }
 
   return {
-    renderApp: baseRenderApp,
-    fetchRecommendations,
-    fetchRecommend,
-    fetchCrops,
-    fetchPrice,
+    renderApp: appHarness.setup,
+    fetchRecommendations: appHarness.fetchRecommendations,
+    fetchRecommend: appHarness.fetchRecommend,
+    fetchCrops: appHarness.fetchCrops,
+    fetchPrice: appHarness.fetchPrice,
     get useRecommendationsSpy() {
       return ensureSpy()
     },

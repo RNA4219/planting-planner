@@ -1,6 +1,6 @@
-import { render, waitFor } from '@testing-library/react'
+import { cleanup, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 
 import type {
   Crop,
@@ -96,4 +96,41 @@ export const renderApp = async () => {
     }
   })
   return { user }
+}
+
+interface AppTestHarness {
+  readonly setup: typeof renderApp
+  readonly reset: () => void
+  readonly fetchRecommendations: typeof fetchRecommendations
+  readonly fetchRecommend: typeof fetchRecommend
+  readonly fetchCrops: typeof fetchCrops
+  readonly postRefresh: typeof postRefresh
+  readonly fetchRefreshStatus: typeof fetchRefreshStatus
+  readonly fetchPrice: typeof fetchPrice
+  readonly storage: StorageState
+}
+
+export const createAppTestHarness = (): AppTestHarness => {
+  beforeEach(() => {
+    resetAppSpies()
+  })
+
+  afterEach(() => {
+    cleanup()
+    resetAppSpies()
+  })
+
+  return {
+    setup: renderApp,
+    reset: resetAppSpies,
+    fetchRecommendations,
+    fetchRecommend,
+    fetchCrops,
+    postRefresh,
+    fetchRefreshStatus,
+    fetchPrice,
+    get storage() {
+      return storageState
+    },
+  }
 }
