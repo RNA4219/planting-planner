@@ -1,22 +1,145 @@
 
-import { ChangeEvent, useCallback, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
-import { postRefresh } from './lib/api'
+import { fetchRefreshStatus, postRefresh } from './lib/api'
 import { loadRegion } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import type { Region } from './types'
 
 import './App.css'
 
+type ToastTone = 'info' | 'success' | 'error'
+
+interface RefreshToast {
+  id: number
+  message: string
+  tone: ToastTone
+}
+
+const POLL_INTERVAL_MS = 1000
+const TOAST_DURATION_MS = 5000
+
+const useRefreshStatus = () => {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [toasts, setToasts] = useState<RefreshToast[]>([])
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const toastTimersRef = useRef(new Map<number, ReturnType<typeof setTimeout>>())
+  const nextToastIdRef = useRef(0)
+
+  const clearPollTimer = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
+  }, [])
+
+  const removeToast = useCallback((id: number) => {
+    const timer = toastTimersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      toastTimersRef.current.delete(id)
+    }
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [])
+
+  const pushToast = useCallback(
+    (toast: Omit<RefreshToast, 'id'>) => {
+      const id = nextToastIdRef.current++
+      setToasts((prev) => [...prev, { ...toast, id }])
+      const timer = setTimeout(() => {
+        removeToast(id)
+      }, TOAST_DURATION_MS)
+      toastTimersRef.current.set(id, timer)
+    },
+    [removeToast],
+  )
+
+  const pollStatus = useCallback(async () => {
+    let shouldContinue = false
+    try {
+      const status = await fetchRefreshStatus()
+      if (status.state === 'running' || status.state === 'stale') {
+        shouldContinue = true
+        return
+      }
+      if (status.state === 'success') {
+        pushToast({
+          tone: 'success',
+          message: `更新が完了しました。${status.updated_records}件のデータを更新しました。`,
+        })
+      } else if (status.state === 'failure') {
+        const detail = status.last_error ?? '詳細不明のエラー'
+        pushToast({
+          tone: 'error',
+          message: `更新が失敗しました: ${detail}`,
+        })
+      } else {
+        pushToast({
+          tone: 'info',
+          message: '更新ステータスが不明です。',
+        })
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      pushToast({
+        tone: 'error',
+        message: `更新ステータスの取得に失敗しました: ${detail}`,
+      })
+    } finally {
+      if (shouldContinue) {
+        clearPollTimer()
+        pollTimerRef.current = setTimeout(() => {
+          void pollStatus()
+        }, POLL_INTERVAL_MS)
+      } else {
+        clearPollTimer()
+        setIsRefreshing(false)
+      }
+    }
+  }, [clearPollTimer, pushToast])
+
+  const startRefresh = useCallback(async () => {
+    if (isRefreshing) {
+      return
+    }
+    setIsRefreshing(true)
+    try {
+      const response = await postRefresh()
+      if (response.state === 'failure') {
+        pushToast({ tone: 'error', message: '更新リクエストに失敗しました。' })
+        setIsRefreshing(false)
+        return
+      }
+      pushToast({ tone: 'info', message: '更新を開始しました。進行状況を確認しています…' })
+      clearPollTimer()
+      void pollStatus()
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      pushToast({ tone: 'error', message: `更新リクエストに失敗しました: ${detail}` })
+      setIsRefreshing(false)
+    }
+  }, [clearPollTimer, isRefreshing, pollStatus, pushToast])
+
+  useEffect(() => {
+    return () => {
+      clearPollTimer()
+      toastTimersRef.current.forEach((timer) => {
+        clearTimeout(timer)
+      })
+      toastTimersRef.current.clear()
+    }
+  }, [clearPollTimer])
+
+  return { isRefreshing, startRefresh, toasts }
+}
+
 export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
-  const [refreshFailed, setRefreshFailed] = useState(false)
+  const { isRefreshing, startRefresh, toasts } = useRefreshStatus()
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
   const [searchKeyword, setSearchKeyword] = useState('')
 
@@ -45,21 +168,6 @@ export const App = () => {
     },
     [setRegion],
   )
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true)
-    setRefreshFailed(false)
-    try {
-      await postRefresh()
-      setRefreshMessage('更新リクエストを受け付けました。自動ステータス更新は未実装です。')
-      setRefreshFailed(false)
-    } catch {
-      setRefreshMessage('更新リクエストに失敗しました。自動ステータス更新は未実装です。')
-      setRefreshFailed(true)
-    } finally {
-      setRefreshing(false)
-    }
-  }, [])
 
   const normalizedSearchKeyword = useMemo(
     () => searchKeyword.normalize('NFKC').trim().toLowerCase(),
@@ -92,17 +200,18 @@ export const App = () => {
           searchKeyword={searchKeyword}
           onSearchChange={handleSearchChange}
           onSubmit={handleSubmit}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
+          onRefresh={startRefresh}
+          refreshing={isRefreshing}
         />
       </header>
       <main className="app__main">
-        {refreshMessage && (
-          <div
-            className={`app__refresh-message${refreshFailed ? ' app__refresh-message--error' : ''}`}
-            role={refreshFailed ? 'alert' : 'status'}
-          >
-            {refreshMessage}
+        {toasts.length > 0 && (
+          <div className="toast-stack" aria-live="assertive" aria-atomic="true">
+            {toasts.map((toast) => (
+              <div key={toast.id} className={`toast toast--${toast.tone}`} role="alert">
+                {toast.message}
+              </div>
+            ))}
           </div>
         )}
         <RecommendationsTable
