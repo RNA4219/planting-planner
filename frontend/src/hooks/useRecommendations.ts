@@ -18,7 +18,7 @@ const api = apiModule as typeof import('../lib/api') & {
   fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
 }
 
-const { normalizeIsoWeek } = week
+const { normalizeIsoWeek, getCurrentIsoWeek } = week
 const fetchCrops = api.fetchCrops
 
 export interface UseRecommendationsOptions {
@@ -98,6 +98,32 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
     (value: string) => {
       const trimmed = value.trim()
       if (trimmed) {
+        const dateLike = trimmed.match(/^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/)
+        if (dateLike) {
+          const [, yearPart, , monthPart, dayPart] = dateLike
+          const year = Number(yearPart)
+          const month = Number(monthPart)
+          const day = Number(dayPart)
+          if (
+            Number.isInteger(year) &&
+            Number.isInteger(month) &&
+            Number.isInteger(day) &&
+            month >= 1 &&
+            month <= 12 &&
+            day >= 1 &&
+            day <= 31
+          ) {
+            const utcDate = new Date(Date.UTC(year, month - 1, day))
+            if (
+              utcDate.getUTCFullYear() === year &&
+              utcDate.getUTCMonth() === month - 1 &&
+              utcDate.getUTCDate() === day
+            ) {
+              return getCurrentIsoWeek(utcDate)
+            }
+          }
+        }
+
         const upper = trimmed.toUpperCase()
         const weekFirstMatch = upper.match(/^W?(\d{1,2})\D+(\d{4})$/)
         if (weekFirstMatch) {
