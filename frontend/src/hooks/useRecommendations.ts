@@ -1,8 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import * as apiModule from '../lib/api'
 import * as weekModule from '../lib/week'
-import type { Crop, RecommendResponse, RecommendationItem, Region } from '../types'
+import type { RecommendationItem, Region } from '../types'
 import {
   DEFAULT_ACTIVE_WEEK,
   DEFAULT_WEEK,
@@ -12,15 +11,11 @@ import {
 } from '../utils/recommendations'
 
 import { useRecommendationFetcher } from './recommendationFetcher'
+import { useCropCatalog } from './useCropCatalog'
 
 const week = weekModule as typeof import('../lib/week')
-const api = apiModule as typeof import('../lib/api') & {
-  fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
-}
 
 const { normalizeIsoWeek, getCurrentIsoWeek } = week
-const fetchCrops = api.fetchCrops
-
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
   initialRegion?: Region
@@ -35,38 +30,6 @@ export interface UseRecommendationsResult {
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
-}
-
-const useCropIndex = (): Map<string, number> => {
-  const [crops, setCrops] = useState<Crop[]>([])
-
-  useEffect(() => {
-    let active = true
-    const load = async () => {
-      try {
-        const response = await fetchCrops()
-        if (active) {
-          setCrops(response)
-        }
-      } catch {
-        if (active) {
-          setCrops([])
-        }
-      }
-    }
-    void load()
-    return () => {
-      active = false
-    }
-  }, [])
-
-  return useMemo(() => {
-    const map = new Map<string, number>()
-    crops.forEach((crop) => {
-      map.set(crop.name, crop.id)
-    })
-    return map
-  }, [crops])
 }
 
 export interface UseRecommendationLoaderResult {
@@ -222,7 +185,14 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   const [region, setRegion] = useState<Region>(initialRegionRef.current)
   const regionSyncRef = useRef<Region>(initialRegionRef.current)
   const regionFetchSkipRef = useRef<Region | null>(null)
-  const cropIndex = useCropIndex()
+  const { catalog: cropCatalog } = useCropCatalog()
+  const cropIndex = useMemo(() => {
+    const map = new Map<string, number>()
+    cropCatalog.forEach((entry, cropName) => {
+      map.set(cropName, entry.id)
+    })
+    return map
+  }, [cropCatalog])
   const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
 
@@ -296,3 +266,5 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
 
 export type { RecommendationRow } from '../utils/recommendations'
 export type { RecommendationFetcher } from './recommendationFetcher'
+export { useCropCatalog } from './useCropCatalog'
+export type { CropCatalogEntry, CropCatalogMap, UseCropCatalogResult } from './useCropCatalog'
