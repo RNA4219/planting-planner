@@ -1,34 +1,39 @@
 from __future__ import annotations
 
 import sqlite3
+from pathlib import Path
 
 from .. import db
-from . import data_loader, writers
+from .data_loader import DEFAULT_DATA_DIR, SeedPayload, load_seed_payload
+from .writers import write_crops, write_growth_days, write_price_samples, write_seed_payload
 
 __all__ = [
+    "DEFAULT_DATA_DIR",
+    "SeedPayload",
+    "load_seed_payload",
     "seed",
     "seed_from_default_db",
-    "data_loader",
-    "writers",
+    "write_crops",
+    "write_growth_days",
+    "write_price_samples",
+    "write_seed_payload",
 ]
 
 
-def seed(conn: sqlite3.Connection | None = None) -> None:
+def seed(conn: sqlite3.Connection | None = None, data_dir: Path | None = None) -> None:
     close_conn = False
     if conn is None:
         conn = db.get_conn()
         close_conn = True
 
     db.init_db(conn)
-
-    crops_data = data_loader.load_crops()
-    growth_days_data = data_loader.load_growth_days()
-    price_sample_data = data_loader.load_price_samples()
-
-    writers.write_crops_and_prices(conn, crops_data)
-    writers.write_price_samples(conn, price_sample_data)
-    writers.write_growth_days(conn, growth_days_data)
-
+    payload = load_seed_payload(data_dir=data_dir)
+    write_seed_payload(
+        conn,
+        crops=payload.crops,
+        price_samples=payload.price_samples,
+        growth_days=payload.growth_days,
+    )
     conn.commit()
 
     if close_conn:

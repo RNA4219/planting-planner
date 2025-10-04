@@ -6,6 +6,21 @@ export interface Crop {
   category: string
 }
 
+/** 作物の生育期間メタデータ */
+export interface GrowthDays {
+  crop_id: number
+  region: Region
+  days: number
+}
+
+/** 作物一覧 API レスポンス */
+export type CropsResponse = Crop[]
+
+/** ヘルスチェック API レスポンス */
+export interface HealthResponse {
+  status: string
+}
+
 export interface RecommendationItem {
   crop: string
   sowing_week: string
