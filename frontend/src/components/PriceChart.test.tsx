@@ -51,8 +51,8 @@ describe('PriceChart', () => {
       unit: 'kg',
       source: 'テスト',
       prices: [
-        { week: '2024-W01', avg_price: 100 },
-        { week: '2024-W02', avg_price: 200 },
+        { week: '2024-W01', avg_price: 100, stddev: null },
+        { week: '2024-W02', avg_price: 200, stddev: null },
       ],
     })
 
