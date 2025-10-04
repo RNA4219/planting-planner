@@ -99,10 +99,14 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
       const trimmed = value.trim()
       if (trimmed) {
         const digits = trimmed.replace(/[^0-9]/g, '')
-        if (digits.length === 6) {
+        if (digits.length === 5 || digits.length === 6) {
+          const normalizedDigits = normalizeIsoWeek(digits, activeWeek)
+          if (/^\d{4}-W\d{2}$/.test(normalizedDigits)) {
+            return normalizedDigits
+          }
           const year = digits.slice(0, 4)
-          const weekPart = digits.slice(4).padStart(2, '0')
-          return `${year}-W${weekPart}`
+          const weekPart = digits.slice(4)
+          return normalizeIsoWeek(`${year}-W${weekPart.padStart(2, '0')}`, activeWeek)
         }
       }
       return normalizeIsoWeek(value, activeWeek)
