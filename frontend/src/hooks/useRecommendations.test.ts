@@ -17,6 +17,16 @@ vi.mock('../lib/api', () => ({
   fetchRecommendations: fetchRecommendationsMock,
 }))
 
+const createDeferred = <T>() => {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
 describe('useRecommendationLoader', () => {
   beforeEach(() => {
     fetchRecommendationsMock.mockReset()
@@ -63,5 +73,68 @@ describe('useRecommendationLoader', () => {
     })
 
     expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W53')
+  })
+
+  it('並列実行時に古いリクエスト結果を無視する', async () => {
+    const initial = createDeferred<RecommendResponse>()
+    const first = createDeferred<RecommendResponse>()
+    const second = createDeferred<RecommendResponse>()
+
+    fetchRecommendationsMock.mockReset()
+    fetchRecommendationsMock
+      .mockImplementationOnce(() => initial.promise)
+      .mockImplementationOnce(() => first.promise)
+      .mockImplementationOnce(() => second.promise)
+
+    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+
+    await act(async () => {
+      initial.resolve({
+        week: '2024-W05',
+        region: 'temperate',
+        items: [],
+      })
+      await initial.promise
+    })
+
+    const latestItems = [
+      {
+        crop: 'latest crop',
+        sowing_week: '2024-W02',
+        harvest_week: '2024-W12',
+        source: 'test',
+        growth_days: 60,
+      },
+    ]
+
+    await act(async () => {
+      const pendingFirst = result.current.requestRecommendations('2024-W01')
+      const pendingSecond = result.current.requestRecommendations('2024-W02')
+
+      second.resolve({
+        week: '2024-W02',
+        region: 'temperate',
+        items: latestItems,
+      })
+      await pendingSecond
+
+      first.resolve({
+        week: '2024-W01',
+        region: 'temperate',
+        items: [
+          {
+            crop: 'stale crop',
+            sowing_week: '2024-W01',
+            harvest_week: '2024-W11',
+            source: 'test',
+            growth_days: 55,
+          },
+        ],
+      })
+      await pendingFirst
+    })
+
+    expect(result.current.activeWeek).toBe('2024-W02')
+    expect(result.current.items).toEqual(latestItems)
   })
 })
