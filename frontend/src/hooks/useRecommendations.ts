@@ -31,13 +31,20 @@ export interface UseRecommendationsResult {
   setRegion: (region: Region) => void
   queryWeek: string
   setQueryWeek: (week: string) => void
+  searchQuery: string
+  setSearchQuery: (query: string) => void
   currentWeek: string
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
-const useCropIndex = (): Map<string, number> => {
+interface CropIndexResult {
+  map: Map<string, number>
+  crops: Crop[]
+}
+
+const useCropIndex = (): CropIndexResult => {
   const [crops, setCrops] = useState<Crop[]>([])
 
   useEffect(() => {
@@ -65,9 +72,12 @@ const useCropIndex = (): Map<string, number> => {
     crops.forEach((crop) => {
       map.set(crop.name, crop.id)
     })
-    return map
+    return { map, crops }
   }, [crops])
 }
+
+const normalizeSearchText = (value: string): string =>
+  value.trim().normalize('NFKC').toLocaleLowerCase('ja')
 
 export interface UseRecommendationLoaderResult {
   queryWeek: string
@@ -222,9 +232,10 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   const [region, setRegion] = useState<Region>(initialRegionRef.current)
   const regionSyncRef = useRef<Region>(initialRegionRef.current)
   const regionFetchSkipRef = useRef<Region | null>(null)
-  const cropIndex = useCropIndex()
+  const { map: cropIndex, crops } = useCropIndex()
   const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const setQueryWeek = useCallback(
     (nextWeek: string) => {
@@ -252,9 +263,39 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
     void requestRecommendations(currentWeek, { regionOverride: region })
   }, [currentWeek, region, requestRecommendations])
 
+  const cropMetadata = useMemo(() => {
+    const map = new Map<string, { normalizedName: string; normalizedCategory: string }>()
+    crops.forEach((crop) => {
+      map.set(crop.name, {
+        normalizedName: normalizeSearchText(crop.name),
+        normalizedCategory: normalizeSearchText(crop.category),
+      })
+    })
+    return map
+  }, [crops])
+
+  const normalizedSearch = useMemo(() => normalizeSearchText(searchQuery), [searchQuery])
+
+  const filteredItems = useMemo(() => {
+    if (!normalizedSearch) {
+      return items
+    }
+    return items.filter((item) => {
+      const metadata = cropMetadata.get(item.crop)
+      const normalizedName = metadata?.normalizedName ?? normalizeSearchText(item.crop)
+      if (normalizedName.includes(normalizedSearch)) {
+        return true
+      }
+      if (metadata?.normalizedCategory.includes(normalizedSearch)) {
+        return true
+      }
+      return false
+    })
+  }, [items, normalizedSearch, cropMetadata])
+
   const sortedRows = useMemo<RecommendationRow[]>(() => {
-    return buildRecommendationRows({ items, favorites, cropIndex })
-  }, [items, cropIndex, favorites])
+    return buildRecommendationRows({ items: filteredItems, favorites, cropIndex })
+  }, [filteredItems, favorites, cropIndex])
 
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -287,6 +328,8 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
     setRegion,
     queryWeek,
     setQueryWeek,
+    searchQuery,
+    setSearchQuery,
     currentWeek,
     displayWeek,
     sortedRows,

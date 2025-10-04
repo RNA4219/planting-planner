@@ -48,6 +48,19 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
           </select>
         </label>
         <label
+          class="app__search"
+          for="crop-search"
+        >
+          作物検索
+          <input
+            aria-label="作物検索"
+            id="crop-search"
+            placeholder="作物名・カテゴリで検索"
+            type="search"
+            value=""
+          />
+        </label>
+        <label
           class="app__week"
           for="week-input"
         >

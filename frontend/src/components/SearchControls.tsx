@@ -11,6 +11,8 @@ interface SearchControlsProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
+  searchQuery: string
+  onSearchChange: (value: string) => void
 }
 
 export const SearchControls = ({
@@ -21,10 +23,25 @@ export const SearchControls = ({
   onSubmit,
   onRefresh,
   refreshing,
+  searchQuery,
+  onSearchChange,
 }: SearchControlsProps) => {
   return (
     <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
+      <label className="app__search" htmlFor="crop-search">
+        作物検索
+        <input
+          id="crop-search"
+          type="search"
+          value={searchQuery}
+          placeholder="作物名・カテゴリで検索"
+          aria-label="作物検索"
+          onChange={(event) => {
+            onSearchChange(event.target.value)
+          }}
+        />
+      </label>
       <label className="app__week" htmlFor="week-input">
         週
         <input

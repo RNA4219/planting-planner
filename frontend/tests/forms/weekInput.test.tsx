@@ -18,6 +18,8 @@ describe('Week form interactions', () => {
       setRegion: vi.fn(),
       queryWeek: '2024-W30',
       setQueryWeek,
+      searchQuery: '',
+      setSearchQuery: vi.fn(),
       currentWeek: '2024-W30',
       displayWeek: '2024-W30',
       sortedRows: [],

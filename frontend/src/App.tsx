@@ -21,7 +21,18 @@ export const App = () => {
 
   const initialRegionRef = useRef<Region>(loadRegion())
 
-  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
+  const {
+    region,
+    setRegion,
+    queryWeek,
+    setQueryWeek,
+    searchQuery,
+    setSearchQuery,
+    currentWeek,
+    displayWeek,
+    sortedRows,
+    handleSubmit,
+  } =
     useRecommendations({ favorites, initialRegion: initialRegionRef.current })
 
   const handleWeekChange = useCallback(
@@ -36,6 +47,13 @@ export const App = () => {
       setRegion(next)
     },
     [setRegion],
+  )
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchQuery(value)
+    },
+    [setSearchQuery],
   )
 
   const handleRefresh = useCallback(async () => {
@@ -65,6 +83,8 @@ export const App = () => {
           onSubmit={handleSubmit}
           onRefresh={handleRefresh}
           refreshing={refreshing}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
         />
       </header>
       <main className="app__main">
