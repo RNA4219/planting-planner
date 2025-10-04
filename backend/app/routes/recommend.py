@@ -5,10 +5,12 @@ from fastapi import APIRouter, HTTPException
 from .. import schemas, utils_week
 from ..dependencies import ConnDependency, RecommendRegionQuery, RecommendWeekQuery
 
-router = APIRouter(prefix="/api/recommend")
+router = APIRouter()
 
 
-@router.get("", response_model=schemas.RecommendResponse)
+# NOTE: keep both legacy "/recommend" and current "/api/recommend" paths wired to this handler.
+@router.get("/api/recommend", response_model=schemas.RecommendResponse)
+@router.get("/recommend", response_model=schemas.RecommendResponse)
 def recommend(
     week: RecommendWeekQuery = None,
     region: RecommendRegionQuery = schemas.DEFAULT_REGION,

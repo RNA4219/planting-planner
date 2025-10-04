@@ -94,3 +94,12 @@ def test_recommend_ignores_price_sources_for_metadata() -> None:
 
     sources = {item["source"] for item in items}
     assert sources == {"internal"}
+
+
+def test_recommend_legacy_path_returns_same_payload() -> None:
+    api_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+    legacy_response = client.get("/recommend", params={"week": REFERENCE_WEEK})
+
+    assert api_response.status_code == 200
+    assert legacy_response.status_code == 200
+    assert legacy_response.json() == api_response.json()
