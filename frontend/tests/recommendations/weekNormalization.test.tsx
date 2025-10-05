@@ -80,6 +80,34 @@ describe('App recommendations / 週入力正規化', () => {
     })
   })
 
+  it('和文日付を 2024-W27 に整形して送信する', async () => {
+    fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
+    fetchRecommendations.mockImplementation(async (region, week) => {
+      const resolvedWeek = week ?? '2024-W30'
+      return createRecommendResponse({
+        week: resolvedWeek,
+        region,
+        items: [createItem({ crop: '春菊' })],
+      })
+    })
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+    })
+
+    const weekInput = screen.getByLabelText('週')
+    await user.clear(weekInput)
+    await user.type(weekInput, '2024年7月1日')
+    expect(weekInput).toHaveValue('2024年7月1日')
+    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W27')
+    })
+  })
+
   it('週番号が1桁の場合もゼロ埋めして送信する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
     fetchRecommendations.mockImplementation(async (region, week) => {
