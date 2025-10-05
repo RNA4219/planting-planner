@@ -43,8 +43,7 @@ else:
 def _resolve_run_etl_factory() -> _RunEtlFactory:
     from .. import etl_runner as shim
 
-    factory = getattr(shim, "_load_run_etl")
-    return cast(_RunEtlFactory, factory)
+    return cast(_RunEtlFactory, shim._load_run_etl)
 
 
 def _run_etl_with_retries(
