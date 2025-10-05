@@ -286,6 +286,52 @@ describe('useRecommendations', () => {
     expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', baselineWeek)
   })
 
+  it('reloadCurrentWeek は最後にリクエストした地域・週で再フェッチし参照が安定している', async () => {
+    fetchRecommendationsMock.mockReset()
+    fetchCropsMock.mockReset()
+    fetchCropsMock.mockResolvedValueOnce([])
+    fetchRecommendationsMock
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'temperate',
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'cold',
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        week: '2024-W05',
+        region: 'cold',
+        items: [],
+      })
+
+    const { result } = renderHook(() =>
+      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const reloadHandle = result.current.reloadCurrentWeek
+
+    await act(async () => {
+      result.current.setRegion('cold')
+      await Promise.resolve()
+    })
+
+    expect(result.current.reloadCurrentWeek).toBe(reloadHandle)
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+
+    await act(async () => {
+      await result.current.reloadCurrentWeek()
+    })
+
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+  })
+
   it('handleSubmit で週を変更すると正規化済みの週で再検索される', async () => {
     fetchRecommendationsMock.mockReset()
     fetchCropsMock.mockReset()
