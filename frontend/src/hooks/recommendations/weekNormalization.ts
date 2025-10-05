@@ -89,6 +89,7 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       const weekPart = digits.slice(4)
       if (weekPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
     }
+    return normalizeIsoWeek(normalized, activeWeek)
   }
   return normalizeIsoWeek(value, activeWeek)
 }
