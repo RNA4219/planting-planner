@@ -85,9 +85,19 @@ export const resetAppSpies = () => {
   fetchPrice.mockReset()
 }
 
-export const renderApp = async () => {
+interface RenderAppOptions {
+  readonly useFakeTimers?: boolean
+}
+
+export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}) => {
   const App = (await import('../../src/App')).default
-  const user = userEvent.setup()
+  const user = userEvent.setup(
+    useFakeTimers
+      ? {
+          advanceTimers: vi.advanceTimersByTime,
+        }
+      : undefined,
+  )
   render(<App />)
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {
