@@ -67,7 +67,7 @@ describe('App recommendations / お気に入り並び替え', () => {
       last_error: null,
     })
 
-    const { user } = await renderApp()
+    const { user } = await renderApp({ useFakeTimers: true })
 
     expect(fetchRefreshStatus).not.toHaveBeenCalled()
 
