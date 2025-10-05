@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -8,6 +9,26 @@ import pytest
 from app import db, etl
 
 from ._helpers import make_conn, prepare_crops
+
+
+def test_load_price_feed_uses_default_sample() -> None:
+    expected_path = Path(__file__).resolve().parents[3] / "data" / "price_weekly.sample.json"
+    with expected_path.open("r", encoding="utf-8") as fh:
+        expected_payload = json.load(fh)
+
+    loaded = etl.load_price_feed()
+
+    assert isinstance(loaded, list)
+    assert loaded == expected_payload
+    assert all(isinstance(item, dict) for item in loaded)
+
+
+def test_load_price_feed_returns_empty_for_missing_file(tmp_path: Path) -> None:
+    missing = tmp_path / "missing.json"
+
+    loaded = etl.load_price_feed(missing)
+
+    assert loaded == []
 
 
 def test_run_etl_transforms_and_upserts_weekly_prices() -> None:
@@ -88,6 +109,21 @@ def test_run_etl_transforms_and_upserts_weekly_prices() -> None:
             (2, "2024-W02", None, None, "円/kg", "market"),
             (2, "2024-W03", pytest.approx(250.0), pytest.approx(11.0), "円/kg", "market"),
         ]
+    finally:
+        conn.close()
+
+
+def test_run_etl_no_records_short_circuits(tmp_path: Path) -> None:
+    conn = make_conn(tmp_path / "etl.sqlite")
+    try:
+        db.init_db(conn)
+        prepare_crops(conn)
+
+        updated = etl.run_etl(conn, data_loader=lambda: [])
+
+        assert updated == 0
+        rows = conn.execute("SELECT COUNT(*) FROM price_weekly").fetchone()
+        assert rows[0] == 0
     finally:
         conn.close()
 
