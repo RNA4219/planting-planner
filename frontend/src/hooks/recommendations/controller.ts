@@ -20,6 +20,7 @@ export interface UseRecommendationsResult {
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
+  reloadCurrentWeek: () => Promise<void>
 }
 
 export const useRecommendations = ({ favorites, initialRegion }: UseRecommendationsOptions): UseRecommendationsResult => {
@@ -37,6 +38,27 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
   }, [cropCatalog])
   const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
     useRecommendationLoader(region)
+  const latestRegionRef = useRef(region)
+  const latestWeekRef = useRef(currentWeek)
+  const requestRef = useRef(requestRecommendations)
+
+  useEffect(() => {
+    latestRegionRef.current = region
+  }, [region])
+
+  useEffect(() => {
+    latestWeekRef.current = currentWeek
+  }, [currentWeek])
+
+  useEffect(() => {
+    requestRef.current = requestRecommendations
+  }, [requestRecommendations])
+
+  const reloadCurrentWeek = useCallback(() => {
+    return requestRef.current(latestWeekRef.current, {
+      regionOverride: latestRegionRef.current,
+    })
+  }, [])
 
   const setQueryWeek = useCallback(
     (nextWeek: string) => {
@@ -103,6 +125,7 @@ export const useRecommendations = ({ favorites, initialRegion }: UseRecommendati
     displayWeek,
     sortedRows,
     handleSubmit,
+    reloadCurrentWeek,
   }
 }
 
