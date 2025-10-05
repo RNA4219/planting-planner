@@ -132,7 +132,13 @@ describe('App refresh', () => {
         },
       ],
     })
-    fetchPrice.mockResolvedValue({ crop: '春菊', unit: 'kg', prices: [] })
+    fetchPrice.mockResolvedValue({
+      crop_id: 1,
+      crop: '春菊',
+      unit: 'kg',
+      source: 'local-db',
+      prices: [],
+    })
 
     await renderApp()
 
