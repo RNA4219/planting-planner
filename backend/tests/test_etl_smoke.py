@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import inspect
-from importlib import import_module
 import pkgutil
+from importlib import import_module
 from types import ModuleType
 
 ETL_PACKAGE = ".etl"
