@@ -11,7 +11,6 @@ from __future__ import annotations
 # TODO [x] etl/test_schema.py へ移行完了
 # TODO [x] etl/test_runner.py へ移行完了
 # TODO [x] etl/test_retry.py へ移行完了
-
 from .etl import test_connection as _test_connection
 from .etl import test_retry as _test_retry
 from .etl import test_runner as _test_runner
