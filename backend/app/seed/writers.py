@@ -17,7 +17,9 @@ def _optional_float(value: Any) -> float | None:
     raise TypeError(f"Unsupported numeric value: {value!r}")
 
 
-def _iter_price_records(crops: Iterable[Mapping[str, Any]]) -> Iterable[tuple[int, Mapping[str, Any]]]:
+def _iter_price_records(
+    crops: Iterable[Mapping[str, Any]],
+) -> Iterable[tuple[int, Mapping[str, Any]]]:
     for crop in crops:
         crop_id = int(crop["id"])
         for price in crop.get("price_weekly", []) or []:
@@ -62,7 +64,9 @@ def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) ->
         )
 
 
-def write_price_samples(conn: sqlite3.Connection, price_samples: Iterable[Mapping[str, Any]]) -> None:
+def write_price_samples(
+    conn: sqlite3.Connection, price_samples: Iterable[Mapping[str, Any]]
+) -> None:
     for row in price_samples:
         conn.execute(
             """

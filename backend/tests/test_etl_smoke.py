@@ -23,7 +23,9 @@ def _iter_etl_modules() -> list[str]:
 def _has_collectable_tests(module: ModuleType) -> bool:
     if any(name.startswith("test_") and callable(obj) for name, obj in inspect.getmembers(module)):
         return True
-    if any(name.startswith("Test") and inspect.isclass(obj) for name, obj in inspect.getmembers(module)):
+    if any(
+        name.startswith("Test") and inspect.isclass(obj) for name, obj in inspect.getmembers(module)
+    ):
         return True
     return False
 
