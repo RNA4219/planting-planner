@@ -88,9 +88,7 @@ def _recreate_table_with_autoincrement(
     columns_cursor = conn.execute(f"PRAGMA table_info('{temp_table}')")
     columns = [str(row["name"]) for row in columns_cursor.fetchall()]
     column_list = ", ".join(columns)
-    conn.execute(
-        f"INSERT INTO {table} ({column_list}) SELECT {column_list} FROM {temp_table}"
-    )
+    conn.execute(f"INSERT INTO {table} ({column_list}) SELECT {column_list} FROM {temp_table}")
     conn.execute(f"DROP TABLE {temp_table}")
 
 

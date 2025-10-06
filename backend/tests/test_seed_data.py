@@ -44,7 +44,9 @@ def seed_payload() -> data_loader.SeedPayload:
     )
 
 
-def test_seed_inserts_expected_records(monkeypatch: pytest.MonkeyPatch, seed_payload: data_loader.SeedPayload) -> None:
+def test_seed_inserts_expected_records(
+    monkeypatch: pytest.MonkeyPatch, seed_payload: data_loader.SeedPayload
+) -> None:
     monkeypatch.setattr(seed_module.db, "init_db", lambda conn: None)
     monkeypatch.setattr(seed_module, "load_seed_payload", lambda data_dir=None: seed_payload)
 
@@ -58,7 +60,10 @@ def test_seed_inserts_expected_records(monkeypatch: pytest.MonkeyPatch, seed_pay
         "INSERT OR IGNORE INTO crops (id, name, category) VALUES (?, ?, ?)",
         (1, "Lettuce", "Leafy"),
     ) in executed
-    assert ("UPDATE crops SET name = ?, category = ? WHERE id = ?", ("Lettuce", "Leafy", 1)) in executed
+    assert (
+        "UPDATE crops SET name = ?, category = ? WHERE id = ?",
+        ("Lettuce", "Leafy", 1),
+    ) in executed
 
     assert any(
         sql.startswith("INSERT OR REPLACE INTO price_weekly")
@@ -83,6 +88,9 @@ def test_seed_inserts_expected_records(monkeypatch: pytest.MonkeyPatch, seed_pay
         "INSERT OR IGNORE INTO growth_days (crop_id, region, days) VALUES (?, ?, ?)",
         (1, "tokyo", 65),
     ) in executed
-    assert ("UPDATE growth_days SET days = ? WHERE crop_id = ? AND region = ?", (65, 1, "tokyo")) in executed
+    assert (
+        "UPDATE growth_days SET days = ? WHERE crop_id = ? AND region = ?",
+        (65, 1, "tokyo"),
+    ) in executed
 
     conn.commit.assert_called_once_with()

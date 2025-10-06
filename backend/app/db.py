@@ -20,6 +20,7 @@ from typing import Final, Protocol, cast
 _PACKAGE_ROOT = Path(__file__).with_name("db")
 __path__ = [str(_PACKAGE_ROOT)]
 
+
 class _ConnectionModule(Protocol):
     DB_LOCK: RLock
     DATABASE_FILE: Path
@@ -36,12 +37,8 @@ class _MigrationsModule(Protocol):
     def init_db(conn: sqlite3.Connection | None = None) -> None: ...
 
 
-_connection = cast(
-    _ConnectionModule, import_module("app.db.connection")
-)
-_migrations = cast(
-    _MigrationsModule, import_module("app.db.migrations")
-)
+_connection = cast(_ConnectionModule, import_module("app.db.connection"))
+_migrations = cast(_MigrationsModule, import_module("app.db.migrations"))
 
 DB_LOCK = _connection.DB_LOCK
 DATABASE_FILE: Final[Path] = _connection.DATABASE_FILE

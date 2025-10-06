@@ -24,9 +24,7 @@ def test_start_etl_job_records_failure_metadata(
 
     attempts: dict[str, int] = {"count": 0}
 
-    def failing_run_etl(
-        conn: sqlite3.Connection, *, data_loader: object | None = None
-    ) -> int:
+    def failing_run_etl(conn: sqlite3.Connection, *, data_loader: object | None = None) -> int:
         attempts["count"] += 1
         raise RuntimeError("boom")
 
@@ -69,9 +67,7 @@ def test_start_etl_job_retries_database_errors(
 
     attempts: dict[str, int] = {"count": 0}
 
-    def flaky_run_etl(
-        conn: sqlite3.Connection, *, data_loader: object | None = None
-    ) -> int:
+    def flaky_run_etl(conn: sqlite3.Connection, *, data_loader: object | None = None) -> int:
         attempts["count"] += 1
         raise sqlite3.OperationalError("db locked")
 

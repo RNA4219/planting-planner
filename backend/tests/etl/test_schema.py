@@ -25,13 +25,11 @@ def test_ensure_schema_backfills_missing_columns(tmp_path: Path) -> None:
 
         etl_runner._ensure_schema(conn)
 
-        columns = {
-            row["name"]
-            for row in conn.execute("PRAGMA table_info('etl_runs')").fetchall()
-        }
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info('etl_runs')").fetchall()}
         assert {"state", "started_at", "finished_at", "last_error"}.issubset(columns)
     finally:
         conn.close()
+
 
 def test_insert_run_metadata_persists_defaults() -> None:
     from app import db

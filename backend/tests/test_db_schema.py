@@ -69,7 +69,9 @@ def test_tables_use_autoincrement(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
         conn.close()
 
 
-def test_get_conn_creates_db_with_foreign_keys(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_conn_creates_db_with_foreign_keys(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     test_db = tmp_path / "nested" / "schema.db"
     monkeypatch.setattr(db, "DATABASE_FILE", test_db)
 
