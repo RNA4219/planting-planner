@@ -11,6 +11,8 @@ describe('normalizeWeekInput', () => {
     ['2024/07/01', '2024-W27'],
     ['2024.07.01', '2024-W27'],
     ['2024年7月1日', '2024-W27'],
+    ['2024年第六週', '2024-W06'],
+    ['第六週 2024年', '2024-W06'],
   ])('入力 %s は %s へ正規化される', (input, expected) => {
     expect(normalizeWeekInput(input, '2024-W05')).toBe(expected)
   })
