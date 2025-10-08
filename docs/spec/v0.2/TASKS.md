@@ -2,26 +2,46 @@
 
 > スコープ: 各タスクは 1 ファイルあたり 1 回のみ指定。テスト追加→実装修正の順。
 
-## frontend/src/hooks/useRefreshStatus.ts
-- [ ] `frontend/src/hooks/useRefreshStatus.test.ts` を追加し、success/failure/stale/timeout と 5 秒後自動クローズ・手動 dismiss を先行実装。
-- [ ] テストをパスする `useRefreshStatus` 本体を実装し、`pendingToasts` と `dismissToast` を公開。
+## frontend/src/hooks/__tests__/useRefreshStatus.controller.test.ts
+- [ ] 5 秒後の自動クローズと `dismissToast` 手動クローズをフェイクタイマーで検証するケースを追加。
+- [ ] `stale` レスポンスとフェッチエラー時のトースト種別・重複抑止を検証するケースを追加。
 
-## frontend/src/App.tsx
-- [ ] `app.refresh` テストを拡張し、`useRefreshStatus` フックの `pendingToasts`/`dismissToast` を期待するケースを追加。
-- [ ] トーストスタック描画を共通フック準拠に置換し、`reloadCurrentWeek` で推薦/価格を再読込。
+## frontend/src/hooks/refresh/controller.ts
+- [ ] テスト追加後、トーストごとにタイマーを保持して自動クローズし、`dismissToast` がタイマーを片付けるよう実装を更新。
+- [ ] リフレッシュ成功時にコールバックで `reloadCurrentWeek` を起動できるようオプションを追加し、既存シグネチャ互換を維持。
+
+## frontend/src/hooks/refresh/poller.test.ts
+- [ ] `createRefreshStatusPoller` が停止時にスケジュール済みタイマーを解除し、`stale` 到達で `onTerminal` を一度だけ呼ぶことを確認するユニットテストを作成。
+
+## frontend/src/hooks/refresh/poller.ts
+- [ ] テスト追加後、`schedule`/`cancel` 差し替え時にタイマー参照を必ず解放し、例外時も `onError` 実行後に停止するようリファクタリング。
+
+## frontend/src/components/__tests__/ToastStack.test.tsx
+- [ ] `ToastStack` 仮コンポーネントのスナップショットを避け、ロール `alert` と閉じるボタンの挙動・自動クローズ発火を検証するテストを追加。
+
+## frontend/src/components/ToastStack.tsx
+- [ ] テスト追加後、ARIA 属性と閉じるボタンを備えたトーストスタックを実装し、5 秒タイマーと `onDismiss` ハンドラを受け付けるようにする。
+
+## frontend/tests/app.refresh.test.tsx
+- [ ] フェイクタイマーで `/refresh` 成功→`/refresh/status` ポーリング→成功トースト表示→`reloadCurrentWeek` 呼び出し→自動クローズを検証する統合テストを追加。
+
+## frontend/tests/utils/renderApp.tsx
+- [ ] テスト追加後、`renderApp` にトースト待機ユーティリティを追加し、`useFakeTimers` オプション利用時に `vi.useFakeTimers()` を委譲してリセットするよう更新。
 
 ## frontend/tests/recommendations/favoritesPrioritization.test.tsx
-- [ ] フェイクタイマーを用いて `fetchRefreshStatus` のポーリング前提に期待値を更新。
-- [ ] お気に入り優先ロジックが維持される回帰テストを整備。
+- [ ] 新トースト制御の導入後もお気に入り優先ロジックが壊れないよう、不要な手動 `setInterval` を除去して `fetchRefreshStatus` ポーリング挙動を検証するテストに書き換え。
 
-## frontend/src/hooks/useRecommendations.ts
-- [ ] `reloadCurrentWeek` API をテスト先行で追加し、最後の地域・週を再取得できるようにする。
-- [ ] 既存公開シグネチャを維持したまま実装を更新。
+## frontend/src/App.tsx
+- [ ] テスト追加後、ローカル実装の `useRefreshStatus` を削除し `hooks/useRefreshStatus` と `ToastStack` を利用、成功時に `reloadCurrentWeek` を呼ぶように実装更新。
 
-## frontend/src/hooks/useRecommendationLoader.ts
-- [ ] `normalizeWeekInput` を純粋関数として切り出しテスト化。
-- [ ] リファクタ後もフックの戻り値が変わらないことを確認。
+## frontend/package.json
+- [ ] Vitest の単一ファイル実行をサポートする `"test:file"` スクリプトを追加し、CI 用 `test` スクリプトは `vitest run` に統一する。
+
+## docs/spec/v0.2/TESTING.md
+- [ ] `npm test` の利用手順を更新し、`npm run test:file -- <pattern>` の例と Vitest CLI オプション対応状況を追記。
+
+## frontend/src/hooks/useRefreshStatus.test.ts
+- [ ] `__tests__/useRefreshStatus.controller.test.ts` に重複したケースを移管した後、当ファイルのレガシーテストを削除。
 
 ## frontend/src/hooks/useRecommendations.test.ts
-- [ ] describe 単位でテストを分割し、200 行未満となるよう `__tests__` ディレクトリへ移動。
-- [ ] 共通モックは `recommendationTestUtils.ts` へ抽出。
+- [ ] ファイルを `hooks/__tests__/useRecommendations.controller.test.ts` などに分割し、共通モックを `tests/utils/recommendations` へ抽出して 200 行未満にするリファクタリングを実施。
