@@ -20,6 +20,20 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
   const trimmed = value.trim()
   if (trimmed) {
     const normalized = trimmed.normalize('NFKC')
+    const digitMap: Record<string, string> = {
+      〇: '0',
+      零: '0',
+      一: '1',
+      二: '2',
+      三: '3',
+      四: '4',
+      五: '5',
+      六: '6',
+      七: '7',
+      八: '8',
+      九: '9',
+    }
+    const normalizedDigits = normalized.replace(/[〇零一二三四五六七八九]/g, (char) => digitMap[char] ?? char)
     const getIsoWeekFromDateParts = (
       year: number,
       month: number,
@@ -46,7 +60,7 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       return undefined
     }
 
-    const japaneseDateLike = normalized.match(/^([0-9]{4})年\s*([0-9]{1,2})月\s*([0-9]{1,2})日$/)
+    const japaneseDateLike = normalizedDigits.match(/^([0-9]{4})年\s*([0-9]{1,2})月\s*([0-9]{1,2})日$/)
     if (japaneseDateLike) {
       const [, yearPart, monthPart, dayPart] = japaneseDateLike
       const isoWeek = getIsoWeekFromDateParts(
@@ -57,7 +71,7 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       if (isoWeek) return isoWeek
     }
 
-    const dateLike = normalized.match(/^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/)
+    const dateLike = normalizedDigits.match(/^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/)
     if (dateLike) {
       const [, yearPart, , monthPart, dayPart] = dateLike
       const isoWeek = getIsoWeekFromDateParts(
@@ -68,8 +82,8 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       if (isoWeek) return isoWeek
     }
 
-    const upper = normalized.toUpperCase()
-    const weekFirstMatch = upper.match(/^W?(\d{1,2})\D+(\d{4})$/)
+    const upper = normalizedDigits.toUpperCase()
+    const weekFirstMatch = upper.match(/^\D*(\d{1,2})\D+(\d{4})(?:年)?$/)
     if (weekFirstMatch) {
       const weekPart = weekFirstMatch[1]
       const yearPart = weekFirstMatch[2]
@@ -85,9 +99,18 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
 
     const digits = upper.replace(/[^0-9]/g, '')
     if (digits.length >= 5 && digits.length <= 6) {
-      const yearPart = digits.slice(0, 4)
-      const weekPart = digits.slice(4)
-      if (weekPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
+      const normalizeFromParts = (yearPart: string, weekPart: string) => {
+        if (yearPart.length === 4 && weekPart) {
+          return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
+        }
+        return undefined
+      }
+
+      const fromYearLeading = normalizeFromParts(digits.slice(0, 4), digits.slice(4))
+      if (fromYearLeading) return fromYearLeading
+
+      const fromWeekLeading = normalizeFromParts(digits.slice(-4), digits.slice(0, digits.length - 4))
+      if (fromWeekLeading) return fromWeekLeading
     }
   }
   return normalizeIsoWeek(value, activeWeek)
