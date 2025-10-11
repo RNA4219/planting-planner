@@ -1,4 +1,4 @@
-import { cleanup, render, waitFor } from '@testing-library/react'
+import { cleanup, render, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, vi } from 'vitest'
 
@@ -70,6 +70,15 @@ vi.mock('../../src/lib/api', () => ({
   fetchPrice,
 }))
 
+let shouldRestoreTimers = false
+
+afterEach(() => {
+  if (shouldRestoreTimers) {
+    vi.useRealTimers()
+    shouldRestoreTimers = false
+  }
+})
+
 export const resetAppSpies = () => {
   storageState.region = 'temperate'
   storageState.favorites = []
@@ -104,7 +113,30 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
       throw new Error('recommendations not requested yet')
     }
   })
-  return { user }
+  if (useFakeTimers) {
+    vi.useFakeTimers()
+    shouldRestoreTimers = true
+  }
+  const waitForToastToDisappear = async (locator: () => Element | null) => {
+    if (typeof locator !== 'function') {
+      throw new TypeError('waitForToastToDisappear requires a locator function')
+    }
+    if (!useFakeTimers) {
+      await waitForElementToBeRemoved(locator)
+      return
+    }
+    const toast = locator()
+    if (!toast) {
+      return
+    }
+    const maxWaitMs = 10000
+    vi.advanceTimersByTime(maxWaitMs)
+    await Promise.resolve()
+    if (locator()) {
+      throw new Error('toast still visible after waiting for removal')
+    }
+  }
+  return { user, waitForToastToDisappear }
 }
 
 interface AppTestHarness {

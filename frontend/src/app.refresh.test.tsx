@@ -20,7 +20,6 @@ describe('App refresh', () => {
 
   afterEach(() => {
     cleanup()
-    vi.useRealTimers()
   })
 
   it('更新ボタンでポーリングが始まりトーストで結果を表示する', async () => {
@@ -42,8 +41,7 @@ describe('App refresh', () => {
       ],
     })
 
-    await renderApp()
-    vi.useFakeTimers()
+    const { waitForToastToDisappear } = await renderApp({ useFakeTimers: true })
 
     const refreshButton = screen.getByRole('button', { name: '更新' })
     const main = screen.getByRole('main')
@@ -86,9 +84,7 @@ describe('App refresh', () => {
     expect(successToasts.some((toast) => toast.textContent?.includes('3件'))).toBe(true)
     expect(refreshButton).not.toBeDisabled()
 
-    await vi.advanceTimersByTimeAsync(5000)
-    await Promise.resolve()
-    expect(within(main).queryByText(/3件/)).not.toBeInTheDocument()
+    await waitForToastToDisappear(() => within(main).queryByText(/3件/))
 
     fireEvent.click(refreshButton)
     expect(refreshButton).toBeDisabled()
