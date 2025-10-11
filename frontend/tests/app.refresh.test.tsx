@@ -78,9 +78,8 @@ describe('App refresh workflow', () => {
 
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
 
-    expect(
-      screen.queryByText('更新が完了しました。7件のデータを更新しました。'),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText('データ更新が完了しました')).not.toBeInTheDocument()
+    expect(screen.queryByText('7件のデータを更新しました。')).not.toBeInTheDocument()
 
     await vi.advanceTimersByTimeAsync(1000)
     await Promise.resolve()
@@ -88,8 +87,11 @@ describe('App refresh workflow', () => {
 
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(2)
 
-    const successToast = screen.getByText('更新が完了しました。7件のデータを更新しました。')
-    expect(successToast).toBeInTheDocument()
+    const successMessage = screen.getByText('データ更新が完了しました')
+    const successDetail = screen.getByText('7件のデータを更新しました。')
+    expect(successMessage).toBeInTheDocument()
+    expect(successDetail).toBeInTheDocument()
+    expect(successDetail.closest('.toast')).toBe(successMessage.closest('.toast'))
 
     for (let i = 0; i < 5; i += 1) {
       if (reloadCurrentWeekSpy.mock.calls.length > 0) {

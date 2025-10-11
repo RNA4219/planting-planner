@@ -40,17 +40,15 @@ const toastFromStatus = (status: ToastStatus): ToastPayload => {
   if (status.state === 'success') {
     return {
       variant: 'success',
-      message: TOAST_MESSAGES.refreshSuccess(status.updated_records ?? 0),
-      detail: null,
+      message: TOAST_MESSAGES.refreshSuccessMessage,
+      detail: TOAST_MESSAGES.refreshSuccessDetail(status.updated_records ?? 0),
     }
   }
   if (status.state === 'failure') {
     return {
       variant: 'error',
-      message: TOAST_MESSAGES.refreshFailure(
-        status.last_error ?? TOAST_MESSAGES.refreshStatusUnknownDetail,
-      ),
-      detail: null,
+      message: TOAST_MESSAGES.refreshFailureMessage,
+      detail: status.last_error ?? null,
     }
   }
   return {
@@ -62,10 +60,8 @@ const toastFromStatus = (status: ToastStatus): ToastPayload => {
 
 const createFetchErrorToast = (error: unknown): ToastPayload => ({
   variant: 'error',
-  message: TOAST_MESSAGES.refreshStatusFetchFailure(
-    error instanceof Error ? error.message : String(error),
-  ),
-  detail: null,
+  message: TOAST_MESSAGES.refreshStatusFetchFailureMessage,
+  detail: error instanceof Error ? error.message : String(error),
 })
 
 export const useRefreshStatusController = (
