@@ -32,6 +32,9 @@ const createStatus = (
 })
 
 describe('useRefreshStatusController', () => {
+  const renderController = () =>
+    renderHook(() => useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 4000 }))
+
   beforeEach(() => {
     vi.useFakeTimers()
   })
@@ -51,15 +54,19 @@ describe('useRefreshStatusController', () => {
       }),
     )
 
-    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
-    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
-    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success', { updated_records: 8 }))
+        expect(toastId).toBeDefined()
 
-    await act(async () => {
-      const promise = result.current.startRefresh()
-      await vi.advanceTimersByTimeAsync(1000)
-      await vi.advanceTimersByTimeAsync(1000)
-      await promise
+        const timerIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 5000)
+        expect(timerIndex).toBeGreaterThanOrEqual(0)
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(5000)
+        })
+
+        expect(result.current.pendingToasts).toEqual([])
+      } finally {
+        setTimeoutSpy.mockRestore()
+      }
     })
 
     expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
@@ -91,15 +98,24 @@ describe('useRefreshStatusController', () => {
       await promise
     })
 
-    expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'error', detail: 'boom' })
+    it('stale のトーストは重複して追加されない', async () => {
+      const { result } = renderController()
 
-    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
-    fetchRefreshStatusMock.mockImplementation(async () => createStatus('running'))
+      postRefreshMock.mockResolvedValue({ state: 'stale' })
 
-    await act(async () => {
-      const promise = result.current.startRefresh()
-      await vi.advanceTimersByTimeAsync(4000)
-      await promise
+      await act(async () => {
+        const promise = result.current.startRefresh()
+        await promise
+      })
+
+      expect(result.current.pendingToasts).toHaveLength(1)
+
+      await act(async () => {
+        const promise = result.current.startRefresh()
+        await promise
+      })
+
+      expect(result.current.pendingToasts).toHaveLength(1)
     })
 
     expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })

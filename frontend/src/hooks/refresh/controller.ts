@@ -14,6 +14,10 @@ export interface RefreshToast {
   readonly detail?: string | null
 }
 
+const TOAST_AUTO_DISMISS_MS = 5000
+const STALE_TOAST_MESSAGE = 'データ更新の結果を取得できませんでした'
+const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
+
 export interface UseRefreshStatusOptions {
   readonly pollIntervalMs?: number
   readonly timeoutMs?: number
@@ -143,7 +147,16 @@ export const useRefreshStatusController = (
     [clearTimers, enqueue, options?.onSuccess],
   )
 
-  useEffect(() => () => finish(), [finish])
+  useEffect(
+    () => () => {
+      toastTimers.current.forEach((timer) => {
+        clearTimeout(timer)
+      })
+      toastTimers.current.clear()
+      finish()
+    },
+    [finish],
+  )
 
   const startRefresh = useCallback(async () => {
     if (active.current) return
