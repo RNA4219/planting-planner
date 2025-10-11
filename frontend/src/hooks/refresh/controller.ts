@@ -22,7 +22,7 @@ const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
 export interface UseRefreshStatusOptions {
   readonly pollIntervalMs?: number
   readonly timeoutMs?: number
-  readonly onSuccess?: () => void
+  readonly onSuccess?: () => void | Promise<void>
 }
 
 export interface UseRefreshStatusResult {
@@ -134,7 +134,7 @@ export const useRefreshStatusController = (
       completion.current = null
       if (toast) {
         if (toast.variant === 'success') {
-          options?.onSuccess?.()
+          void options?.onSuccess?.()
         }
         enqueue(toast)
       }
