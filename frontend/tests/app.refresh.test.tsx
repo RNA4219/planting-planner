@@ -43,7 +43,7 @@ describe.skip('App refresh workflow', () => {
         }
       })
 
-    postRefresh.mockResolvedValue({ state: 'success' })
+    postRefresh.mockResolvedValue({ state: 'running' })
     fetchRefreshStatus
       .mockResolvedValueOnce({
         state: 'running',
@@ -76,6 +76,10 @@ describe.skip('App refresh workflow', () => {
     await waitFor(() => {
       expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
     })
+
+    expect(
+      screen.queryByText('更新が完了しました。7件のデータを更新しました。'),
+    ).not.toBeInTheDocument()
 
     await vi.advanceTimersByTimeAsync(1000)
     await Promise.resolve()
