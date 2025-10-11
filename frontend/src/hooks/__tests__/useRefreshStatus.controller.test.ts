@@ -66,7 +66,7 @@ describe('useRefreshStatusController', () => {
     expect(result.current.pendingToasts.at(-1)).toMatchObject({
       variant: 'success',
       message: 'データ更新が完了しました',
-      detail: '更新件数: 5',
+      detail: '5件のデータを更新しました。',
     })
   })
 
