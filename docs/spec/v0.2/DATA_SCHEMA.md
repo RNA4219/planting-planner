@@ -36,6 +36,14 @@
 | カラム | 型 / 制約 | 説明 |
 | --- | --- | --- |
 | id | INTEGER PK | 実行 ID |
+| run_at | TEXT NOT NULL | 実行要求を受けた時刻（ISO 8601 文字列） |
+| status | TEXT NOT NULL | `pending` `running` `success` `failure` などの状態 |
+| updated_records | INTEGER NOT NULL | 更新件数 |
+| error_message | TEXT | 失敗時のメッセージ |
+| state | TEXT | 実装内の状態管理フィールド |
+| started_at | TEXT | 実処理開始時刻 |
+| finished_at | TEXT | 実処理終了時刻 |
+| last_error | TEXT | 直近エラーの詳細 |
 | run_at | TEXT NOT NULL | 実行日時（ISO-8601 文字列） |
 | status | TEXT NOT NULL | 実行状態コード |
 | updated_records | INTEGER NOT NULL | 更新件数 |
