@@ -5,6 +5,7 @@ import type { RefreshStatusResponse } from '../../types'
 
 import { useRefreshStatusController } from '../refresh/controller'
 import * as pollerModule from '../refresh/poller'
+import type { RefreshStatusPollerOptions } from '../refresh/poller'
 
 type PostRefreshImmediate =
   Pick<RefreshStatusResponse, 'state'> &
@@ -50,7 +51,7 @@ describe('useRefreshStatusController', () => {
   })
 
   it('既定オプションでポーラーが 5000ms 間隔になる', async () => {
-    let capturedOptions: pollerModule.RefreshStatusPollerOptions | null = null
+    let capturedOptions: RefreshStatusPollerOptions | null = null
 
     const pollerSpy = vi
       .spyOn(pollerModule, 'createRefreshStatusPoller')
@@ -78,7 +79,8 @@ describe('useRefreshStatusController', () => {
       })
 
       expect(pollerSpy).toHaveBeenCalledTimes(1)
-      expect(capturedOptions?.pollIntervalMs).toBe(5000)
+      expect(capturedOptions).not.toBeNull()
+      expect(capturedOptions!.pollIntervalMs).toBe(5000)
     } finally {
       pollerSpy.mockRestore()
     }
