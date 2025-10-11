@@ -10,6 +10,11 @@
 - `SearchBox` が名前・カテゴリの部分一致フィルタを実行し、大文字小文字を無視するテスト。
 - `RefreshStatusPoller` が状態遷移でポーリングを停止し、トースト表示を制御するテスト。
 - `CropList` が検索結果とお気に入りの優先順位を満たすことを確認。
+- `frontend/tests/app.refresh.test.tsx` による `/refresh` フロー統合テストで、成功時の `reloadCurrentWeek` 呼び出しと自動クローズを検証。
+
+### テストコマンド
+- `npm run test` — CI と同一の `vitest --run` 実行。追加オプションは `npm run test -- --coverage` のように末尾へ委譲できる。
+- `npm run test:file -- "src/hooks/__tests__/useRefreshStatus.controller.test.ts"` — 指定パターンのファイルのみ実行。`--reporter=dot` や `--runInBand` など Vitest CLI オプションを併用可能。
 
 ## E2E
 - シナリオ: 「更新ボタン押下 → ステータス polling → 成功トースト → リスト更新 → 価格チャート再描画」。

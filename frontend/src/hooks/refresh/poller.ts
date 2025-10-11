@@ -46,6 +46,7 @@ export const createRefreshStatusPoller = (
         void tick()
       }, options.pollIntervalMs)
     } catch (error) {
+      clearTimer()
       options.onError(error)
     }
   }

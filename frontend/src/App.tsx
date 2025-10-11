@@ -9,6 +9,7 @@ import { fetchRefreshStatus, postRefresh } from './lib/api'
 import { loadRegion } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import type { Region } from './types'
+import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 import './App.css'
 
@@ -69,25 +70,25 @@ const useRefreshStatus = () => {
       if (status.state === 'success') {
         pushToast({
           tone: 'success',
-          message: `更新が完了しました。${status.updated_records}件のデータを更新しました。`,
+          message: TOAST_MESSAGES.refreshSuccess(status.updated_records),
         })
       } else if (status.state === 'failure') {
-        const detail = status.last_error ?? '詳細不明のエラー'
+        const detail = status.last_error ?? TOAST_MESSAGES.refreshStatusUnknownDetail
         pushToast({
           tone: 'error',
-          message: `更新が失敗しました: ${detail}`,
+          message: TOAST_MESSAGES.refreshFailure(detail),
         })
       } else {
         pushToast({
           tone: 'info',
-          message: '更新ステータスが不明です。',
+          message: TOAST_MESSAGES.refreshUnknown,
         })
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)
       pushToast({
         tone: 'error',
-        message: `更新ステータスの取得に失敗しました: ${detail}`,
+        message: TOAST_MESSAGES.refreshStatusFetchFailure(detail),
       })
     } finally {
       if (shouldContinue) {
@@ -110,16 +111,19 @@ const useRefreshStatus = () => {
     try {
       const response = await postRefresh()
       if (response.state === 'failure') {
-        pushToast({ tone: 'error', message: '更新リクエストに失敗しました。' })
+        pushToast({ tone: 'error', message: TOAST_MESSAGES.refreshRequestFailure })
         setIsRefreshing(false)
         return
       }
-      pushToast({ tone: 'info', message: '更新を開始しました。進行状況を確認しています…' })
+      pushToast({ tone: 'info', message: TOAST_MESSAGES.refreshRequestStarted })
       clearPollTimer()
       void pollStatus()
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)
-      pushToast({ tone: 'error', message: `更新リクエストに失敗しました: ${detail}` })
+      pushToast({
+        tone: 'error',
+        message: TOAST_MESSAGES.refreshRequestFailureWithDetail(detail),
+      })
       setIsRefreshing(false)
     }
   }, [clearPollTimer, isRefreshing, pollStatus, pushToast])
@@ -191,7 +195,7 @@ export const App = () => {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Planting Planner</h1>
+        <h1 className="app__title">{APP_TEXT.title}</h1>
         <SearchControls
           queryWeek={queryWeek}
           currentWeek={currentWeek}
