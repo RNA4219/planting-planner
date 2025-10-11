@@ -65,7 +65,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             週
             <input
               id="week-input"
-              inputmode="numeric"
+              inputmode="text"
               name="week"
               pattern="\\d{4}-W\\d{2}"
               placeholder="2024-W30"
