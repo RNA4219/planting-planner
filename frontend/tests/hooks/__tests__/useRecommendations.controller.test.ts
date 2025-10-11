@@ -1,25 +1,21 @@
 import '@testing-library/jest-dom/vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import type { FormEvent } from 'react'
 
-import type { RecommendationItem } from '../../src/types'
-import { useRecommendationLoader } from '../../src/hooks/useRecommendationLoader'
-import { useRecommendations } from '../../src/hooks/useRecommendations'
+import {
+  recommendationControllerMocks,
+  resetRecommendationControllerMocks,
+} from '../../utils/recommendations'
+import type { RecommendationItem } from '../../../src/types'
+import { useRecommendationLoader } from '../../../src/hooks/useRecommendationLoader'
+import { useRecommendations } from '../../../src/hooks/useRecommendations'
 
-const fetcherMock = vi.fn()
-
-vi.mock('../../src/hooks/recommendationFetcher', () => ({
-  useRecommendationFetcher: () => fetcherMock,
-}))
-
-vi.mock('../../src/hooks/useCropCatalog', () => ({
-  useCropCatalog: () => ({ catalog: new Map(), isLoading: false }),
-}))
+const { fetcherMock } = recommendationControllerMocks
 
 describe('hooks / useRecommendationLoader + useRecommendations', () => {
   beforeEach(() => {
-    fetcherMock.mockReset()
+    resetRecommendationControllerMocks()
   })
 
   it('normalizes week input before requesting recommendations', async () => {
