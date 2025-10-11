@@ -33,13 +33,16 @@
 - `UNIQUE (crop_id, week)` で作物×週の重複登録を禁止。
 
 ### etl_runs
-| カラム | 型 | 説明 |
+| カラム | 型 / 制約 | 説明 |
 | --- | --- | --- |
 | id | INTEGER PK | 実行 ID |
+| run_at | TEXT NOT NULL | 実行日時（ISO-8601 文字列） |
+| status | TEXT NOT NULL | 実行状態コード |
+| updated_records | INTEGER NOT NULL | 更新件数 |
+| error_message | TEXT | 失敗時のメッセージ |
 | state | TEXT | `running` `success` `failure` `stale` |
-| started_at | DATETIME | 開始時刻 |
-| finished_at | DATETIME | 終了時刻 |
-| updated_records | INTEGER | 更新件数 |
+| started_at | TEXT | 開始時刻（ISO-8601 文字列） |
+| finished_at | TEXT | 終了時刻（ISO-8601 文字列） |
 | last_error | TEXT | 直近エラーメッセージ |
 
 ## 花きデータ取り込み
