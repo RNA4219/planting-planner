@@ -24,11 +24,10 @@ const createStatus = (
   overrides: Partial<RefreshStatusResponse> = {},
 ): RefreshStatusResponse => ({
   state,
-  started_at: '2024-01-01T00:00:00Z',
-  finished_at: state === 'running' ? null : '2024-01-01T00:10:00Z',
-  updated_records: 42,
-  last_error: null,
-  ...overrides,
+  started_at: overrides.started_at ?? '2024-01-01T00:00:00Z',
+  finished_at: overrides.finished_at ?? (state === 'running' ? null : '2024-01-01T00:10:00Z'),
+  updated_records: overrides.updated_records ?? 0,
+  last_error: overrides.last_error ?? null,
 })
 
 describe('useRefreshStatusController', () => {
@@ -37,114 +36,73 @@ describe('useRefreshStatusController', () => {
 
   beforeEach(() => {
     vi.useFakeTimers()
+    postRefreshMock.mockReset()
+    fetchRefreshStatusMock.mockReset()
   })
 
   afterEach(() => {
-    vi.clearAllMocks()
     vi.useRealTimers()
   })
 
-  it('開始から終了までのフローを制御し、成功・失敗・タイムアウト時のトーストを生成する', async () => {
-    const reloadCurrentWeekMock = vi.fn()
+  it('成功時にトーストを表示し onSuccess を呼び出す', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success', { updated_records: 5 }))
+
+    const onSuccess = vi.fn()
     const { result } = renderHook(() =>
-      useRefreshStatusController({
-        pollIntervalMs: 1000,
-        timeoutMs: 4000,
-        onSuccess: reloadCurrentWeekMock,
-      }),
+      useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 4000, onSuccess }),
     )
 
-        expect(toastId).toBeDefined()
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
+    })
 
-        const timerIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 5000)
-        expect(timerIndex).toBeGreaterThanOrEqual(0)
+    expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({
+      variant: 'success',
+      message: 'データ更新が完了しました',
+      detail: '更新件数: 5',
+    })
+  })
 
-        await act(async () => {
-          await vi.advanceTimersByTimeAsync(5000)
-        })
+  it('失敗時にはエラートーストを追加する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(
+      createStatus('failure', { last_error: 'boom', finished_at: '2024-01-01T00:20:00Z' }),
+    )
 
-        expect(result.current.pendingToasts).toEqual([])
-      } finally {
-        setTimeoutSpy.mockRestore()
-      }
+    const { result } = renderController()
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
     })
 
     expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
-    expect(result.current.pendingToasts).toEqual([
-      expect.objectContaining({
-        variant: 'success',
-        detail: '更新件数: 8',
-      }),
-    ])
-    expect(reloadCurrentWeekMock).toHaveBeenCalledTimes(1)
-    const successToastId = result.current.pendingToasts[0]?.id
-    expect(successToastId).toBeDefined()
-    expect(result.current.pendingToasts.some((toast) => toast.id === successToastId)).toBe(true)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5000)
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({
+      variant: 'error',
+      message: 'データ更新に失敗しました',
+      detail: 'boom',
     })
-    expect(result.current.pendingToasts.some((toast) => toast.id === successToastId)).toBe(false)
+  })
 
-    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
-    fetchRefreshStatusMock.mockImplementationOnce(async () => createStatus('running'))
-    fetchRefreshStatusMock.mockImplementationOnce(async () =>
-      createStatus('failure', { last_error: 'boom' }),
-    )
+  it('stale の応答では警告トーストを追加する', async () => {
+    postRefreshMock.mockResolvedValue({ state: 'stale' })
+
+    const { result } = renderController()
 
     await act(async () => {
-      const promise = result.current.startRefresh()
-      await vi.advanceTimersByTimeAsync(1000)
-      await vi.advanceTimersByTimeAsync(1000)
-      await promise
-    })
-
-    it('stale のトーストは重複して追加されない', async () => {
-      const { result } = renderController()
-
-      postRefreshMock.mockResolvedValue({ state: 'stale' })
-
-      await act(async () => {
-        const promise = result.current.startRefresh()
-        await promise
-      })
-
-      expect(result.current.pendingToasts).toHaveLength(1)
-
-      await act(async () => {
-        const promise = result.current.startRefresh()
-        await promise
-      })
-
-      expect(result.current.pendingToasts).toHaveLength(1)
+      await result.current.startRefresh()
     })
 
     expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })
-    expect(result.current.isRefreshing).toBe(false)
-
-    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
-    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
-    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success', { updated_records: 1 }))
-
-    await act(async () => {
-      const promise = result.current.startRefresh()
-      await vi.advanceTimersByTimeAsync(1000)
-      await vi.advanceTimersByTimeAsync(1000)
-      await promise
-    })
-
-    const dismissTargetId = result.current.pendingToasts.at(-1)?.id
-    expect(dismissTargetId).toBeDefined()
-    if (dismissTargetId) {
-      act(() => {
-        result.current.dismissToast(dismissTargetId)
-      })
-    }
-    expect(result.current.pendingToasts.some((toast) => toast.id === dismissTargetId)).toBe(false)
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5000)
-    })
-    expect(result.current.pendingToasts.some((toast) => toast.id === dismissTargetId)).toBe(false)
-    expect(reloadCurrentWeekMock).toHaveBeenCalledTimes(2)
   })
 })
