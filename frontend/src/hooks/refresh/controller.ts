@@ -14,6 +14,10 @@ export interface RefreshToast {
   readonly detail?: string | null
 }
 
+const TOAST_AUTO_DISMISS_MS = 5000
+const STALE_TOAST_MESSAGE = 'データ更新の結果を取得できませんでした'
+const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
+
 export interface UseRefreshStatusOptions {
   readonly pollIntervalMs?: number
   readonly timeoutMs?: number
@@ -80,15 +84,61 @@ export const useRefreshStatusController = (
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completion = useRef<(() => void) | null>(null)
   const toastSeq = useRef(0)
+  const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const pollerRef = useRef<ReturnType<typeof createRefreshStatusPoller> | null>(null)
 
-  const enqueue = useCallback((toast: ToastPayload) => {
-    setPendingToasts((prev) => [...prev, { ...toast, id: String(++toastSeq.current) }])
+  const clearToastTimer = useCallback((id: string) => {
+    const timer = toastTimers.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      toastTimers.current.delete(id)
+    }
   }, [])
 
-  const dismissToast = useCallback((id: string) => {
-    setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [])
+  const registerToastTimer = useCallback((id: string) => {
+    clearToastTimer(id)
+    const timer = setTimeout(() => {
+      clearToastTimer(id)
+      setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
+    }, TOAST_AUTO_DISMISS_MS)
+    toastTimers.current.set(id, timer)
+  }, [clearToastTimer])
+
+  const dismissToast = useCallback(
+    (id: string) => {
+      clearToastTimer(id)
+      setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
+    },
+    [clearToastTimer],
+  )
+
+  const shouldDeduplicate = useCallback(
+    (existing: RefreshToast, toast: ToastPayload): boolean =>
+      existing.message === toast.message &&
+      ((toast.variant === 'warning' && toast.message === STALE_TOAST_MESSAGE) ||
+        (toast.variant === 'error' && toast.message === FETCH_STATUS_ERROR_MESSAGE)),
+    [],
+  )
+
+  const enqueue = useCallback(
+    (toast: ToastPayload) => {
+      setPendingToasts((prev) => {
+        const duplicate = prev.find((existing) => shouldDeduplicate(existing, toast))
+        if (duplicate) {
+          registerToastTimer(duplicate.id)
+          return prev.map((existing) =>
+            existing.id === duplicate.id
+              ? { ...existing, detail: toast.detail ?? existing.detail ?? null }
+              : existing,
+          )
+        }
+        const id = String(++toastSeq.current)
+        registerToastTimer(id)
+        return [...prev, { ...toast, id }]
+      })
+    },
+    [registerToastTimer, shouldDeduplicate],
+  )
 
   const clearTimers = useCallback(() => {
     pollerRef.current?.stop()
@@ -112,7 +162,16 @@ export const useRefreshStatusController = (
     [clearTimers, enqueue],
   )
 
-  useEffect(() => () => finish(), [finish])
+  useEffect(
+    () => () => {
+      toastTimers.current.forEach((timer) => {
+        clearTimeout(timer)
+      })
+      toastTimers.current.clear()
+      finish()
+    },
+    [finish],
+  )
 
   const startRefresh = useCallback(async () => {
     if (active.current) return
