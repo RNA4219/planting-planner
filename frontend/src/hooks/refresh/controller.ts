@@ -134,7 +134,7 @@ export const useRefreshStatusController = (
       completion.current = null
       if (toast) {
         if (toast.variant === 'success') {
-          void options?.onSuccess?.()
+          void Promise.resolve(options?.onSuccess?.()).catch(() => undefined)
         }
         enqueue(toast)
       }

@@ -93,6 +93,36 @@ describe('useRefreshStatusController', () => {
     })
   })
 
+  it('onSuccess が拒否しても未処理拒否が発生しない', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 1, last_error: null })
+
+    const catchSpy = vi.spyOn(Promise.prototype, 'catch')
+    const onSuccess = vi.fn(() => Promise.reject(new Error('rejected')))
+    const initialCatchCalls = catchSpy.mock.calls.length
+
+    try {
+      const { result } = renderHook(() =>
+        useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 4000, onSuccess }),
+      )
+
+      await act(async () => {
+        await expect(result.current.startRefresh()).resolves.toBeUndefined()
+      })
+
+      await Promise.resolve()
+      await vi.runAllTicks()
+
+      expect(onSuccess).toHaveBeenCalledTimes(1)
+      expect(catchSpy.mock.calls.length).toBe(initialCatchCalls + 1)
+      expect(result.current.pendingToasts.at(-1)).toMatchObject({
+        variant: 'success',
+        message: 'データ更新が完了しました',
+      })
+    } finally {
+      catchSpy.mockRestore()
+    }
+  })
+
   it('失敗時にはエラートーストを追加する', async () => {
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
     fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
