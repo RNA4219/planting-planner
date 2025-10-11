@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { TOAST_AUTO_DISMISS_MS } from '../../constants/toast'
 import { ToastStack } from '../ToastStack'
 
 const sampleToasts = [
@@ -43,13 +44,13 @@ describe('ToastStack', () => {
       <ToastStack
         toasts={sampleToasts.slice(0, 1)}
         onDismiss={handleDismiss}
-        autoCloseDurationMs={2000}
+        autoCloseDurationMs={TOAST_AUTO_DISMISS_MS}
       />,
     )
 
     expect(handleDismiss).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(2000)
+    await vi.advanceTimersByTimeAsync(TOAST_AUTO_DISMISS_MS)
 
     expect(handleDismiss).toHaveBeenCalledWith('1')
   })

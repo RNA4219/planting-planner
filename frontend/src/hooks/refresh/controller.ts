@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { TOAST_AUTO_DISMISS_MS } from '../../components/ToastStack'
+import { TOAST_AUTO_DISMISS_MS } from '../../constants/toast'
 import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
 import type { RefreshStatusResponse } from '../../types'
