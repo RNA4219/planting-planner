@@ -15,7 +15,7 @@
 - 日付処理: 週開始日を ISO 週の月曜日へ丸める。
 
 ## Load
-- `price_weekly` に対し `ON CONFLICT(crop_id, region, week_start)` で UPSERT。
+- `price_weekly` に対し `ON CONFLICT(crop_id, week)` で UPSERT。
 - 更新件数を計測し `etl_runs.updated_records` に保存。
 - エラー時は `etl_runs.state=failure` とし、`last_error` を記録。
 
