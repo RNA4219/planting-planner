@@ -5,9 +5,10 @@ import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
-import { fetchRefreshStatus, postRefresh } from './lib/api'
+import { ToastStack } from './components/ToastStack'
 import { loadRegion } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
+import { useRefreshStatus } from './hooks/useRefreshStatus'
 import type { Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
@@ -143,14 +144,24 @@ const useRefreshStatus = () => {
 
 export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
-  const { isRefreshing, startRefresh, toasts } = useRefreshStatus()
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
   const [searchKeyword, setSearchKeyword] = useState('')
 
   const initialRegionRef = useRef<Region>(loadRegion())
 
-  const { region, setRegion, queryWeek, setQueryWeek, currentWeek, displayWeek, sortedRows, handleSubmit } =
-    useRecommendations({ favorites, initialRegion: initialRegionRef.current })
+  const {
+    region,
+    setRegion,
+    queryWeek,
+    setQueryWeek,
+    currentWeek,
+    displayWeek,
+    sortedRows,
+    handleSubmit,
+    reloadCurrentWeek,
+  } = useRecommendations({ favorites, initialRegion: initialRegionRef.current })
+  const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatus({ pollIntervalMs: 1000 })
+  const lastSuccessToastIdRef = useRef<string | null>(null)
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +203,18 @@ export const App = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
+  useEffect(() => {
+    const latestSuccess = [...pendingToasts].reverse().find((toast) => toast.variant === 'success')
+    if (!latestSuccess) {
+      return
+    }
+    if (lastSuccessToastIdRef.current === latestSuccess.id) {
+      return
+    }
+    lastSuccessToastIdRef.current = latestSuccess.id
+    void reloadCurrentWeek()
+  }, [pendingToasts, reloadCurrentWeek])
+
   return (
     <div className="app">
       <header className="app__header">
@@ -209,15 +232,7 @@ export const App = () => {
         />
       </header>
       <main className="app__main">
-        {toasts.length > 0 && (
-          <div className="toast-stack" aria-live="assertive" aria-atomic="true">
-            {toasts.map((toast) => (
-              <div key={toast.id} className={`toast toast--${toast.tone}`} role="alert">
-                {toast.message}
-              </div>
-            ))}
-          </div>
-        )}
+        <ToastStack toasts={pendingToasts} onDismiss={dismissToast} />
         <RecommendationsTable
           region={region}
           displayWeek={displayWeek}
