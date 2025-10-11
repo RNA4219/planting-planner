@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { MockInstance } from 'vitest'
 
 import type { RefreshStatusResponse } from '../../types'
 
@@ -43,7 +44,7 @@ describe('useRefreshStatusController', () => {
       }),
     )
 
-  let setTimeoutSpy: vi.SpyInstance<ReturnType<typeof setTimeout>, Parameters<typeof setTimeout>>
+  let setTimeoutSpy: MockInstance<(typeof globalThis)['setTimeout']>
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -83,7 +84,10 @@ describe('useRefreshStatusController', () => {
 
     const successToastId = result.current.pendingToasts[0]?.id
     expect(successToastId).toBeDefined()
-    expect(setTimeoutSpy.mock.calls.some(([, delay]) => delay === 5000)).toBe(true)
+    const hasAutoDismiss = (
+      setTimeoutSpy.mock.calls as unknown as ReadonlyArray<Parameters<typeof setTimeout>>
+    ).some((call) => call[1] === 5000)
+    expect(hasAutoDismiss).toBe(true)
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000)
