@@ -33,14 +33,17 @@
 - `UNIQUE (crop_id, week)` で作物×週の重複登録を禁止。
 
 ### etl_runs
-| カラム | 型 | 説明 |
+| カラム | 型 / 制約 | 説明 |
 | --- | --- | --- |
 | id | INTEGER PK | 実行 ID |
-| state | TEXT | `running` `success` `failure` `stale` |
-| started_at | DATETIME | 開始時刻 |
-| finished_at | DATETIME | 終了時刻 |
-| updated_records | INTEGER | 更新件数 |
-| last_error | TEXT | 直近エラーメッセージ |
+| run_at | TEXT NOT NULL | 実行要求を受けた時刻（ISO 8601 文字列） |
+| status | TEXT NOT NULL | `pending` `running` `success` `failure` などの状態 |
+| updated_records | INTEGER NOT NULL | 更新件数 |
+| error_message | TEXT | 失敗時のメッセージ |
+| state | TEXT | 実装内の状態管理フィールド |
+| started_at | TEXT | 実処理開始時刻 |
+| finished_at | TEXT | 実処理終了時刻 |
+| last_error | TEXT | 直近エラーの詳細 |
 
 ## 花きデータ取り込み
 - `crops.category=flower` を追記し、関連する `growth_days` と `price_weekly` を整備。
