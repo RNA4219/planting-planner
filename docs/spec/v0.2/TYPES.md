@@ -10,11 +10,12 @@ class RefreshState(str, Enum):
 
 class RefreshStatus(BaseModel):
     state: RefreshState
-    started_at: datetime | None
-    finished_at: datetime | None
+    started_at: str | None
+    finished_at: str | None
     updated_records: int
     last_error: str | None
 ```
+- `started_at` と `finished_at` は ISO8601 形式の文字列。未設定時は `None`。
 - `updated_records` は 0 以上の整数。
 - 花きデータ対応でも既存 Enum を再利用。
 
