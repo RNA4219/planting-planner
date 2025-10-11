@@ -24,7 +24,6 @@ export const RegionSelect = ({ onChange, options = DEFAULT_OPTIONS, disabled }: 
 
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value as Region
-    onChange(next)
     setSelected(next)
     saveRegion(next)
   }
