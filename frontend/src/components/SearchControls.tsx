@@ -2,6 +2,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 
 import { RegionSelect } from './RegionSelect'
 import type { Region } from '../types'
+import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
 
 interface SearchControlsProps {
   queryWeek: string
@@ -36,11 +37,11 @@ export const SearchControls = ({
           type="search"
           value={searchKeyword}
           onChange={onSearchChange}
-          placeholder="作物名・カテゴリで検索"
-          aria-label="作物検索"
+          placeholder={SEARCH_CONTROLS_TEXT.searchPlaceholder}
+          aria-label={SEARCH_CONTROLS_TEXT.searchAriaLabel}
         />
         <label className="app__week" htmlFor="week-input">
-          週
+          {SEARCH_CONTROLS_TEXT.weekLabel}
           <input
             id="week-input"
             name="week"
@@ -53,7 +54,7 @@ export const SearchControls = ({
           />
         </label>
         <div className="app__controls-actions">
-          <button type="submit">この条件で見る</button>
+          <button type="submit">{SEARCH_CONTROLS_TEXT.submitButton}</button>
           <button
             className={`app__refresh${refreshing ? ' app__refresh--loading' : ''}`}
             type="button"
@@ -62,7 +63,9 @@ export const SearchControls = ({
             }}
             disabled={refreshing}
           >
-            {refreshing ? '更新中...' : '更新'}
+            {refreshing
+              ? SEARCH_CONTROLS_TEXT.refreshingButton
+              : SEARCH_CONTROLS_TEXT.refreshButton}
           </button>
         </div>
       </div>
