@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-export type ToastVariant = 'success' | 'error' | 'warning'
+export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 export interface ToastStackItem {
   readonly id: string; readonly variant: ToastVariant; readonly message: string; readonly detail?: string | null

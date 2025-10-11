@@ -44,6 +44,38 @@ describe('useRefreshStatusController', () => {
     vi.useRealTimers()
   })
 
+  it('更新開始時に情報トーストを追加する', async () => {
+    const { result, unmount } = renderController()
+
+    let resolvePost:
+      | ((value: { state: 'running' | 'success' | 'failure' | 'stale' }) => void)
+      | undefined
+    postRefreshMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePost = resolve
+        }),
+    )
+    fetchRefreshStatusMock.mockResolvedValue(createStatus('running'))
+
+    await act(async () => {
+      void result.current.startRefresh()
+    })
+
+    expect(resolvePost).toBeDefined()
+
+    await act(async () => {
+      resolvePost?.({ state: 'running' })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'info' })
+
+    act(() => {
+      unmount()
+    })
+  })
+
   it('開始から終了までのフローを制御し、成功・失敗・タイムアウト時のトーストを生成する', async () => {
     const reloadCurrentWeekMock = vi.fn()
     const { result } = renderHook(() =>
@@ -54,20 +86,24 @@ describe('useRefreshStatusController', () => {
       }),
     )
 
-        expect(toastId).toBeDefined()
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+    try {
+      postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+      fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+      fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success', { updated_records: 8 }))
 
-        const timerIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 5000)
-        expect(timerIndex).toBeGreaterThanOrEqual(0)
+      await act(async () => {
+        const promise = result.current.startRefresh()
+        await vi.advanceTimersByTimeAsync(1000)
+        await vi.advanceTimersByTimeAsync(1000)
+        await promise
+      })
 
-        await act(async () => {
-          await vi.advanceTimersByTimeAsync(5000)
-        })
-
-        expect(result.current.pendingToasts).toEqual([])
-      } finally {
-        setTimeoutSpy.mockRestore()
-      }
-    })
+      const timerIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 5000)
+      expect(timerIndex).toBeGreaterThanOrEqual(0)
+    } finally {
+      setTimeoutSpy.mockRestore()
+    }
 
     expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
     expect(result.current.pendingToasts).toEqual([
@@ -98,27 +134,7 @@ describe('useRefreshStatusController', () => {
       await promise
     })
 
-    it('stale のトーストは重複して追加されない', async () => {
-      const { result } = renderController()
-
-      postRefreshMock.mockResolvedValue({ state: 'stale' })
-
-      await act(async () => {
-        const promise = result.current.startRefresh()
-        await promise
-      })
-
-      expect(result.current.pendingToasts).toHaveLength(1)
-
-      await act(async () => {
-        const promise = result.current.startRefresh()
-        await promise
-      })
-
-      expect(result.current.pendingToasts).toHaveLength(1)
-    })
-
-    expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'error' })
     expect(result.current.isRefreshing).toBe(false)
 
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
@@ -146,5 +162,26 @@ describe('useRefreshStatusController', () => {
     })
     expect(result.current.pendingToasts.some((toast) => toast.id === dismissTargetId)).toBe(false)
     expect(reloadCurrentWeekMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('stale のトーストは重複して追加されない', async () => {
+    const { result } = renderController()
+
+    postRefreshMock.mockResolvedValue({ state: 'stale' })
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await promise
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(1)
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await promise
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(1)
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })
   })
 })

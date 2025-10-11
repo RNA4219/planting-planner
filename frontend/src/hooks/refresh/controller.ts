@@ -5,7 +5,7 @@ import type { RefreshState, RefreshStatusResponse } from '../../types'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
-export type RefreshToastVariant = 'success' | 'error' | 'warning'
+export type RefreshToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 export interface RefreshToast {
   readonly id: string
@@ -15,6 +15,7 @@ export interface RefreshToast {
 }
 
 const TOAST_AUTO_DISMISS_MS = 5000
+const REFRESH_STARTED_MESSAGE = '更新を開始しました。進行状況を確認しています…'
 const STALE_TOAST_MESSAGE = 'データ更新の結果を取得できませんでした'
 const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
 
@@ -85,6 +86,7 @@ export const useRefreshStatusController = (
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completion = useRef<(() => void) | null>(null)
   const toastSeq = useRef(0)
+  const startToastId = useRef<string | null>(null)
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const pollerRef = useRef<ReturnType<typeof createRefreshStatusPoller> | null>(null)
 
@@ -95,17 +97,50 @@ export const useRefreshStatusController = (
     toastTimers.current.delete(id)
   }, [])
 
-  const enqueue = useCallback((toast: ToastPayload) => {
+  const enqueue = useCallback((toast: ToastPayload, options?: { dedupe?: boolean }) => {
+    if (options?.dedupe) {
+      let insertedId: string | null = null
+      setPendingToasts((prev) => {
+        const exists = prev.some(
+          (entry) =>
+            entry.variant === toast.variant &&
+            entry.message === toast.message &&
+            entry.detail === toast.detail,
+        )
+        if (exists) {
+          return prev
+        }
+        const id = String(++toastSeq.current)
+        insertedId = id
+        const timer = setTimeout(() => {
+          setPendingToasts((current) => current.filter((entry) => entry.id !== id))
+          toastTimers.current.delete(id)
+        }, TOAST_AUTO_DISMISS_MS)
+        toastTimers.current.set(id, timer)
+        return [...prev, { ...toast, id }]
+      })
+      return insertedId
+    }
+
     const id = String(++toastSeq.current)
     setPendingToasts((prev) => [...prev, { ...toast, id }])
     const timer = setTimeout(() => {
       setPendingToasts((prev) => prev.filter((entry) => entry.id !== id))
       toastTimers.current.delete(id)
-    }, 5000)
+    }, TOAST_AUTO_DISMISS_MS)
     toastTimers.current.set(id, timer)
+    return id
   }, [])
 
   const dismissToast = useCallback((id: string) => {
+    cancelToastTimer(id)
+    setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [cancelToastTimer])
+
+  const clearStartToast = useCallback(() => {
+    const id = startToastId.current
+    if (!id) return
+    startToastId.current = null
     cancelToastTimer(id)
     setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
   }, [cancelToastTimer])
@@ -133,6 +168,7 @@ export const useRefreshStatusController = (
     (toast?: ToastPayload) => {
       if (!active.current) return
       active.current = false
+      clearStartToast()
       clearTimers()
       setIsRefreshing(false)
       completion.current?.()
@@ -141,10 +177,10 @@ export const useRefreshStatusController = (
         if (toast.variant === 'success') {
           options?.onSuccess?.()
         }
-        enqueue(toast)
+        enqueue(toast, { dedupe: toast.variant === 'warning' })
       }
     },
-    [clearTimers, enqueue, options?.onSuccess],
+    [clearStartToast, clearTimers, enqueue, options?.onSuccess],
   )
 
   useEffect(
@@ -188,6 +224,12 @@ export const useRefreshStatusController = (
       if (isTerminalState(response.state)) {
         finish(toastFromStatus(buildStatus(response.state)))
       } else {
+        clearStartToast()
+        startToastId.current = enqueue({
+          variant: 'info',
+          message: REFRESH_STARTED_MESSAGE,
+          detail: null,
+        })
         void pollerRef.current?.run()
       }
     } catch (error) {
@@ -199,7 +241,7 @@ export const useRefreshStatusController = (
     }
 
     await completionPromise
-  }, [finish, settings.pollIntervalMs, settings.timeoutMs])
+  }, [clearStartToast, enqueue, finish, settings.pollIntervalMs, settings.timeoutMs])
 
   return { isRefreshing, pendingToasts, startRefresh, dismissToast }
 }
