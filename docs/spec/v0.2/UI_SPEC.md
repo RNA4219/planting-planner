@@ -16,14 +16,16 @@
 - マウス/キーボード操作でフォーカス可能。Enter で選択、Space でお気に入り切替。
 
 ## RefreshStatusPoller
-- 更新中はボタンをスピナー付き無効状態にし、メッセージ "更新中..." を表示。
-- `running` → `success` で緑のトースト、`failure` で赤、`stale` で黄色を表示。
-- トーストは 5 秒後自動クローズ。手動閉鎖ボタン付き。
-- `role="alert"` `aria-live="assertive"` を付与しアクセシビリティに配慮。
+- 更新リクエスト開始時はボタンをスピナー付き無効状態にし、メッセージ "更新中..." を表示。
+- `postRefresh` が `running` を返した場合、`TOAST_MESSAGES.refreshRequestStarted` の文言（「更新を開始しました。進行状況を確認しています…」）で `info` トーストを即時に表示する。
+- その後のポーリング結果は `success` で緑、`failure` で赤、`stale` で黄色のトーストに集約し、完了後に `onSuccess` をトリガーする。
+- トーストは 5 秒後に自動クローズし、各トーストに閉じるボタンを必ず設置する。
+- `role="alert"` `aria-live="assertive"` 属性を付与し、支援技術へ確実に通知する。
 
 ## Toast コンポーネント
-- プロパティ: `type` (`success` `error` `warning`)、`message`、`onClose`。
-- Tailwind クラスで背景色を切り替える。
+- プロパティ: `variant` (`success` `error` `warning` `info`)、`message`、`detail?`、`onDismiss?`。
+- DOM 構造は `toast-stack` ブロック配下に `toast toast--<variant>` という BEM 風クラスでバリアント別スタイルを切り替える。
+- `autoCloseDurationMs` 既定値は 5,000ms（`TOAST_AUTO_DISMISS_MS`）で、手動操作時もタイマーを停止する。
 
 ## レスポンシブ
 - モバイル表示では検索ボックスと更新ボタンを縦並びに。
