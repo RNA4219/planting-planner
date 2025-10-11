@@ -187,7 +187,7 @@ export const useRefreshStatusController = (
       const response = await postRefresh()
       if (!active.current) return
       if (isTerminalState(response.state)) {
-        finish(toastFromStatus(buildStatus(response.state)))
+        finish(toastFromStatus(response))
       } else {
         enqueue({ variant: 'info', message: TOAST_MESSAGES.refreshRequestStarted, detail: null })
         void pollerRef.current?.run()
