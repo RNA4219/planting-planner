@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   fetchRecommend,
@@ -8,11 +8,17 @@ import {
   fetchCrops,
   postRefresh,
   fetchRefreshStatus,
+  resetAppSpies,
 } from './utils/renderApp'
 import App from '../src/App'
 
 describe.skip('App refresh workflow', () => {
+  beforeEach(() => {
+    resetAppSpies()
+  })
+
   afterEach(() => {
+    resetAppSpies()
     vi.useRealTimers()
   })
 
