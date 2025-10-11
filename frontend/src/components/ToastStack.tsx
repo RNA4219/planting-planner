@@ -1,19 +1,26 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-export type ToastVariant = 'success' | 'error' | 'warning'
+export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 export interface ToastStackItem {
-  readonly id: string; readonly variant: ToastVariant; readonly message: string; readonly detail?: string | null
+  readonly id: string
+  readonly variant: ToastVariant
+  readonly message: string
+  readonly detail?: string | null
 }
 
 export interface ToastStackProps {
-  readonly toasts: ReadonlyArray<ToastStackItem>; readonly onDismiss?: (id: string) => void; readonly autoCloseDurationMs?: number
+  readonly toasts: ReadonlyArray<ToastStackItem>
+  readonly onDismiss?: (id: string) => void
+  readonly autoCloseDurationMs?: number
 }
+
+export const TOAST_AUTO_DISMISS_MS = 5000
 
 export const ToastStack = ({
   toasts,
   onDismiss,
-  autoCloseDurationMs = 5000,
+  autoCloseDurationMs = TOAST_AUTO_DISMISS_MS,
 }: ToastStackProps) => {
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const prevDuration = useRef<number | undefined>(autoCloseDurationMs)
