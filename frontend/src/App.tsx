@@ -10,8 +10,137 @@ import { loadRegion } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatus } from './hooks/useRefreshStatus'
 import type { Region } from './types'
+import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 import './App.css'
+
+type ToastTone = 'info' | 'success' | 'error'
+
+interface RefreshToast {
+  id: number
+  message: string
+  tone: ToastTone
+}
+
+const POLL_INTERVAL_MS = 1000
+const TOAST_DURATION_MS = 5000
+
+const useRefreshStatus = () => {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [toasts, setToasts] = useState<RefreshToast[]>([])
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const toastTimersRef = useRef(new Map<number, ReturnType<typeof setTimeout>>())
+  const nextToastIdRef = useRef(0)
+
+  const clearPollTimer = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
+  }, [])
+
+  const removeToast = useCallback((id: number) => {
+    const timer = toastTimersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      toastTimersRef.current.delete(id)
+    }
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [])
+
+  const pushToast = useCallback(
+    (toast: Omit<RefreshToast, 'id'>) => {
+      const id = nextToastIdRef.current++
+      setToasts((prev) => [...prev, { ...toast, id }])
+      const timer = setTimeout(() => {
+        removeToast(id)
+      }, TOAST_DURATION_MS)
+      toastTimersRef.current.set(id, timer)
+    },
+    [removeToast],
+  )
+
+  const pollStatus = useCallback(async () => {
+    let shouldContinue = false
+    try {
+      const status = await fetchRefreshStatus()
+      if (status.state === 'running' || status.state === 'stale') {
+        shouldContinue = true
+        return
+      }
+      if (status.state === 'success') {
+        pushToast({
+          tone: 'success',
+          message: TOAST_MESSAGES.refreshSuccess(status.updated_records),
+        })
+      } else if (status.state === 'failure') {
+        const detail = status.last_error ?? TOAST_MESSAGES.refreshStatusUnknownDetail
+        pushToast({
+          tone: 'error',
+          message: TOAST_MESSAGES.refreshFailure(detail),
+        })
+      } else {
+        pushToast({
+          tone: 'info',
+          message: TOAST_MESSAGES.refreshUnknown,
+        })
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      pushToast({
+        tone: 'error',
+        message: TOAST_MESSAGES.refreshStatusFetchFailure(detail),
+      })
+    } finally {
+      if (shouldContinue) {
+        clearPollTimer()
+        pollTimerRef.current = setTimeout(() => {
+          void pollStatus()
+        }, POLL_INTERVAL_MS)
+      } else {
+        clearPollTimer()
+        setIsRefreshing(false)
+      }
+    }
+  }, [clearPollTimer, pushToast])
+
+  const startRefresh = useCallback(async () => {
+    if (isRefreshing) {
+      return
+    }
+    setIsRefreshing(true)
+    try {
+      const response = await postRefresh()
+      if (response.state === 'failure') {
+        pushToast({ tone: 'error', message: TOAST_MESSAGES.refreshRequestFailure })
+        setIsRefreshing(false)
+        return
+      }
+      pushToast({ tone: 'info', message: TOAST_MESSAGES.refreshRequestStarted })
+      clearPollTimer()
+      void pollStatus()
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      pushToast({
+        tone: 'error',
+        message: TOAST_MESSAGES.refreshRequestFailureWithDetail(detail),
+      })
+      setIsRefreshing(false)
+    }
+  }, [clearPollTimer, isRefreshing, pollStatus, pushToast])
+
+  useEffect(() => {
+    return () => {
+      clearPollTimer()
+      toastTimersRef.current.forEach((timer) => {
+        clearTimeout(timer)
+      })
+      toastTimersRef.current.clear()
+    }
+  }, [clearPollTimer])
+
+  return { isRefreshing, startRefresh, toasts }
+}
 
 export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
@@ -89,7 +218,7 @@ export const App = () => {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Planting Planner</h1>
+        <h1 className="app__title">{APP_TEXT.title}</h1>
         <SearchControls
           queryWeek={queryWeek}
           currentWeek={currentWeek}

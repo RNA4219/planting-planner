@@ -7,6 +7,22 @@ import { fetchRecommend, resetAppSpies } from './renderApp'
 type UseRecommendationsModule = typeof import('../../src/hooks/useRecommendations')
 export type RecommendationItem = RecommendResponse['items'][number]
 
+const fetcherMock = vi.fn()
+const cropCatalogState = { catalog: new Map(), isLoading: false }
+
+vi.mock('../../src/hooks/recommendationFetcher', () => ({
+  useRecommendationFetcher: () => fetcherMock,
+}))
+
+vi.mock('../../src/hooks/useCropCatalog', () => ({
+  useCropCatalog: () => cropCatalogState,
+}))
+
+export const recommendationControllerMocks = {
+  fetcherMock,
+  cropCatalogState,
+}
+
 export const defaultCrops = [
   { id: 1, name: '春菊', category: 'leaf' },
   { id: 2, name: 'にんじん', category: 'root' },
@@ -50,4 +66,10 @@ export const setupRecommendationsTest = async (): Promise<SetupRecommendationsTe
   )
   const useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
   return { useRecommendationsModule, useRecommendationsSpy }
+}
+
+export const resetRecommendationControllerMocks = (): void => {
+  recommendationControllerMocks.fetcherMock.mockReset()
+  recommendationControllerMocks.cropCatalogState.catalog = new Map()
+  recommendationControllerMocks.cropCatalogState.isLoading = false
 }
