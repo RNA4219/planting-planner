@@ -13,8 +13,9 @@ const buildStatus = (state: RefreshStatusResponse['state']): RefreshStatusRespon
 
 describe('createRefreshStatusPoller', () => {
   it('stop 時に cancel が呼ばれる', async () => {
-    const schedule = vi.fn<(handler: () => void, interval: number) => number>().mockImplementation(() => 1)
-    const cancel = vi.fn<(timer: number) => void>()
+    const timer = 1 as ReturnType<typeof setTimeout>
+    const schedule = vi.fn<typeof setTimeout>().mockImplementation(() => timer)
+    const cancel = vi.fn<typeof clearTimeout>()
     const poller = createRefreshStatusPoller({
       pollIntervalMs: 1000,
       fetchStatus: vi.fn().mockResolvedValue(buildStatus('running')),
@@ -28,7 +29,7 @@ describe('createRefreshStatusPoller', () => {
     await poller.run()
     poller.stop()
 
-    expect(cancel).toHaveBeenCalledWith(1)
+    expect(cancel).toHaveBeenCalledWith(timer)
   })
 
   it('stale 状態では onTerminal が一度だけ呼ばれる', async () => {
@@ -48,14 +49,17 @@ describe('createRefreshStatusPoller', () => {
   })
 
   it('エラー時に onError 後 stop される', async () => {
-    let scheduledHandler: (() => void) | null = null
+    let scheduledHandler: (() => void) | undefined
+    const timer = 1 as ReturnType<typeof setTimeout>
     const schedule = vi
-      .fn<(handler: () => void, interval: number) => number>()
+      .fn<typeof setTimeout>()
       .mockImplementation((handler) => {
-        scheduledHandler = handler
-        return 1
+        if (typeof handler === 'function') {
+          scheduledHandler = handler as () => void
+        }
+        return timer
       })
-    const cancel = vi.fn<(timer: number) => void>()
+    const cancel = vi.fn<typeof clearTimeout>()
     const onError = vi.fn()
     const fetchStatus = vi
       .fn<() => Promise<RefreshStatusResponse>>()
@@ -78,6 +82,6 @@ describe('createRefreshStatusPoller', () => {
     await Promise.resolve()
 
     expect(onError).toHaveBeenCalledTimes(1)
-    expect(cancel).toHaveBeenCalledWith(1)
+    expect(cancel).toHaveBeenCalledWith(timer)
   })
 })
