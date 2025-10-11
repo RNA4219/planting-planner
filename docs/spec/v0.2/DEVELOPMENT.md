@@ -13,8 +13,22 @@
 - フロントエンド: Vitest + Testing Library。E2E は Playwright を想定。
 
 ## 環境
-- Docker Compose で backend/frontend を起動。
-- ETL はバックグラウンドタスクとして同一コンテナで実行。
+1. Node.js 20 以上と Python 3.11 以上を準備。
+2. フロントエンドを起動：
+   ```bash
+   cd frontend
+   npm ci
+   npm run dev
+   ```
+3. 別ターミナルでバックエンドを起動：
+   ```bash
+   cd backend
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt -r requirements-dev.txt
+   uvicorn app.main:app --reload
+   ```
+4. ブラウザで表示されたローカル URL を開き、地域を選んで「今週の作付け計画」を確認。
 
 ## リリース手順
 1. data/ 内の花きデータ更新を確認。
