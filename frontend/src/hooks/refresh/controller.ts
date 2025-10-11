@@ -61,14 +61,14 @@ const toastFromStatus = (status: RefreshStatusResponse): ToastPayload => {
   }
   return {
     variant: 'warning',
-    message: 'データ更新の結果を取得できませんでした',
+    message: STALE_TOAST_MESSAGE,
     detail: '更新状況を確認できませんでした。時間をおいて再試行してください。',
   }
 }
 
 const createFetchErrorToast = (error: unknown): ToastPayload => ({
   variant: 'error',
-  message: '更新状況の取得に失敗しました',
+  message: FETCH_STATUS_ERROR_MESSAGE,
   detail: error instanceof Error ? error.message : String(error),
 })
 
@@ -101,7 +101,7 @@ export const useRefreshStatusController = (
     const timer = setTimeout(() => {
       setPendingToasts((prev) => prev.filter((entry) => entry.id !== id))
       toastTimers.current.delete(id)
-    }, 5000)
+    }, TOAST_AUTO_DISMISS_MS)
     toastTimers.current.set(id, timer)
   }, [])
 
