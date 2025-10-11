@@ -2,8 +2,24 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RefreshStatusResponse } from '../../types'
+import type { RefreshStatusPollerOptions } from '../refresh/poller'
 
 import { useRefreshStatusController } from '../refresh/controller'
+
+const capturedOptions = vi.hoisted<RefreshStatusPollerOptions[]>(() => [])
+
+vi.mock('../refresh/poller', async () => {
+  const actual = await vi.importActual<typeof import('../refresh/poller')>('../refresh/poller')
+  return {
+    ...actual,
+    createRefreshStatusPoller: vi
+      .fn<typeof actual.createRefreshStatusPoller>()
+      .mockImplementation((options: RefreshStatusPollerOptions) => {
+        capturedOptions.push(options)
+        return actual.createRefreshStatusPoller(options)
+      }),
+  }
+})
 
 type PostRefreshImmediate =
   Pick<RefreshStatusResponse, 'state'> &
@@ -42,6 +58,7 @@ describe('useRefreshStatusController', () => {
     vi.useFakeTimers()
     postRefreshMock.mockReset()
     fetchRefreshStatusMock.mockReset()
+    capturedOptions.length = 0
   })
 
   afterEach(() => {
@@ -65,6 +82,8 @@ describe('useRefreshStatusController', () => {
       await promise
     })
 
+    const typedOptions = capturedOptions.at(-1)
+    expect(typedOptions?.pollIntervalMs).toBe(1000)
     expect(onSuccess).toHaveBeenCalledTimes(1)
     expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
     expect(result.current.pendingToasts.at(-1)).toMatchObject({
