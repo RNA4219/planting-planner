@@ -33,12 +33,14 @@ export const createRefreshStatusPoller = (
   }
 
   const tick = async (): Promise<void> => {
+    clearTimer()
     if (!options.isActive()) return
     try {
       const status = await options.fetchStatus()
       if (!options.isActive()) return
       if (isTerminalState(status.state)) {
         options.onTerminal(status)
+        clearTimer()
         return
       }
       const schedule = options.schedule ?? setTimeout
@@ -47,6 +49,7 @@ export const createRefreshStatusPoller = (
       }, options.pollIntervalMs)
     } catch (error) {
       options.onError(error)
+      clearTimer()
     }
   }
 
