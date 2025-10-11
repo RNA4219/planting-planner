@@ -39,6 +39,7 @@
 
 ## docs/spec/v0.2/TESTING.md
 - [ ] `npm test` の利用手順を更新し、`npm run test:file -- <pattern>` の例と Vitest CLI オプション対応状況を追記。
+  - `SearchControls`（旧 `SearchBox`）、`RecommendationsTable`（旧 `CropList`）、`useRefreshStatusController`／`createRefreshStatusPoller`（旧 `RefreshStatusPoller`）の名称同期を明示し、対応するテストスイートの参照先を一覧化。
 
 ## frontend/src/hooks/useRefreshStatus.test.ts
 - [ ] `__tests__/useRefreshStatus.controller.test.ts` に重複したケースを移管した後、当ファイルのレガシーテストを削除。
