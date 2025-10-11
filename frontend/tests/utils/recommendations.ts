@@ -1,8 +1,10 @@
 import { vi, type MockInstance } from 'vitest'
 
-import type { RecommendResponse } from '../../src/types'
+import type { RecommendResponse, Region } from '../../src/types'
 
-import { fetchRecommend, resetAppSpies } from './renderApp'
+import { normalizeRecommendationResponse } from '../../src/utils/recommendations'
+
+import { fetchRecommend, fetchRecommendations, resetAppSpies } from './renderApp'
 
 type UseRecommendationsModule = typeof import('../../src/hooks/useRecommendations')
 export type RecommendationItem = RecommendResponse['items'][number]
@@ -29,6 +31,40 @@ export const defaultCrops = [
   { id: 3, name: 'キャベツ', category: 'leaf' },
   { id: 4, name: 'トルコギキョウ', category: 'flower' },
 ] as const
+
+const applyDefaultRecommendationMocks = () => {
+  fetcherMock.mockImplementation(
+    async ({ region, week, preferLegacy }: { region: Region; week: string; preferLegacy?: boolean }) => {
+      const callModern = async () => {
+        try {
+          return await fetchRecommendations(region, week)
+        } catch {
+          return undefined
+        }
+      }
+      const callLegacy = async () => {
+        try {
+          return await fetchRecommend({ region, week })
+        } catch {
+          return undefined
+        }
+      }
+      const primary = preferLegacy ? callLegacy : callModern
+      const secondary = preferLegacy ? callModern : callLegacy
+      const response = (await primary()) ?? (await secondary())
+      if (!response) {
+        return null
+      }
+      return normalizeRecommendationResponse(response, week)
+    },
+  )
+  cropCatalogState.catalog = new Map(
+    defaultCrops.map((crop) => [crop.name, { id: crop.id, name: crop.name, category: crop.category }]),
+  )
+  cropCatalogState.isLoading = false
+}
+
+applyDefaultRecommendationMocks()
 
 export const toFullWidthAscii = (value: string): string =>
   value.replace(/[!-~]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0xfee0))
@@ -60,6 +96,7 @@ interface SetupRecommendationsTestResult {
 
 export const setupRecommendationsTest = async (): Promise<SetupRecommendationsTestResult> => {
   resetAppSpies()
+  applyDefaultRecommendationMocks()
   fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
   const useRecommendationsModule: UseRecommendationsModule = await import(
     '../../src/hooks/useRecommendations'
@@ -70,6 +107,5 @@ export const setupRecommendationsTest = async (): Promise<SetupRecommendationsTe
 
 export const resetRecommendationControllerMocks = (): void => {
   recommendationControllerMocks.fetcherMock.mockReset()
-  recommendationControllerMocks.cropCatalogState.catalog = new Map()
-  recommendationControllerMocks.cropCatalogState.isLoading = false
+  applyDefaultRecommendationMocks()
 }
