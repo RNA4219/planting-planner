@@ -16,9 +16,6 @@ export interface RefreshToast {
   readonly detail?: string | null
 }
 
-const STALE_TOAST_MESSAGE = 'データ更新の結果を取得できませんでした'
-const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
-
 export interface UseRefreshStatusOptions {
   readonly pollIntervalMs?: number
   readonly timeoutMs?: number
@@ -43,28 +40,32 @@ const toastFromStatus = (status: ToastStatus): ToastPayload => {
   if (status.state === 'success') {
     return {
       variant: 'success',
-      message: 'データ更新が完了しました',
-      detail: `${status.updated_records ?? 0}件のデータを更新しました。`,
+      message: TOAST_MESSAGES.refreshSuccess(status.updated_records ?? 0),
+      detail: null,
     }
   }
   if (status.state === 'failure') {
     return {
       variant: 'error',
-      message: 'データ更新に失敗しました',
-      detail: status.last_error ?? null,
+      message: TOAST_MESSAGES.refreshFailure(
+        status.last_error ?? TOAST_MESSAGES.refreshStatusUnknownDetail,
+      ),
+      detail: null,
     }
   }
   return {
     variant: 'warning',
-    message: STALE_TOAST_MESSAGE,
-    detail: '更新状況を確認できませんでした。時間をおいて再試行してください。',
+    message: TOAST_MESSAGES.refreshUnknown,
+    detail: TOAST_MESSAGES.refreshStatusUnknownDetail,
   }
 }
 
 const createFetchErrorToast = (error: unknown): ToastPayload => ({
   variant: 'error',
-  message: FETCH_STATUS_ERROR_MESSAGE,
-  detail: error instanceof Error ? error.message : String(error),
+  message: TOAST_MESSAGES.refreshStatusFetchFailure(
+    error instanceof Error ? error.message : String(error),
+  ),
+  detail: null,
 })
 
 export const useRefreshStatusController = (
@@ -189,7 +190,7 @@ export const useRefreshStatusController = (
     } catch (error) {
       finish({
         variant: 'error',
-        message: '更新リクエストに失敗しました',
+        message: TOAST_MESSAGES.refreshRequestFailure,
         detail: error instanceof Error ? error.message : String(error),
       })
     }
