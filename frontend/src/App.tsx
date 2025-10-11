@@ -8,7 +8,7 @@ import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
 import { loadRegion } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
-import { useRefreshStatus } from './hooks/useRefreshStatus'
+import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { Region } from './types'
 import { APP_TEXT } from './constants/messages'
 
@@ -32,7 +32,7 @@ export const App = () => {
     handleSubmit,
     reloadCurrentWeek,
   } = useRecommendations({ favorites, initialRegion: initialRegionRef.current })
-  const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatus({ pollIntervalMs: 1000 })
+  const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController({ pollIntervalMs: 1000 })
   const lastSuccessToastIdRef = useRef<string | null>(null)
 
   const handleWeekChange = useCallback(
