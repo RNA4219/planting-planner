@@ -17,6 +17,7 @@ export interface RefreshToast {
 export interface UseRefreshStatusOptions {
   readonly pollIntervalMs?: number
   readonly timeoutMs?: number
+  readonly onSuccess?: () => void
 }
 
 export interface UseRefreshStatusResult {
@@ -80,15 +81,40 @@ export const useRefreshStatusController = (
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completion = useRef<(() => void) | null>(null)
   const toastSeq = useRef(0)
+  const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const pollerRef = useRef<ReturnType<typeof createRefreshStatusPoller> | null>(null)
 
+  const cancelToastTimer = useCallback((id: string) => {
+    const timer = toastTimers.current.get(id)
+    if (!timer) return
+    clearTimeout(timer)
+    toastTimers.current.delete(id)
+  }, [])
+
   const enqueue = useCallback((toast: ToastPayload) => {
-    setPendingToasts((prev) => [...prev, { ...toast, id: String(++toastSeq.current) }])
+    const id = String(++toastSeq.current)
+    setPendingToasts((prev) => [...prev, { ...toast, id }])
+    const timer = setTimeout(() => {
+      setPendingToasts((prev) => prev.filter((entry) => entry.id !== id))
+      toastTimers.current.delete(id)
+    }, 5000)
+    toastTimers.current.set(id, timer)
   }, [])
 
   const dismissToast = useCallback((id: string) => {
+    cancelToastTimer(id)
     setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [])
+  }, [cancelToastTimer])
+
+  useEffect(
+    () => () => {
+      toastTimers.current.forEach((timer) => {
+        clearTimeout(timer)
+      })
+      toastTimers.current.clear()
+    },
+    [],
+  )
 
   const clearTimers = useCallback(() => {
     pollerRef.current?.stop()
@@ -107,9 +133,14 @@ export const useRefreshStatusController = (
       setIsRefreshing(false)
       completion.current?.()
       completion.current = null
-      if (toast) enqueue(toast)
+      if (toast) {
+        if (toast.variant === 'success') {
+          options?.onSuccess?.()
+        }
+        enqueue(toast)
+      }
     },
-    [clearTimers, enqueue],
+    [clearTimers, enqueue, options?.onSuccess],
   )
 
   useEffect(() => () => finish(), [finish])
