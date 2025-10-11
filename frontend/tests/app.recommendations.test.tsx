@@ -9,6 +9,7 @@ import {
   renderApp,
   resetAppSpies,
 } from './utils/renderApp'
+import { SEARCH_CONTROLS_TEXT } from '../src/constants/messages'
 
 describe('App recommendations', () => {
   beforeEach(() => {
@@ -31,7 +32,9 @@ describe('App recommendations', () => {
     const weekInput = screen.getByLabelText('週') as HTMLInputElement
     await user.clear(weekInput)
     await user.type(weekInput, '2024-W31')
-    await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
+    await user.click(
+      screen.getByRole('button', { name: SEARCH_CONTROLS_TEXT.submitButton }),
+    )
 
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W31')
