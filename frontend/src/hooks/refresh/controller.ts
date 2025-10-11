@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TOAST_AUTO_DISMISS_MS } from '../../components/ToastStack'
 import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
-import type { RefreshState, RefreshStatusResponse } from '../../types'
+import type { RefreshStatusResponse } from '../../types'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
@@ -33,17 +33,6 @@ export interface UseRefreshStatusResult {
 }
 
 type ToastPayload = Omit<RefreshToast, 'id'>
-
-const buildStatus = (
-  state: RefreshState,
-  overrides: Partial<RefreshStatusResponse> = {},
-): RefreshStatusResponse => ({
-  state,
-  started_at: overrides.started_at ?? null,
-  finished_at: overrides.finished_at ?? null,
-  updated_records: overrides.updated_records ?? 0,
-  last_error: overrides.last_error ?? null,
-})
 
 type ToastStatus =
   | RefreshStatusResponse
