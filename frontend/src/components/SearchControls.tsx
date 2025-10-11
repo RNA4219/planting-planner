@@ -50,7 +50,7 @@ export const SearchControls = ({
             onChange={onWeekChange}
             placeholder={currentWeek}
             pattern="\d{4}-W\d{2}"
-            inputMode="numeric"
+            inputMode="text"
           />
         </label>
         <div className="app__controls-actions">
