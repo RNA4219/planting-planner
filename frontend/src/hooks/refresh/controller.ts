@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TOAST_AUTO_DISMISS_MS } from '../../components/ToastStack'
 import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
-import type { RefreshState, RefreshStatusResponse } from '../../types'
+import type { RefreshStatusResponse } from '../../types'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
@@ -34,30 +34,24 @@ export interface UseRefreshStatusResult {
 
 type ToastPayload = Omit<RefreshToast, 'id'>
 
-const buildStatus = (
-  state: RefreshState,
-  overrides: Partial<RefreshStatusResponse> = {},
-): RefreshStatusResponse => ({
-  state,
-  started_at: overrides.started_at ?? null,
-  finished_at: overrides.finished_at ?? null,
-  updated_records: overrides.updated_records ?? 0,
-  last_error: overrides.last_error ?? null,
-})
+type ToastStatus =
+  | RefreshStatusResponse
+  | (Pick<RefreshStatusResponse, 'state'> &
+      Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error'>>)
 
-const toastFromStatus = (status: RefreshStatusResponse): ToastPayload => {
+const toastFromStatus = (status: ToastStatus): ToastPayload => {
   if (status.state === 'success') {
     return {
       variant: 'success',
       message: 'データ更新が完了しました',
-      detail: `${status.updated_records}件のデータを更新しました。`,
+      detail: `${status.updated_records ?? 0}件のデータを更新しました。`,
     }
   }
   if (status.state === 'failure') {
     return {
       variant: 'error',
       message: 'データ更新に失敗しました',
-      detail: status.last_error,
+      detail: status.last_error ?? null,
     }
   }
   return {
@@ -187,7 +181,7 @@ export const useRefreshStatusController = (
       const response = await postRefresh()
       if (!active.current) return
       if (isTerminalState(response.state)) {
-        finish(toastFromStatus(buildStatus(response.state)))
+        finish(toastFromStatus(response))
       } else {
         enqueue({ variant: 'info', message: TOAST_MESSAGES.refreshRequestStarted, detail: null })
         void pollerRef.current?.run()

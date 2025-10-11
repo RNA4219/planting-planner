@@ -5,7 +5,11 @@ import type { RefreshStatusResponse } from '../../types'
 
 import { useRefreshStatusController } from '../refresh/controller'
 
-type PostRefreshMock = () => Promise<{ state: 'running' | 'success' | 'failure' | 'stale' }>
+type PostRefreshImmediate =
+  Pick<RefreshStatusResponse, 'state'> &
+  Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error'>>
+
+type PostRefreshMock = () => Promise<PostRefreshImmediate>
 
 type FetchRefreshStatusMock = () => Promise<RefreshStatusResponse>
 
@@ -91,6 +95,40 @@ describe('useRefreshStatusController', () => {
       variant: 'error',
       message: 'データ更新に失敗しました',
       detail: 'boom',
+    })
+  })
+
+  it('postRefresh の成功応答をトースト詳細へ反映する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 3, last_error: null })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      await result.current.startRefresh()
+    })
+
+    expect(fetchRefreshStatusMock).not.toHaveBeenCalled()
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({
+      variant: 'success',
+      message: 'データ更新が完了しました',
+      detail: '3件のデータを更新しました。',
+    })
+  })
+
+  it('postRefresh の失敗応答で last_error を表示する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'failure', updated_records: 0, last_error: 'fatal' })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      await result.current.startRefresh()
+    })
+
+    expect(fetchRefreshStatusMock).not.toHaveBeenCalled()
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({
+      variant: 'error',
+      message: 'データ更新に失敗しました',
+      detail: 'fatal',
     })
   })
 
