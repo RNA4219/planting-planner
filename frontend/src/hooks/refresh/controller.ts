@@ -49,7 +49,7 @@ const toastFromStatus = (status: RefreshStatusResponse): ToastPayload => {
     return {
       variant: 'success',
       message: 'データ更新が完了しました',
-      detail: `更新件数: ${status.updated_records}`,
+      detail: `${status.updated_records}件のデータを更新しました。`,
     }
   }
   if (status.state === 'failure') {
