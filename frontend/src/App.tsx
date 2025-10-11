@@ -51,9 +51,10 @@ export const App = () => {
 
   const handleRegionChange = useCallback(
     (next: Region) => {
+      setSelectedCropId(null)
       setRegion(next)
     },
-    [setRegion],
+    [setRegion, setSelectedCropId],
   )
 
   const normalizedSearchKeyword = useMemo(
@@ -74,6 +75,10 @@ export const App = () => {
       )
     })
   }, [normalizedSearchKeyword, sortedRows])
+
+  useEffect(() => {
+    setSelectedCropId((prev) => (prev === null ? prev : null))
+  }, [region, setSelectedCropId])
 
   useEffect(() => {
     const latestSuccess = [...pendingToasts].reverse().find((toast) => toast.variant === 'success')
