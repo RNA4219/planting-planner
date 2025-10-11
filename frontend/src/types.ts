@@ -41,6 +41,8 @@ export type RefreshState = 'success' | 'failure' | 'running' | 'stale'
 
 export interface RefreshResponse {
   state: RefreshState
+  updated_records?: number
+  last_error?: string | null
 }
 
 export interface RefreshStatusResponse {

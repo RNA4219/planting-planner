@@ -45,19 +45,24 @@ const buildStatus = (
   last_error: overrides.last_error ?? null,
 })
 
-const toastFromStatus = (status: RefreshStatusResponse): ToastPayload => {
+type ToastStatus =
+  | RefreshStatusResponse
+  | (Pick<RefreshStatusResponse, 'state'> &
+      Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error'>>)
+
+const toastFromStatus = (status: ToastStatus): ToastPayload => {
   if (status.state === 'success') {
     return {
       variant: 'success',
       message: 'データ更新が完了しました',
-      detail: `${status.updated_records}件のデータを更新しました。`,
+      detail: `${status.updated_records ?? 0}件のデータを更新しました。`,
     }
   }
   if (status.state === 'failure') {
     return {
       variant: 'error',
       message: 'データ更新に失敗しました',
-      detail: status.last_error,
+      detail: status.last_error ?? null,
     }
   }
   return {

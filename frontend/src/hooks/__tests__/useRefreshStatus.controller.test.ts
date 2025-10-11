@@ -5,9 +5,11 @@ import type { RefreshStatusResponse } from '../../types'
 
 import { useRefreshStatusController } from '../refresh/controller'
 
-type PostRefreshMock = () => Promise<
-  Pick<RefreshStatusResponse, 'state' | 'updated_records' | 'last_error'>
->
+type PostRefreshImmediate =
+  Pick<RefreshStatusResponse, 'state'> &
+  Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error'>>
+
+type PostRefreshMock = () => Promise<PostRefreshImmediate>
 
 type FetchRefreshStatusMock = () => Promise<RefreshStatusResponse>
 
