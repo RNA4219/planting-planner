@@ -44,6 +44,14 @@
 | started_at | TEXT | 実処理開始時刻 |
 | finished_at | TEXT | 実処理終了時刻 |
 | last_error | TEXT | 直近エラーの詳細 |
+| run_at | TEXT NOT NULL | 実行日時（ISO-8601 文字列） |
+| status | TEXT NOT NULL | 実行状態コード |
+| updated_records | INTEGER NOT NULL | 更新件数 |
+| error_message | TEXT | 失敗時のメッセージ |
+| state | TEXT | `running` `success` `failure` `stale` |
+| started_at | TEXT | 開始時刻（ISO-8601 文字列） |
+| finished_at | TEXT | 終了時刻（ISO-8601 文字列） |
+| last_error | TEXT | 直近エラーメッセージ |
 
 ## 花きデータ取り込み
 - `crops.category=flower` を追記し、関連する `growth_days` と `price_weekly` を整備。
