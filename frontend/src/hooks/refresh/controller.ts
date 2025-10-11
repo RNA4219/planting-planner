@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { TOAST_AUTO_DISMISS_MS } from '../../components/ToastStack'
+import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
 import type { RefreshState, RefreshStatusResponse } from '../../types'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
-export type RefreshToastVariant = 'success' | 'error' | 'warning'
+export type RefreshToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 export interface RefreshToast {
   readonly id: string
@@ -14,7 +16,6 @@ export interface RefreshToast {
   readonly detail?: string | null
 }
 
-const TOAST_AUTO_DISMISS_MS = 5000
 const STALE_TOAST_MESSAGE = 'データ更新の結果を取得できませんでした'
 const FETCH_STATUS_ERROR_MESSAGE = '更新状況の取得に失敗しました'
 
@@ -188,6 +189,7 @@ export const useRefreshStatusController = (
       if (isTerminalState(response.state)) {
         finish(toastFromStatus(buildStatus(response.state)))
       } else {
+        enqueue({ variant: 'info', message: TOAST_MESSAGES.refreshRequestStarted, detail: null })
         void pollerRef.current?.run()
       }
     } catch (error) {

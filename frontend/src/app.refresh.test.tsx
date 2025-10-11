@@ -74,6 +74,9 @@ describe('App refresh', () => {
     expect(refreshButton).toBeDisabled()
 
     await Promise.resolve()
+    await Promise.resolve()
+    const startToast = within(main).getByText(/更新を開始しました。/)
+    expect(startToast).toBeInTheDocument()
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
 
     await vi.advanceTimersByTimeAsync(1000)
