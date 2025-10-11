@@ -12,13 +12,13 @@ export const SEARCH_CONTROLS_TEXT = {
 } as const
 
 export const TOAST_MESSAGES = {
-  refreshSuccess: (updatedRecords: number) =>
-    `更新が完了しました。${updatedRecords}件のデータを更新しました。`,
-  refreshFailure: (detail: string) => `更新が失敗しました: ${detail}`,
+  refreshSuccessMessage: 'データ更新が完了しました',
+  refreshSuccessDetail: (updatedRecords: number) =>
+    `${updatedRecords}件のデータを更新しました。`,
+  refreshFailureMessage: 'データ更新に失敗しました',
   refreshUnknown: '更新ステータスが不明です。',
   refreshStatusUnknownDetail: '詳細不明のエラー',
-  refreshStatusFetchFailure: (detail: string) =>
-    `更新ステータスの取得に失敗しました: ${detail}`,
+  refreshStatusFetchFailureMessage: '更新状況の取得に失敗しました',
   refreshRequestFailure: '更新リクエストに失敗しました。',
   refreshRequestStarted: '更新を開始しました。進行状況を確認しています…',
   refreshRequestFailureWithDetail: (detail: string) =>

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -9,10 +9,10 @@ import {
   postRefresh,
   fetchRefreshStatus,
   resetAppSpies,
+  renderApp,
 } from './utils/renderApp'
-import App from '../src/App'
 
-describe.skip('App refresh workflow', () => {
+describe('App refresh workflow', () => {
   beforeEach(() => {
     resetAppSpies()
   })
@@ -23,8 +23,6 @@ describe.skip('App refresh workflow', () => {
   })
 
   test('postRefresh 成功後にステータスをポーリングし、成功トーストと reloadCurrentWeek を経て自動クローズする', async () => {
-    vi.useFakeTimers()
-
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
@@ -66,40 +64,42 @@ describe.skip('App refresh workflow', () => {
         last_error: null,
       })
 
-    render(<App />)
+    await renderApp({ useFakeTimers: true })
 
     const refreshButton = screen.getByRole('button', { name: '更新' })
     fireEvent.click(refreshButton)
     await Promise.resolve()
+    await Promise.resolve()
 
-    await waitFor(() => {
-      expect(postRefresh).toHaveBeenCalledTimes(1)
-    })
+    expect(postRefresh).toHaveBeenCalledTimes(1)
 
-    const startToast = await screen.findByText('更新を開始しました。進行状況を確認しています…')
+    const startToast = screen.getByText('更新を開始しました。進行状況を確認しています…')
     expect(startToast).toBeInTheDocument()
 
-    await waitFor(() => {
-      expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
-    })
+    expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
 
-    expect(
-      screen.queryByText('更新が完了しました。7件のデータを更新しました。'),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText('データ更新が完了しました')).not.toBeInTheDocument()
+    expect(screen.queryByText('7件のデータを更新しました。')).not.toBeInTheDocument()
 
     await vi.advanceTimersByTimeAsync(1000)
     await Promise.resolve()
+    await Promise.resolve()
 
-    await waitFor(() => {
-      expect(fetchRefreshStatus).toHaveBeenCalledTimes(2)
-    })
+    expect(fetchRefreshStatus).toHaveBeenCalledTimes(2)
 
-    const successToast = await screen.findByText('更新が完了しました。7件のデータを更新しました。')
-    expect(successToast).toBeInTheDocument()
+    const successMessage = screen.getByText('データ更新が完了しました')
+    const successDetail = screen.getByText('7件のデータを更新しました。')
+    expect(successMessage).toBeInTheDocument()
+    expect(successDetail).toBeInTheDocument()
+    expect(successDetail.closest('.toast')).toBe(successMessage.closest('.toast'))
 
-    await waitFor(() => {
-      expect(reloadCurrentWeekSpy).toHaveBeenCalledTimes(1)
-    })
+    for (let i = 0; i < 5; i += 1) {
+      if (reloadCurrentWeekSpy.mock.calls.length > 0) {
+        break
+      }
+      await Promise.resolve()
+    }
+    expect(reloadCurrentWeekSpy).toHaveBeenCalledTimes(1)
 
     useRecommendationsMock.mockRestore()
   })
