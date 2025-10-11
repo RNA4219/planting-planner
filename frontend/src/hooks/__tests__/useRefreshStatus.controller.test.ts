@@ -42,8 +42,13 @@ describe('useRefreshStatusController', () => {
   })
 
   it('開始から終了までのフローを制御し、成功・失敗・タイムアウト時のトーストを生成する', async () => {
+    const reloadCurrentWeekMock = vi.fn()
     const { result } = renderHook(() =>
-      useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 4000 }),
+      useRefreshStatusController({
+        pollIntervalMs: 1000,
+        timeoutMs: 4000,
+        onSuccess: reloadCurrentWeekMock,
+      }),
     )
 
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
@@ -64,6 +69,14 @@ describe('useRefreshStatusController', () => {
         detail: '更新件数: 8',
       }),
     ])
+    expect(reloadCurrentWeekMock).toHaveBeenCalledTimes(1)
+    const successToastId = result.current.pendingToasts[0]?.id
+    expect(successToastId).toBeDefined()
+    expect(result.current.pendingToasts.some((toast) => toast.id === successToastId)).toBe(true)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000)
+    })
+    expect(result.current.pendingToasts.some((toast) => toast.id === successToastId)).toBe(false)
 
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
     fetchRefreshStatusMock.mockImplementationOnce(async () => createStatus('running'))
@@ -91,5 +104,31 @@ describe('useRefreshStatusController', () => {
 
     expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })
     expect(result.current.isRefreshing).toBe(false)
+
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success', { updated_records: 1 }))
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
+    })
+
+    const dismissTargetId = result.current.pendingToasts.at(-1)?.id
+    expect(dismissTargetId).toBeDefined()
+    if (dismissTargetId) {
+      act(() => {
+        result.current.dismissToast(dismissTargetId)
+      })
+    }
+    expect(result.current.pendingToasts.some((toast) => toast.id === dismissTargetId)).toBe(false)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000)
+    })
+    expect(result.current.pendingToasts.some((toast) => toast.id === dismissTargetId)).toBe(false)
+    expect(reloadCurrentWeekMock).toHaveBeenCalledTimes(2)
   })
 })
