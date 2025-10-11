@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 
+import { TOAST_AUTO_DISMISS_MS } from '../constants/toast'
+
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 export interface ToastStackItem {
@@ -14,8 +16,6 @@ export interface ToastStackProps {
   readonly onDismiss?: (id: string) => void
   readonly autoCloseDurationMs?: number
 }
-
-export const TOAST_AUTO_DISMISS_MS = 5000
 
 export const ToastStack = ({
   toasts,
