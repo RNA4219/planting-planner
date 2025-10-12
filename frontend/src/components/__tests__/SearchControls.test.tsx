@@ -9,6 +9,8 @@ const createProps = () => ({
   currentWeek: '2024-W20',
   onWeekChange: vi.fn(),
   onRegionChange: vi.fn(),
+  marketScope: 'national' as const,
+  onMarketScopeChange: vi.fn(),
   searchKeyword: 'トマト',
   onSearchChange: vi.fn(),
   onSubmit: vi.fn(),
