@@ -1,8 +1,20 @@
 import '@testing-library/jest-dom/vitest'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SearchControls } from '../SearchControls'
+import type { MarketScopeOption } from '../../constants/marketScopes'
+
+const { fetchMarketsMock } = vi.hoisted(() => ({
+  fetchMarketsMock: vi.fn<
+    () => Promise<{ markets: MarketScopeOption[]; generated_at: string }>
+  >(),
+}))
+
+vi.mock('../../lib/api', () => ({
+  fetchMarkets: fetchMarketsMock,
+}))
 
 const createProps = () => ({
   queryWeek: '2024-W01',
@@ -18,9 +30,27 @@ const createProps = () => ({
   refreshing: false,
 })
 
+const renderSearchControls = (props = createProps()) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
+  const result = render(
+    <QueryClientProvider client={queryClient}>
+      <SearchControls {...props} />
+    </QueryClientProvider>,
+  )
+
+  return { ...result, queryClient }
+}
+
 describe('SearchControls', () => {
+  afterEach(() => {
+    fetchMarketsMock.mockReset()
+  })
+
   it('週入力の inputMode が text または未指定で、pattern が YYYY-Www を維持する', () => {
-    render(<SearchControls {...createProps()} />)
+    const { queryClient } = renderSearchControls()
 
     const weekInput = screen.getByLabelText('週') as HTMLInputElement
 
@@ -28,5 +58,39 @@ describe('SearchControls', () => {
 
     const inputMode = weekInput.getAttribute('inputmode')
     expect(inputMode === null || inputMode === 'text').toBe(true)
+
+    queryClient.clear()
+  })
+
+  it('市場リストを React Query のレスポンスに合わせて描画する', async () => {
+    const markets: MarketScopeOption[] = [
+      { value: 'national', label: '全国平均（API）' },
+      { value: 'city:fukuoka', label: '福岡市中央卸売（API）' },
+    ]
+    fetchMarketsMock.mockResolvedValue({
+      markets,
+      generated_at: '2024-05-01T00:00:00Z',
+    })
+
+    const { queryClient } = renderSearchControls()
+
+    const marketSelects = screen.getAllByLabelText('市場')
+    const marketSelect = marketSelects.at(-1)
+    if (!marketSelect) {
+      throw new Error('市場セレクトが見つかりません')
+    }
+
+    await waitFor(() => {
+      expect(fetchMarketsMock).toHaveBeenCalledTimes(1)
+      expect(within(marketSelect).getAllByRole('option')).toHaveLength(markets.length)
+    })
+
+    const optionElements = within(marketSelect).getAllByRole('option')
+    optionElements.forEach((element, index) => {
+      expect(element).toHaveTextContent(markets[index]!.label)
+      expect(element).toHaveValue(markets[index]!.value)
+    })
+
+    queryClient.clear()
   })
 })

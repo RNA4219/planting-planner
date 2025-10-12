@@ -8,6 +8,7 @@ import type {
   RefreshStatusResponse,
   Region,
 } from '../types'
+import type { MarketScopeOption } from '../constants/marketScopes'
 
 const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
@@ -47,10 +48,23 @@ const buildUrl = (
   return `${prefix}${normalizedPath}${search ? `?${search}` : ''}`
 }
 
+class HttpError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number, options?: ErrorOptions) {
+    super(message, options)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
 const parseResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const message = await response.text()
-    throw new Error(message || `Request failed with status ${response.status}`)
+    throw new HttpError(
+      message || `Request failed with status ${response.status}`,
+      response.status,
+    )
   }
 
   if (response.status === 204) {
@@ -74,6 +88,25 @@ const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> =>
 export const fetchCrops = async (): Promise<Crop[]> => {
   const url = buildUrl('/crops')
   return request<Crop[]>(url)
+}
+
+export interface MarketsResponse {
+  readonly markets: MarketScopeOption[]
+  readonly generated_at: string
+}
+
+export const fetchMarkets = async (): Promise<MarketsResponse> => {
+  const url = buildUrl('/markets')
+  try {
+    return await request<MarketsResponse>(url)
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 503) {
+      throw new HttpError('市場一覧 API は現在利用できません (503)', error.status, {
+        cause: error,
+      })
+    }
+    throw error
+  }
 }
 
 export interface RecommendResponseWithFallback extends RecommendResponse {

@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PriceSeries, RecommendResponse } from '../types'
+import type { MarketScopeOption } from '../constants/marketScopes'
 import type { RecommendResponseWithFallback } from './api'
 
 type FetchRecommend = typeof import('./api')['fetchRecommend']
 type FetchRecommendations = typeof import('./api')['fetchRecommendations']
 type FetchPrice = typeof import('./api')['fetchPrice']
+type FetchMarkets = typeof import('./api')['fetchMarkets']
 
 let fetchRecommend: FetchRecommend
 let fetchRecommendations: FetchRecommendations
 let fetchPrice: FetchPrice
+let fetchMarkets: FetchMarkets
 let apiEndpoint: string
 
 describe('fetchRecommend', () => {
@@ -262,5 +265,62 @@ describe('fetchPrice', () => {
     expect(requestUrl.pathname).toBe('/api/price')
     expect(requestUrl.searchParams.get('marketScope')).toBe('national')
     expect(result).toEqual(payload)
+  })
+})
+
+describe('fetchMarkets', () => {
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
+
+  beforeEach(() => {
+    vi.resetModules()
+    apiEndpoint = '/api'
+    fetchMock = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  const loadFetchMarkets = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchMarkets } = await import('./api'))
+  }
+
+  it('markets エンドポイントのレスポンスを返す', async () => {
+    const payload: { markets: MarketScopeOption[]; generated_at: string } = {
+      markets: [
+        { value: 'national', label: '全国平均（API）' },
+        { value: 'city:fukuoka', label: '福岡市中央卸売（API）' },
+      ],
+      generated_at: '2024-05-01T00:00:00Z',
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchMarkets()
+    const result = await fetchMarkets()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/markets', {
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect(result).toEqual(payload)
+  })
+
+  it('503 の場合は利用不可メッセージで例外を投げる', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('', { status: 503, statusText: 'Service Unavailable' }),
+    )
+
+    await loadFetchMarkets()
+
+    await expect(fetchMarkets()).rejects.toThrow(
+      '市場一覧 API は現在利用できません (503)',
+    )
   })
 })

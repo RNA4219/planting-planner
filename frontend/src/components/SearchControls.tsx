@@ -1,9 +1,11 @@
 import type { ChangeEvent, FormEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { RegionSelect } from './RegionSelect'
 import type { MarketScope, Region } from '../types'
 import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
 import { MARKET_SCOPE_OPTIONS } from '../constants/marketScopes'
+import { fetchMarkets } from '../lib/api'
 
 interface SearchControlsProps {
   queryWeek: string
@@ -32,6 +34,13 @@ export const SearchControls = ({
   onRefresh,
   refreshing,
 }: SearchControlsProps) => {
+  const { data: marketsResponse, isSuccess } = useQuery({
+    queryKey: ['markets'],
+    queryFn: fetchMarkets,
+  })
+
+  const marketOptions = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+
   return (
     <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
@@ -43,7 +52,7 @@ export const SearchControls = ({
           onMarketScopeChange(event.target.value as MarketScope)
         }}
       >
-        {MARKET_SCOPE_OPTIONS.map((option) => (
+        {marketOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
