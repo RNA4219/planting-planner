@@ -10,13 +10,14 @@ import type {
   RefreshStatusResponse,
   Region,
 } from '../../../src/types'
+import type { RecommendResponseWithFallback } from '../../../src/lib/api'
 
 export const fetchRecommendations = vi.fn<
   (
     region: Region,
     week: string | undefined,
     options: { marketScope: MarketScope; category: CropCategory },
-  ) => Promise<RecommendResponse>
+  ) => Promise<RecommendResponseWithFallback>
 >()
 
 export const fetchRecommend = vi.fn<
