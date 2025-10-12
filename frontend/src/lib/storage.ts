@@ -1,7 +1,9 @@
-import type { Region } from '../types'
+import type { CropCategory, MarketScope, Region } from '../types'
 
 const FAVORITES_KEY = 'plantingPlanner.favorites'
 const REGION_KEY = 'plantingPlanner.region'
+const MARKET_SCOPE_KEY = 'plantingPlanner.marketScope'
+const CATEGORY_KEY = 'plantingPlanner.category'
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
@@ -61,4 +63,41 @@ export const loadRegion = (): Region => {
 
 export const saveRegion = (region: Region): void => {
   storage.setItem(REGION_KEY, region)
+}
+
+const isMarketScope = (value: unknown): value is MarketScope => {
+  if (value === 'national') {
+    return true
+  }
+  if (typeof value === 'string' && value.startsWith('city:') && value.length > 'city:'.length) {
+    return true
+  }
+  return false
+}
+
+export const loadMarketScope = (): MarketScope => {
+  const scope = readJson<MarketScope | null>(MARKET_SCOPE_KEY, null)
+  if (isMarketScope(scope)) {
+    return scope
+  }
+  return 'national'
+}
+
+export const saveMarketScope = (marketScope: MarketScope): void => {
+  storage.setItem(MARKET_SCOPE_KEY, JSON.stringify(marketScope))
+}
+
+const isCropCategory = (value: unknown): value is CropCategory =>
+  value === 'leaf' || value === 'root' || value === 'flower'
+
+export const loadSelectedCategory = (): CropCategory => {
+  const category = readJson<CropCategory | null>(CATEGORY_KEY, null)
+  if (isCropCategory(category)) {
+    return category
+  }
+  return 'leaf'
+}
+
+export const saveSelectedCategory = (category: CropCategory): void => {
+  storage.setItem(CATEGORY_KEY, JSON.stringify(category))
 }

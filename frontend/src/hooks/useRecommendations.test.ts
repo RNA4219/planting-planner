@@ -2,12 +2,16 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FormEvent } from 'react'
 
-import type { RecommendResponse, Region } from '../types'
+import type { CropCategory, MarketScope, RecommendResponse, Region } from '../types'
 
 import { useRecommendationLoader } from './useRecommendationLoader'
 import { useRecommendations } from './useRecommendations'
 
-type FetchRecommendationsMock = (region: Region, week: string) => Promise<RecommendResponse>
+type FetchRecommendationsMock = (
+  region: Region,
+  week: string,
+  options: { marketScope: MarketScope; category: CropCategory },
+) => Promise<RecommendResponse>
 
 const { fetchCropsMock, fetchRecommendationsMock } = vi.hoisted(() => ({
   fetchCropsMock: vi.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
@@ -46,7 +50,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('requestRecommendations は入力週を ISO 形式に正規化して API へ渡す', async () => {
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await Promise.resolve()
@@ -58,11 +64,17 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024-W6')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W06')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W06',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('requestRecommendations は日付形式 (YYYY-MM-DD) を ISO 週へ変換して API へ渡す', async () => {
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await Promise.resolve()
@@ -74,11 +86,17 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024-07-01')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W27',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('requestRecommendations は日付形式 (YYYY/MM/DD) を ISO 週へ変換して API へ渡す', async () => {
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await Promise.resolve()
@@ -90,11 +108,17 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024/07/01')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W27',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('requestRecommendations は 6 桁の数値入力を最終週へクランプして API へ渡す', async () => {
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await Promise.resolve()
@@ -106,11 +130,17 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('202460')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W53')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W53',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('API が不正な週を返した場合でも activeWeek はリクエスト週を保持する', async () => {
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await Promise.resolve()
@@ -141,7 +171,9 @@ describe('useRecommendationLoader', () => {
       .mockImplementationOnce(() => first.promise)
       .mockImplementationOnce(() => second.promise)
 
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       initial.resolve({
@@ -283,7 +315,11 @@ describe('useRecommendations', () => {
 
     expect(result.current.region).toBe('cold')
     expect(result.current.currentWeek).toBe('2024-W05')
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', baselineWeek)
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      baselineWeek,
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('reloadCurrentWeek は最後にリクエストした地域・週で再フェッチし参照が安定している', async () => {
@@ -323,13 +359,21 @@ describe('useRecommendations', () => {
     })
 
     expect(result.current.reloadCurrentWeek).toBe(reloadHandle)
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      '2024-W05',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
 
     await act(async () => {
       await result.current.reloadCurrentWeek()
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      '2024-W05',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 
   it('handleSubmit で週を変更すると正規化済みの週で再検索される', async () => {
@@ -377,7 +421,11 @@ describe('useRecommendations', () => {
       await result.current.handleSubmit(event)
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('temperate', '2024-W07')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'temperate',
+      '2024-W07',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
     expect(result.current.currentWeek).toBe('2024-W07')
     expect(result.current.displayWeek).toBe('2024-W07')
   })

@@ -29,21 +29,27 @@ describe('App recommendations / 地域変更と競合制御', () => {
 
   it('地域選択と週入力でAPIが手動フェッチされる', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region) =>
-      createRecommendResponse({
+    fetchRecommendations.mockImplementation(async (region, week, options) => {
+      void week
+      void options
+      return createRecommendResponse({
         region,
         items: [
           createItem({
             crop: region === 'temperate' ? '春菊' : 'にんじん',
           }),
         ],
-      }),
-    )
+      })
+    })
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
 
@@ -55,7 +61,11 @@ describe('App recommendations / 地域変更と競合制御', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'cold',
+        '2024-W32',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
     expect(screen.getByText('にんじん')).toBeInTheDocument()
@@ -63,21 +73,28 @@ describe('App recommendations / 地域変更と競合制御', () => {
 
   it('地域変更で即時フェッチされテーブルが更新される', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region) =>
-      createRecommendResponse({
+    fetchRecommendations.mockImplementation(async (region, week, options) => {
+      void week
+      void options
+      return createRecommendResponse({
         region,
         items: [
           createItem({
             crop: region === 'temperate' ? '春菊' : 'にんじん',
           }),
         ],
-      }),
-    )
+      })
+    })
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        1,
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
 
     expect(screen.getByText('春菊')).toBeInTheDocument()
@@ -86,7 +103,12 @@ describe('App recommendations / 地域変更と競合制御', () => {
     await user.selectOptions(select, '寒冷地')
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(2, 'cold', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        2,
+        'cold',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
 
     const table = await screen.findByRole('table')

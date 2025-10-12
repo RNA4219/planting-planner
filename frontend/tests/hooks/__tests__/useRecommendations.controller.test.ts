@@ -23,7 +23,9 @@ describe('hooks / useRecommendations controller', () => {
     )
 
     await waitFor(() => {
-      expect(fetcherMock).toHaveBeenCalled()
+      expect(fetcherMock).toHaveBeenCalledWith(
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     fetcherMock.mockClear()
     fetcherMock.mockResolvedValue({ week: '2024-W32', items: [] })

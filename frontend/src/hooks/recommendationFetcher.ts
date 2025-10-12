@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 import * as apiModule from '../lib/api'
-import type { RecommendResponse, Region } from '../types'
+import type { CropCategory, MarketScope, RecommendResponse, Region } from '../types'
 import { normalizeRecommendationResponse, type NormalizeRecommendationResult } from '../utils/recommendations'
 
 const api = apiModule as typeof import('../lib/api') & {
@@ -11,6 +11,8 @@ const api = apiModule as typeof import('../lib/api') & {
 interface RecommendationFetchInput {
   region: Region
   week: string
+  marketScope: MarketScope
+  category: CropCategory
   preferLegacy?: boolean
 }
 
@@ -20,13 +22,13 @@ export type RecommendationFetcher = (
 
 export const useRecommendationFetcher = (): RecommendationFetcher => {
   return useCallback<RecommendationFetcher>(
-    async ({ region, week, preferLegacy = false }) => {
+    async ({ region, week, marketScope, category, preferLegacy = false }) => {
       const callModern = async (): Promise<RecommendResponse | undefined> => {
         if (typeof api.fetchRecommendations !== 'function') {
           return undefined
         }
         try {
-          return await api.fetchRecommendations(region, week)
+          return await api.fetchRecommendations(region, week, { marketScope, category })
         } catch {
           return undefined
         }

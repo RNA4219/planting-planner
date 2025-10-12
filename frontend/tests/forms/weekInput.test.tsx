@@ -16,12 +16,17 @@ describe('Week form interactions', () => {
     harness.useRecommendationsSpy.mockReturnValue({
       region: 'temperate',
       setRegion: vi.fn(),
+      marketScope: 'national',
+      setMarketScope: vi.fn(),
+      category: 'leaf',
+      setCategory: vi.fn(),
       queryWeek: '2024-W30',
       setQueryWeek,
       currentWeek: '2024-W30',
       displayWeek: '2024-W30',
       sortedRows: [],
       handleSubmit,
+      reloadCurrentWeek: vi.fn(),
     })
 
     const App = (await import('../../src/App')).default

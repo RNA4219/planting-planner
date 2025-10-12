@@ -18,7 +18,9 @@ describe('hooks / useRecommendationLoader', () => {
 
   it('normalizes week input before requesting recommendations', async () => {
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await waitFor(() => {
       expect(fetcherMock).toHaveBeenCalled()
@@ -32,7 +34,12 @@ describe('hooks / useRecommendationLoader', () => {
     })
 
     expect(fetcherMock).toHaveBeenCalledWith(
-      expect.objectContaining({ region: 'temperate', week: '2024-W24' }),
+      expect.objectContaining({
+        region: 'temperate',
+        week: '2024-W24',
+        marketScope: 'national',
+        category: 'leaf',
+      }),
     )
     expect(result.current.activeWeek).toBe('2024-W24')
     expect(result.current.currentWeek).toBe('2024-W24')
@@ -49,7 +56,9 @@ describe('hooks / useRecommendationLoader', () => {
     fetcherMock.mockResolvedValueOnce({ week: '2024-W30', items: [initialItem] })
     fetcherMock.mockRejectedValueOnce(new Error('network error'))
 
-    const { result } = renderHook(() => useRecommendationLoader('temperate'))
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(1)

@@ -1,5 +1,9 @@
 export type Region = 'cold' | 'temperate' | 'warm'
 
+export type MarketScope = 'national' | `city:${string}`
+
+export type CropCategory = 'leaf' | 'root' | 'flower'
+
 export interface Crop {
   id: number
   name: string
@@ -66,6 +70,14 @@ export interface RegionOption {
   value: Region
 }
 
+export interface MarketScopeStorage {
+  marketScope: MarketScope
+}
+
+export interface CategoryStorage {
+  category: CropCategory
+}
+
 export interface PricePoint {
   week: string
   avg_price: number | null
@@ -89,6 +101,11 @@ export interface RegionStorage {
 export interface FavoritesStorage {
   favorites: number[]
 }
+
+export interface RecommendationPreferences
+  extends RegionStorage,
+    MarketScopeStorage,
+    CategoryStorage {}
 
 export interface SearchFilter {
   keyword: string

@@ -2,6 +2,8 @@ import { vi } from 'vitest'
 
 import type {
   Crop,
+  CropCategory,
+  MarketScope,
   PriceSeries,
   RecommendResponse,
   RefreshResponse,
@@ -10,7 +12,11 @@ import type {
 } from '../../../src/types'
 
 export const fetchRecommendations = vi.fn<
-  (region: Region, week?: string) => Promise<RecommendResponse>
+  (
+    region: Region,
+    week: string | undefined,
+    options: { marketScope: MarketScope; category: CropCategory },
+  ) => Promise<RecommendResponse>
 >()
 
 export const fetchRecommend = vi.fn<

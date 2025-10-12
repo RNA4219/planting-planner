@@ -6,10 +6,10 @@ import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
-import { loadRegion } from './lib/storage'
+import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatusController } from './hooks/refresh/controller'
-import type { Region } from './types'
+import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT } from './constants/messages'
 
 import './App.css'
@@ -20,10 +20,14 @@ export const App = () => {
   const [searchKeyword, setSearchKeyword] = useState('')
 
   const initialRegionRef = useRef<Region>(loadRegion())
+  const initialMarketScopeRef = useRef<MarketScope>(loadMarketScope())
+  const initialCategoryRef = useRef<CropCategory>(loadSelectedCategory())
 
   const {
     region,
     setRegion,
+    marketScope,
+    category,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -31,7 +35,12 @@ export const App = () => {
     sortedRows,
     handleSubmit,
     reloadCurrentWeek,
-  } = useRecommendations({ favorites, initialRegion: initialRegionRef.current })
+  } = useRecommendations({
+    favorites,
+    initialRegion: initialRegionRef.current,
+    initialMarketScope: initialMarketScopeRef.current,
+    initialCategory: initialCategoryRef.current,
+  })
   const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController()
   const lastSuccessToastIdRef = useRef<string | null>(null)
 
@@ -78,7 +87,7 @@ export const App = () => {
 
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
-  }, [region, setSelectedCropId])
+  }, [category, marketScope, region, setSelectedCropId])
 
   useEffect(() => {
     const latestSuccess = [...pendingToasts].reverse().find((toast) => toast.variant === 'success')

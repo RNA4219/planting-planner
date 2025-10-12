@@ -34,8 +34,18 @@ describe('Region switching interactions', () => {
     const firstRequest = createDeferred<RecommendResponse>()
     const secondRequest = createDeferred<RecommendResponse>()
 
-    fetchRecommendations.mockImplementationOnce(() => firstRequest.promise)
-    fetchRecommendations.mockImplementationOnce(() => secondRequest.promise)
+    fetchRecommendations.mockImplementationOnce((region, week, options) => {
+      void region
+      void week
+      void options
+      return firstRequest.promise
+    })
+    fetchRecommendations.mockImplementationOnce((region, week, options) => {
+      void region
+      void week
+      void options
+      return secondRequest.promise
+    })
 
     const { user } = await renderApp()
 
@@ -43,7 +53,12 @@ describe('Region switching interactions', () => {
     await user.selectOptions(regionSelect, 'cold')
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(2, 'cold', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        2,
+        'cold',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
 
     secondRequest.resolve({
