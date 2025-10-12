@@ -1,11 +1,22 @@
 import '@testing-library/jest-dom/vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   recommendationControllerMocks,
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
+
+const fetchQueryMock = vi.fn()
+
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({
+    fetchQuery: fetchQueryMock,
+    getQueryData: vi.fn(),
+    setQueryData: vi.fn(),
+    invalidateQueries: vi.fn(),
+  }),
+}))
 import type { RecommendationItem } from '../../utils/recommendations'
 import { useRecommendationLoader } from '../../../src/hooks/useRecommendationLoader'
 
@@ -14,6 +25,7 @@ describe('hooks / useRecommendationLoader', () => {
 
   beforeEach(() => {
     resetRecommendationControllerMocks()
+    fetchQueryMock.mockReset()
   })
 
   it('normalizes week input before requesting recommendations', async () => {
@@ -70,5 +82,50 @@ describe('hooks / useRecommendationLoader', () => {
 
     expect(result.current.items).toEqual([])
     expect(result.current.activeWeek).toBe('2024-W31')
+  })
+
+  it('tracks selected market/category and uses them in the cache key', async () => {
+    fetchQueryMock.mockImplementation(async (_key, fetcher) => fetcher())
+    fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
+
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
+
+    await waitFor(() => {
+      expect(fetchQueryMock).toHaveBeenCalled()
+    })
+
+    const [initialKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
+    expect(initialKey).toEqual([
+      'recommendations',
+      'temperate',
+      'national',
+      'leaf',
+      expect.any(String),
+    ])
+    expect(result.current.selectedMarket).toBe('national')
+    expect(result.current.selectedCategory).toBe('leaf')
+
+    fetchQueryMock.mockClear()
+    fetcherMock.mockResolvedValue({ week: '2024-W31', items: [] })
+
+    await act(async () => {
+      await result.current.requestRecommendations('2024-W31', {
+        marketScopeOverride: 'city:kyoto',
+        categoryOverride: 'root',
+      })
+    })
+
+    const [overrideKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
+    expect(overrideKey).toEqual([
+      'recommendations',
+      'temperate',
+      'city:kyoto',
+      'root',
+      '2024-W31',
+    ])
+    expect(result.current.selectedMarket).toBe('city:kyoto')
+    expect(result.current.selectedCategory).toBe('root')
   })
 })
