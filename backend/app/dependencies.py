@@ -48,14 +48,40 @@ RecommendRegionQuery = Annotated[
 PriceCropQuery = Annotated[int, Query(ge=1)]
 FromWeekQuery = Annotated[str | None, Query(description="from ISO week e.g., 2025-W01")]
 ToWeekQuery = Annotated[str | None, Query(description="to ISO week e.g., 2025-W52")]
-MarketScopeQuery = Annotated[
-    schemas.MarketScope | None,
-    Query(
-        alias="marketScope",
-        description="Market scope identifier (national or city:<id>)",
-    ),
-]
-CategoryQuery = Annotated[
-    str | None,
-    Query(description="Crop category filter"),
-]
+def _market_scope_query(
+    value: Annotated[
+        str | None,
+        Query(
+            alias="marketScope",
+            description="Market scope identifier (national or city:<id>)",
+        ),
+    ] = None,
+) -> schemas.MarketScope | None:
+    if value is None:
+        return None
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if candidate == "national":
+        return schemas.DEFAULT_MARKET_SCOPE
+    return schemas.parse_market_scope(candidate)
+
+
+def _category_query(
+    value: Annotated[
+        str | None,
+        Query(alias="category", description="Crop category filter"),
+    ] = None,
+) -> str | None:
+    if value is None:
+        return None
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if candidate.casefold() == "all":
+        return None
+    return candidate
+
+
+MarketScopeQuery = Annotated[schemas.MarketScope | None, Depends(_market_scope_query)]
+CategoryQuery = Annotated[str | None, Depends(_category_query)]

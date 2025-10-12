@@ -79,3 +79,16 @@ def test_price_series_city_scope_falls_back_to_national() -> None:
     assert body["prices"]
     assert body["prices"][0]["avg_price"] == 210.0
     assert response.headers.get("x-market-fallback") == "true"
+
+
+def test_price_series_blank_market_scope_uses_national_without_fallback() -> None:
+    _write_market_prices([( "national", 1, "2025-W40", 210.0)])
+    response = client.get(
+        "/api/price",
+        params={"crop_id": 1, "frm": "2025-W40", "to": "2025-W40", "marketScope": ""},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["prices"]
+    assert body["prices"][0]["avg_price"] == 210.0
+    assert response.headers.get("x-market-fallback") is None
