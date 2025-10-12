@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import time
 from datetime import datetime
 
 import pytest
@@ -46,6 +47,21 @@ def teardown_function(_: object) -> None:
     _reset_etl_runs()
 
 
+def _wait_for_refresh_success(timeout: float = 5.0) -> dict[str, object]:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        status_response = client.get(REFRESH_STATUS_ENDPOINT)
+        assert status_response.status_code == 200
+
+        payload = status_response.json()
+        if payload["state"] == "failure":
+            pytest.fail(f"refresh failed: {payload['last_error']}")
+        if payload["state"] == "success":
+            return payload
+        time.sleep(0.1)
+    pytest.fail("timed out waiting for refresh success")
+
+
 def test_refresh_status_returns_default_payload() -> None:
     response = client.get(REFRESH_STATUS_ENDPOINT)
     assert response.status_code == 200
@@ -85,11 +101,26 @@ def test_refresh_triggers_background_job_and_updates_status() -> None:
         assert started_at <= finished_at
 
 
-def test_refresh_emits_cache_update_log(caplog: pytest.LogCaptureFixture) -> None:
+def test_refresh_emits_cache_update_log_on_success(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     caplog.set_level(logging.INFO)
 
     response = client.post(REFRESH_ENDPOINT)
     assert response.status_code == 200
 
-    messages = [record.getMessage() for record in caplog.records]
-    assert any(MARKET_CACHE_LOG in message for message in messages)
+    payload = _wait_for_refresh_success()
+
+    caplog.clear()
+
+    status_response = client.get(REFRESH_STATUS_ENDPOINT)
+    assert status_response.status_code == 200
+
+    target_record = None
+    for record in caplog.records:
+        if record.name == "app.services" and MARKET_CACHE_LOG in record.getMessage():
+            target_record = record
+            break
+    assert target_record is not None
+    assert target_record.levelno == logging.INFO
+    assert getattr(target_record, "updated_records", None) == payload["updated_records"]
