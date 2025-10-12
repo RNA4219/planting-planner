@@ -42,14 +42,18 @@ export const resolveCurrentWeek = (): string => {
 export const DEFAULT_WEEK = resolveCurrentWeek()
 export const DEFAULT_ACTIVE_WEEK = normalizeIsoWeek(DEFAULT_WEEK)
 
+export type RecommendationSource = 'modern' | 'legacy'
+
 export interface NormalizeRecommendationResult {
   week: string
   items: RecommendationItem[]
+  source: RecommendationSource
 }
 
 export const normalizeRecommendationResponse = (
   response: RecommendResponse,
   fallbackWeek: string,
+  source: RecommendationSource = 'modern',
 ): NormalizeRecommendationResult => {
   const weekValue = normalizeIsoWeek(response.week, fallbackWeek)
   const normalizedItems = response.items.map<RecommendationItem>((item) => ({
@@ -60,6 +64,7 @@ export const normalizeRecommendationResponse = (
   return {
     week: weekValue,
     items: normalizedItems,
+    source,
   }
 }
 

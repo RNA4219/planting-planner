@@ -1,6 +1,7 @@
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
@@ -27,7 +28,9 @@ export const App = () => {
     region,
     setRegion,
     marketScope,
+    setCategory,
     category,
+    setMarketScope,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -64,6 +67,14 @@ export const App = () => {
       setRegion(next)
     },
     [setRegion, setSelectedCropId],
+  )
+
+  const handleMarketScopeChange = useCallback(
+    (next: MarketScope) => {
+      setSelectedCropId(null)
+      setMarketScope(next)
+    },
+    [setMarketScope, setSelectedCropId],
   )
 
   const normalizedSearchKeyword = useMemo(
@@ -110,6 +121,8 @@ export const App = () => {
           currentWeek={currentWeek}
           onWeekChange={handleWeekChange}
           onRegionChange={handleRegionChange}
+          marketScope={marketScope}
+          onMarketScopeChange={handleMarketScopeChange}
           searchKeyword={searchKeyword}
           onSearchChange={handleSearchChange}
           onSubmit={handleSubmit}
@@ -127,6 +140,7 @@ export const App = () => {
           onSelect={setSelectedCropId}
           onToggleFavorite={toggleFavorite}
           isFavorite={isFavorite}
+          headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
         />
         <PriceChartSection selectedCropId={selectedCropId} />
       </main>
