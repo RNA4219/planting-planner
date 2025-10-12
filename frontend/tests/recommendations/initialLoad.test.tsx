@@ -193,23 +193,30 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
       <div
         aria-label="カテゴリ"
+        class="category-tabs"
         role="tablist"
       >
         <button
           aria-selected="true"
+          class="category-tabs__tab category-tabs__tab--active"
           role="tab"
+          type="button"
         >
           葉菜
         </button>
         <button
           aria-selected="false"
+          class="category-tabs__tab"
           role="tab"
+          type="button"
         >
           根菜
         </button>
         <button
           aria-selected="false"
+          class="category-tabs__tab"
           role="tab"
+          type="button"
         >
           花き
         </button>
