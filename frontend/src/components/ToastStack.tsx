@@ -87,7 +87,7 @@ export const ToastStack = ({
   }
 
   return (
-    <div className="toast-stack" aria-live="assertive" aria-atomic="true">
+    <div className="toast-stack" aria-live="polite" aria-atomic="true">
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast toast--${toast.variant}`} role="alert">
           <div>

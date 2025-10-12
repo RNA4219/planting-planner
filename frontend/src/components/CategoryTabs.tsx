@@ -1,13 +1,13 @@
 import type { CropCategory } from '../types'
 
-const CATEGORY_LABELS: Record<CropCategory, string> = {
+const CATEGORY_LABELS = {
   leaf: '葉菜',
   root: '根菜',
   flower: '花き',
   fruit: '果菜',
-}
+} as const satisfies Record<CropCategory, string>
 
-const CATEGORY_ORDER: CropCategory[] = ['leaf', 'root', 'flower', 'fruit']
+const CATEGORY_ORDER = ['leaf', 'root', 'flower', 'fruit'] as const satisfies readonly CropCategory[]
 
 interface CategoryTabsProps {
   category: CropCategory

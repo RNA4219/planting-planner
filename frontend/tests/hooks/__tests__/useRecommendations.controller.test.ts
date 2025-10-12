@@ -8,6 +8,7 @@ import {
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
 import { useRecommendations } from '../../../src/hooks/useRecommendations'
+import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
 const fetchQueryMock = vi.fn()
 
@@ -79,7 +80,7 @@ describe('hooks / useRecommendations controller', () => {
   it('exposes selected market/category synced with controller setters', async () => {
     fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
 
-    const { result } = renderHook(() =>
+    const { result } = renderHookWithQueryClient(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
     )
 
