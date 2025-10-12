@@ -33,7 +33,7 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
 
     const delta = event.key === 'ArrowRight' ? 1 : -1
     const nextIndex = wrapIndex(currentIndex + delta, CATEGORY_ORDER.length)
-    const nextCategory = CATEGORY_ORDER[nextIndex]
+    const nextCategory = CATEGORY_ORDER[nextIndex]!
 
     if (nextCategory !== category) {
       onChange(nextCategory)

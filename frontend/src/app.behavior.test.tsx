@@ -34,6 +34,7 @@ describe('App behavior', () => {
       week: '2024-W30',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     })
 
     await renderApp()

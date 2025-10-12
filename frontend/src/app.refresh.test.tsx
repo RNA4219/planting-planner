@@ -39,6 +39,7 @@ describe('App refresh', () => {
           growth_days: 35,
         },
       ],
+      isMarketFallback: false,
     })
 
     const { waitForToastToDisappear } = await renderApp({ useFakeTimers: true })

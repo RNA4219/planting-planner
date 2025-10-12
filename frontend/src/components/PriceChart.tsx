@@ -19,7 +19,6 @@ type PriceChartProps = {
   cropId: number | null
   marketScope?: MarketScope
   range?: { from?: string; to?: string }
-  marketScope?: MarketScope
 }
 
 const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
