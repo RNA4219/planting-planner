@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 import time
 from collections.abc import Callable, Iterable
@@ -9,6 +10,8 @@ from typing import TYPE_CHECKING, Any, TypeAlias, cast
 from typing_extensions import Protocol
 
 from . import connection, metadata
+
+logger = logging.getLogger(__name__)
 
 DataLoader: TypeAlias = Callable[[], Iterable[dict[str, Any]]]
 
@@ -99,6 +102,10 @@ def start_etl_job(
             finished_at = _utc_now()
             metadata._mark_run_success(
                 conn, run_id, finished_at=finished_at, updated_records=updated_records
+            )
+            logger.info(
+                "market_metadata cache refresh confirmed",
+                extra={"updated_records": updated_records},
             )
     finally:
         conn.close()
