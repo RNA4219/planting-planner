@@ -16,8 +16,10 @@ def _validate_market_scope(value: str) -> str:
     candidate = value.strip()
     if candidate == "national":
         return candidate
-    if candidate.startswith("city:") and len(candidate.split(":", 1)[1]) > 0:
-        return candidate
+    if candidate.startswith("city:"):
+        city_id = candidate.split(":", 1)[1].strip()
+        if city_id:
+            return f"city:{city_id}"
     raise ValueError("invalid market scope")
 
 
