@@ -5,6 +5,7 @@ from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
+from app.db.connection import get_conn
 from app.main import app
 
 client = TestClient(app)
@@ -94,6 +95,50 @@ def test_recommend_ignores_price_sources_for_metadata() -> None:
 
     sources = {item["source"] for item in items}
     assert sources == {"internal"}
+
+
+def _write_market_prices(records: list[tuple[str, int, str, float | None]] | None = None) -> None:
+    conn = get_conn()
+    try:
+        conn.execute("DELETE FROM market_prices")
+        if records:
+            for scope, crop_id, week, avg_price in records:
+                conn.execute(
+                    """
+                    INSERT INTO market_prices (
+                        crop_id, scope, week, avg_price, stddev, unit, source
+                    ) VALUES (?, ?, ?, ?, NULL, '円/kg', 'market')
+                    """,
+                    (crop_id, scope, week, avg_price),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_recommend_city_scope_uses_city_prices_when_available() -> None:
+    _write_market_prices(
+        [
+            ("national", 1, REFERENCE_WEEK, 120.0),
+            ("city:13", 1, REFERENCE_WEEK, 150.0),
+        ]
+    )
+    response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
+    )
+    assert response.status_code == 200
+    assert response.headers.get("x-market-fallback") is None
+
+
+def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
+    _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
+    response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
+    )
+    assert response.status_code == 200
+    assert response.headers.get("x-market-fallback") == "true"
 
 
 def test_recommend_legacy_path_returns_same_payload() -> None:

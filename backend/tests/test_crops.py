@@ -36,3 +36,13 @@ def test_list_crops_method_not_allowed(seeded_client: TestClient) -> None:
     response = seeded_client.post("/api/crops")
 
     assert response.status_code == 405
+
+
+def test_list_crops_filters_by_category(seeded_client: TestClient) -> None:
+    response = seeded_client.get("/api/crops", params={"category": "leaf"})
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body, "expected at least one crop in leaf category"
+    assert all(item["category"] == "leaf" for item in body)

@@ -1,13 +1,27 @@
 from __future__ import annotations
 
-from typing import Literal, NotRequired
+from typing import Annotated, Literal, NotRequired
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 from typing_extensions import TypedDict
 
 Region = Literal["cold", "temperate", "warm"]
 RefreshState = Literal["success", "failure", "running", "stale"]
 DEFAULT_REGION: Region = "temperate"
+
+
+def _validate_market_scope(value: str) -> str:
+    if not isinstance(value, str):  # pragma: no cover - defensive for validation
+        raise TypeError("market scope must be a string")
+    candidate = value.strip()
+    if candidate == "national":
+        return candidate
+    if candidate.startswith("city:") and len(candidate.split(":", 1)[1]) > 0:
+        return candidate
+    raise ValueError("invalid market scope")
+
+
+MarketScope = Annotated[str, AfterValidator(_validate_market_scope)]
 
 
 class Crop(BaseModel):
