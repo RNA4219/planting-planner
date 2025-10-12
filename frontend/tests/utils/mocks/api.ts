@@ -10,7 +10,8 @@ import type {
   RefreshStatusResponse,
   Region,
 } from '../../../src/types'
-import type { RecommendResponseWithFallback } from '../../../src/lib/api'
+import type { MarketsResponse, RecommendResponseWithFallback } from '../../../src/lib/api'
+import { MARKET_SCOPE_OPTIONS } from '../../../src/constants/marketScopes'
 
 export const fetchRecommendations = vi.fn<
   (
@@ -25,6 +26,11 @@ export const fetchRecommend = vi.fn<
 >()
 
 export const fetchCrops = vi.fn<() => Promise<Crop[]>>()
+
+export const fetchMarkets = vi.fn<() => Promise<MarketsResponse>>().mockResolvedValue({
+  markets: MARKET_SCOPE_OPTIONS,
+  generated_at: '1970-01-01T00:00:00.000Z',
+})
 
 export const postRefresh = vi.fn<() => Promise<RefreshResponse>>()
 
@@ -43,6 +49,7 @@ vi.mock('../../../src/lib/api', () => ({
   fetchRecommendations,
   fetchRecommend,
   fetchCrops,
+  fetchMarkets,
   postRefresh,
   fetchRefreshStatus,
   fetchPrice,
@@ -52,6 +59,11 @@ export const resetApiMocks = () => {
   fetchRecommendations.mockReset()
   fetchRecommend.mockReset()
   fetchCrops.mockReset()
+  fetchMarkets.mockReset()
+  fetchMarkets.mockResolvedValue({
+    markets: MARKET_SCOPE_OPTIONS,
+    generated_at: '1970-01-01T00:00:00.000Z',
+  })
   postRefresh.mockReset()
   fetchRefreshStatus.mockReset()
   fetchPrice.mockReset()
