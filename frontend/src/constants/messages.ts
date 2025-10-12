@@ -25,4 +25,5 @@ export const TOAST_MESSAGES = {
   refreshRequestStarted: '更新を開始しました。進行状況を確認しています…',
   refreshRequestFailureWithDetail: (detail: string) =>
     `更新リクエストに失敗しました: ${detail}`,
+  recommendationFallbackWarning: '市場データが一時的に利用できないため、推定値を表示しています。',
 } as const

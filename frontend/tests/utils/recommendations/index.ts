@@ -1,6 +1,8 @@
 import { vi, type MockInstance } from 'vitest'
 
 import type { CropCategory, MarketScope, RecommendResponse, Region } from '../../../src/types'
+import type { RecommendResponseWithFallback } from '../../../src/lib/api'
+import type { RecommendationFetchResult } from '../../../src/hooks/recommendationFetcher'
 
 import { normalizeRecommendationResponse } from '../../../src/utils/recommendations'
 
@@ -9,7 +11,15 @@ import { fetchRecommend, fetchRecommendations, resetAppSpies } from '../renderAp
 type UseRecommendationsModule = typeof import('../../../src/hooks/useRecommendations')
 export type RecommendationItem = RecommendResponse['items'][number]
 
-const fetcherMock = vi.fn()
+const fetcherMock = vi.fn<
+  (input: {
+    region: Region
+    week: string
+    preferLegacy?: boolean
+    marketScope: MarketScope
+    category: CropCategory
+  }) => Promise<RecommendationFetchResult>
+>()
 const cropCatalogState = { catalog: new Map(), isLoading: false }
 
 vi.mock('../../../src/hooks/recommendationFetcher', () => ({
@@ -50,7 +60,8 @@ const applyDefaultRecommendationMocks = () => {
       const callModern = async () => {
         try {
           const response = await fetchRecommendations(region, week, { marketScope, category })
-          return { response, source: 'modern' as const }
+          const { isMarketFallback, ...rest } = response
+          return { response: rest, source: 'modern' as const, isMarketFallback }
         } catch {
           return undefined
         }
@@ -58,7 +69,7 @@ const applyDefaultRecommendationMocks = () => {
       const callLegacy = async () => {
         try {
           const response = await fetchRecommend({ region, week })
-          return { response, source: 'legacy' as const }
+          return { response, source: 'legacy' as const, isMarketFallback: false }
         } catch {
           return undefined
         }
@@ -67,9 +78,12 @@ const applyDefaultRecommendationMocks = () => {
       const secondary = preferLegacy ? callModern : callLegacy
       const result = (await primary()) ?? (await secondary())
       if (!result) {
-        return null
+        return { result: null, isMarketFallback: false }
       }
-      return normalizeRecommendationResponse(result.response, week, result.source)
+      return {
+        result: normalizeRecommendationResponse(result.response, week, result.source),
+        isMarketFallback: result.isMarketFallback,
+      }
     },
   )
   cropCatalogState.catalog = new Map(
@@ -84,11 +98,12 @@ export const toFullWidthAscii = (value: string): string =>
   value.replace(/[!-~]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0xfee0))
 
 export const createRecommendResponse = (
-  overrides: Partial<RecommendResponse> = {},
-): RecommendResponse => ({
+  overrides: Partial<RecommendResponseWithFallback> = {},
+): RecommendResponseWithFallback => ({
   week: '2024-W30',
   region: 'temperate',
   items: [],
+  isMarketFallback: false,
   ...overrides,
 })
 

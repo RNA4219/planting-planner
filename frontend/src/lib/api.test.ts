@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PriceSeries, RecommendResponse } from '../types'
+import type { RecommendResponseWithFallback } from './api'
 
 type FetchRecommend = typeof import('./api')['fetchRecommend']
 type FetchRecommendations = typeof import('./api')['fetchRecommendations']
@@ -181,7 +182,36 @@ describe('fetchRecommendations', () => {
     expect(requestUrl.pathname).toBe('/api/recommend')
     expect(requestUrl.searchParams.get('marketScope')).toBe('national')
     expect(requestUrl.searchParams.get('category')).toBe('leaf')
-    expect(result).toEqual(payload)
+    expect(result).toEqual({ ...payload, isMarketFallback: false })
+  })
+
+  it('x-market-fallback ヘッダーが true の場合に isMarketFallback を true として返す', async () => {
+    const payload: RecommendResponse = {
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-market-fallback': 'true',
+        },
+      }),
+    )
+
+    await loadFetchRecommendations()
+    const result = await fetchRecommendations('temperate', '2024-W30', {
+      marketScope: 'national',
+      category: 'leaf',
+    })
+
+    const expected: RecommendResponseWithFallback = {
+      ...payload,
+      isMarketFallback: true,
+    }
+    expect(result).toEqual(expected)
   })
 })
 

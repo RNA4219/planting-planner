@@ -27,6 +27,7 @@ describe('Region switching resets crop selection', () => {
           growth_days: 70,
         },
       ],
+      isMarketFallback: false,
     })
 
     fetchRecommendations.mockResolvedValueOnce({
@@ -41,6 +42,7 @@ describe('Region switching resets crop selection', () => {
           growth_days: 60,
         },
       ],
+      isMarketFallback: false,
     })
 
     fetchPrice.mockResolvedValue({

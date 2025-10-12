@@ -2,7 +2,8 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FormEvent } from 'react'
 
-import type { CropCategory, MarketScope, RecommendResponse, Region } from '../types'
+import type { CropCategory, MarketScope, Region } from '../types'
+import type { RecommendResponseWithFallback } from '../lib/api'
 
 import { useRecommendationLoader } from './useRecommendationLoader'
 import { useRecommendations } from './useRecommendations'
@@ -11,7 +12,7 @@ type FetchRecommendationsMock = (
   region: Region,
   week: string,
   options: { marketScope: MarketScope; category: CropCategory },
-) => Promise<RecommendResponse>
+) => Promise<RecommendResponseWithFallback>
 
 const { fetchCropsMock, fetchRecommendationsMock } = vi.hoisted(() => ({
   fetchCropsMock: vi.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
@@ -21,6 +22,28 @@ const { fetchCropsMock, fetchRecommendationsMock } = vi.hoisted(() => ({
 vi.mock('../lib/api', () => ({
   fetchCrops: fetchCropsMock,
   fetchRecommendations: fetchRecommendationsMock,
+}))
+
+const fetchQueryMock = vi.fn()
+
+const setupFetchQueryMock = () => {
+  fetchQueryMock.mockReset()
+  fetchQueryMock.mockImplementation(async (options: unknown) => {
+    if (typeof options === 'function') {
+      return options()
+    }
+    const typed = options as { queryFn: () => Promise<unknown> }
+    return typed.queryFn()
+  })
+}
+
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({
+    fetchQuery: fetchQueryMock,
+    getQueryData: vi.fn(),
+    setQueryData: vi.fn(),
+    invalidateQueries: vi.fn(),
+  }),
 }))
 
 const createDeferred = <T>() => {
@@ -40,13 +63,16 @@ describe('useRecommendationLoader', () => {
       week: '2099-W52',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     }))
     fetchRecommendationsMock.mockImplementation(async () => ({
       week: '2024-W06',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     }))
     fetchCropsMock.mockClear()
+    setupFetchQueryMock()
   })
 
   it('requestRecommendations は入力週を ISO 形式に正規化して API へ渡す', async () => {
@@ -151,6 +177,7 @@ describe('useRecommendationLoader', () => {
       week: 'invalid',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     }))
 
     await act(async () => {
@@ -161,9 +188,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('並列実行時に古いリクエスト結果を無視する', async () => {
-    const initial = createDeferred<RecommendResponse>()
-    const first = createDeferred<RecommendResponse>()
-    const second = createDeferred<RecommendResponse>()
+    const initial = createDeferred<RecommendResponseWithFallback>()
+    const first = createDeferred<RecommendResponseWithFallback>()
+    const second = createDeferred<RecommendResponseWithFallback>()
 
     fetchRecommendationsMock.mockReset()
     fetchRecommendationsMock
@@ -180,6 +207,7 @@ describe('useRecommendationLoader', () => {
         week: '2024-W05',
         region: 'temperate',
         items: [],
+        isMarketFallback: false,
       })
       await initial.promise
     })
@@ -202,6 +230,7 @@ describe('useRecommendationLoader', () => {
         week: '2024-W02',
         region: 'temperate',
         items: latestItems,
+        isMarketFallback: false,
       })
       await pendingSecond
 
@@ -217,6 +246,7 @@ describe('useRecommendationLoader', () => {
             growth_days: 55,
           },
         ],
+        isMarketFallback: false,
       })
       await pendingFirst
     })
@@ -227,9 +257,13 @@ describe('useRecommendationLoader', () => {
 })
 
 describe('useRecommendations', () => {
-  it('favorites を優先した並びと既存 API を維持する', async () => {
+  beforeEach(() => {
+    setupFetchQueryMock()
     fetchRecommendationsMock.mockReset()
     fetchCropsMock.mockReset()
+  })
+
+  it('favorites を優先した並びと既存 API を維持する', async () => {
     fetchCropsMock.mockResolvedValueOnce([
       { id: 1, name: 'Carrot', category: 'root' },
       { id: 2, name: 'Tomato', category: 'fruit' },
@@ -253,6 +287,7 @@ describe('useRecommendations', () => {
           growth_days: 60,
         },
       ],
+      isMarketFallback: false,
     })
 
     const { result } = renderHook(() =>
@@ -281,19 +316,19 @@ describe('useRecommendations', () => {
   })
 
   it('setRegion で地域を更新すると現在週のまま再フェッチされる', async () => {
-    fetchRecommendationsMock.mockReset()
-    fetchCropsMock.mockReset()
     fetchCropsMock.mockResolvedValueOnce([])
     fetchRecommendationsMock
       .mockResolvedValueOnce({
         week: '2024-W05',
         region: 'temperate',
         items: [],
+        isMarketFallback: false,
       })
       .mockResolvedValueOnce({
         week: '2024-W05',
         region: 'cold',
         items: [],
+        isMarketFallback: false,
       })
 
     const { result } = renderHook(() =>
@@ -331,16 +366,19 @@ describe('useRecommendations', () => {
         week: '2024-W05',
         region: 'temperate',
         items: [],
+        isMarketFallback: false,
       })
       .mockResolvedValueOnce({
         week: '2024-W05',
         region: 'cold',
         items: [],
+        isMarketFallback: false,
       })
       .mockResolvedValueOnce({
         week: '2024-W05',
         region: 'cold',
         items: [],
+        isMarketFallback: false,
       })
 
     const { result } = renderHook(() =>
@@ -385,11 +423,13 @@ describe('useRecommendations', () => {
         week: '2024-W05',
         region: 'temperate',
         items: [],
+        isMarketFallback: false,
       })
       .mockResolvedValueOnce({
         week: '2024-W07',
         region: 'temperate',
         items: [],
+        isMarketFallback: false,
       })
 
     const { result } = renderHook(() =>

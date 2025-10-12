@@ -47,14 +47,7 @@ const buildUrl = (
   return `${prefix}${normalizedPath}${search ? `?${search}` : ''}`
 }
 
-const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
-  const response = await fetch(input, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...init,
-  })
-
+const parseResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const message = await response.text()
     throw new Error(message || `Request failed with status ${response.status}`)
@@ -67,22 +60,45 @@ const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> =>
   return (await response.json()) as T
 }
 
+const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+  const response = await fetch(input, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...init,
+  })
+
+  return parseResponse<T>(response)
+}
+
 export const fetchCrops = async (): Promise<Crop[]> => {
   const url = buildUrl('/crops')
   return request<Crop[]>(url)
+}
+
+export interface RecommendResponseWithFallback extends RecommendResponse {
+  readonly isMarketFallback: boolean
 }
 
 export const fetchRecommendations = async (
   region: Region,
   week: string | undefined,
   { marketScope, category }: { marketScope: MarketScope; category: CropCategory },
-): Promise<RecommendResponse> => {
+): Promise<RecommendResponseWithFallback> => {
   const params = new URLSearchParams({ region, marketScope, category })
   if (week) {
     params.set('week', week)
   }
   const url = buildUrl('/recommend', params)
-  return request<RecommendResponse>(url)
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  const payload = await parseResponse<RecommendResponse>(response)
+  const fallbackHeader = response.headers.get('x-market-fallback')
+  const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
+  return { ...payload, isMarketFallback }
 }
 
 export const fetchRecommend = async ({
