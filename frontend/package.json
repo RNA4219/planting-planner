@@ -33,6 +33,7 @@
     "vitest": "^2.1.1"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.56.0",
     "chart.js": "^4.4.3",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",

@@ -34,6 +34,7 @@ export const fetchPrice = vi.fn<
     cropId: number,
     frm?: string,
     to?: string,
+    marketScope?: MarketScope,
   ) => Promise<PriceSeries>
 >()
 

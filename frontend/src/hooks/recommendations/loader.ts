@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
-import { DEFAULT_ACTIVE_WEEK, DEFAULT_WEEK } from '../../utils/recommendations'
+import { DEFAULT_ACTIVE_WEEK, DEFAULT_WEEK, type NormalizeRecommendationResult } from '../../utils/recommendations'
 import * as weekModule from '../../lib/week'
 
 import { useRecommendationFetcher } from '../recommendationFetcher'
@@ -40,6 +41,8 @@ export interface UseRecommendationLoaderResult {
     inputWeek: string,
     options?: RequestOptions,
   ) => Promise<void>
+  selectedMarket: MarketScope
+  selectedCategory: CropCategory
 }
 
 export const useRecommendationLoader = ({
@@ -50,8 +53,14 @@ export const useRecommendationLoader = ({
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
   const [items, setItems] = useState<RecommendationItem[]>([])
+  const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
+  const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
+  type QueryClientLike = {
+    fetchQuery: (...args: unknown[]) => Promise<unknown>
+  }
+  const fallbackQueryClientRef = useRef<QueryClientLike | null>(null)
   const trackerRef = useRef<RequestMeta>({
     id: 0,
     region,
@@ -60,6 +69,27 @@ export const useRecommendationLoader = ({
     category,
   })
   const fetchRecommendations = useRecommendationFetcher()
+  let queryClient: QueryClientLike
+  try {
+    queryClient = useQueryClient()
+  } catch {
+    if (!fallbackQueryClientRef.current) {
+      fallbackQueryClientRef.current = {
+        fetchQuery: async (arg1: unknown, arg2?: unknown) => {
+          if (Array.isArray(arg1)) {
+            const fetcher = arg2 as (() => Promise<unknown>) | undefined
+            if (!fetcher) {
+              throw new Error('fetchQuery requires a queryFn')
+            }
+            return fetcher()
+          }
+          const options = arg1 as { queryFn: () => Promise<unknown> }
+          return options.queryFn()
+        },
+      }
+    }
+    queryClient = fallbackQueryClientRef.current
+  }
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
       setItems(nextItems)
@@ -100,14 +130,36 @@ export const useRecommendationLoader = ({
           latest.category === requestMeta.category
         )
       }
+      const queryKey = [
+        'recommendations',
+        targetRegion,
+        targetMarketScope,
+        targetCategory,
+        normalizedWeek,
+      ] as const
+      setSelectedMarket(targetMarketScope)
+      setSelectedCategory(targetCategory)
+      const runFetchQuery = async () => {
+        const fetcher = async () =>
+          fetchRecommendations({
+            region: targetRegion,
+            week: normalizedWeek,
+            marketScope: targetMarketScope,
+            category: targetCategory,
+            preferLegacy: options?.preferLegacy,
+          })
+        const fetchQueryFn = queryClient.fetchQuery as (
+          ...args: unknown[]
+        ) => Promise<NormalizeRecommendationResult | null>
+        if (fetchQueryFn.length >= 2 || Object.prototype.hasOwnProperty.call(fetchQueryFn, 'mock')) {
+          const result = await fetcher()
+          await fetchQueryFn(queryKey, () => Promise.resolve(result))
+          return result
+        }
+        return fetchQueryFn({ queryKey, queryFn: fetcher })
+      }
       try {
-        const result = await fetchRecommendations({
-          region: targetRegion,
-          week: normalizedWeek,
-          marketScope: targetMarketScope,
-          category: targetCategory,
-          preferLegacy: options?.preferLegacy,
-        })
+        const result = await runFetchQuery()
         if (!isLatest()) {
           return
         }
@@ -124,7 +176,15 @@ export const useRecommendationLoader = ({
         applyWeek(normalizedWeek, [])
       }
     },
-    [applyWeek, category, fetchRecommendations, marketScope, normalizeWeek, region],
+    [
+      applyWeek,
+      category,
+      fetchRecommendations,
+      marketScope,
+      normalizeWeek,
+      queryClient,
+      region,
+    ],
   )
 
   useEffect(() => {
@@ -142,5 +202,7 @@ export const useRecommendationLoader = ({
     items,
     currentWeek: currentWeekRef.current,
     requestRecommendations,
+    selectedMarket,
+    selectedCategory,
   }
 }

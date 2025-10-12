@@ -82,12 +82,11 @@ export const ToastStack = ({
     timersRef.current.clear()
   }, [])
 
-  if (toasts.length === 0) {
-    return null
-  }
+  const hasAssertiveToast = toasts.some((toast) => toast.variant === 'error')
+  const ariaLive = hasAssertiveToast ? 'assertive' : 'polite'
 
   return (
-    <div className="toast-stack" aria-live="assertive" aria-atomic="true">
+    <div className="toast-stack" role="status" aria-live={ariaLive} aria-atomic="true">
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast toast--${toast.variant}`} role="alert">
           <div>

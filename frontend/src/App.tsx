@@ -14,6 +14,18 @@ import { APP_TEXT } from './constants/messages'
 
 import './App.css'
 
+const MARKET_OPTIONS: ReadonlyArray<{ value: MarketScope; label: string }> = [
+  { value: 'national', label: '全国' },
+  { value: 'city:tokyo', label: '東京都' },
+  { value: 'city:osaka', label: '大阪市' },
+]
+
+const CATEGORY_TABS: ReadonlyArray<{ value: CropCategory; label: string }> = [
+  { value: 'leaf', label: '葉菜' },
+  { value: 'root', label: '根菜' },
+  { value: 'flower', label: '花き' },
+]
+
 export const App = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
@@ -27,7 +39,11 @@ export const App = () => {
     region,
     setRegion,
     marketScope,
+    setMarketScope,
+    selectedMarket,
     category,
+    setCategory,
+    selectedCategory,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -64,6 +80,20 @@ export const App = () => {
       setRegion(next)
     },
     [setRegion, setSelectedCropId],
+  )
+
+  const handleMarketScopeChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setMarketScope(event.target.value as MarketScope)
+    },
+    [setMarketScope],
+  )
+
+  const handleCategoryClick = useCallback(
+    (next: CropCategory) => {
+      setCategory(next)
+    },
+    [setCategory],
   )
 
   const normalizedSearchKeyword = useMemo(
@@ -105,6 +135,21 @@ export const App = () => {
     <div className="app">
       <header className="app__header">
         <h1 className="app__title">{APP_TEXT.title}</h1>
+        <label className="market-select">
+          <span className="market-select__label">市場</span>
+          <select
+            aria-label="市場"
+            className="market-select__select"
+            value={selectedMarket}
+            onChange={handleMarketScopeChange}
+          >
+            {MARKET_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <SearchControls
           queryWeek={queryWeek}
           currentWeek={currentWeek}
@@ -119,6 +164,20 @@ export const App = () => {
       </header>
       <main className="app__main">
         <ToastStack toasts={pendingToasts} onDismiss={dismissToast} />
+        <div role="tablist" aria-label="カテゴリ">
+          {CATEGORY_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              role="tab"
+              aria-selected={selectedCategory === tab.value}
+              onClick={() => {
+                handleCategoryClick(tab.value)
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <RecommendationsTable
           region={region}
           displayWeek={displayWeek}

@@ -2,6 +2,7 @@
  * エントリポイントのスモークテストのみを保持します。
  * 詳細なインタラクションケースは ./forms, ./regions, ./favorites, ./prices 以下に配置してください。
  */
+import '@testing-library/jest-dom/vitest'
 import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 

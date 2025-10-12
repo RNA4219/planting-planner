@@ -13,6 +13,35 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
       >
         Planting Planner
       </h1>
+      <label
+        class="market-select"
+      >
+        <span
+          class="market-select__label"
+        >
+          市場
+        </span>
+        <select
+          aria-label="市場"
+          class="market-select__select"
+        >
+          <option
+            value="national"
+          >
+            全国
+          </option>
+          <option
+            value="city:tokyo"
+          >
+            東京都
+          </option>
+          <option
+            value="city:osaka"
+          >
+            大阪市
+          </option>
+        </select>
+      </label>
       <form
         class="app__controls"
         novalidate=""
@@ -94,6 +123,35 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
     <main
       class="app__main"
     >
+      <div
+        aria-atomic="true"
+        aria-live="polite"
+        class="toast-stack"
+        role="status"
+      />
+      <div
+        aria-label="カテゴリ"
+        role="tablist"
+      >
+        <button
+          aria-selected="true"
+          role="tab"
+        >
+          葉菜
+        </button>
+        <button
+          aria-selected="false"
+          role="tab"
+        >
+          根菜
+        </button>
+        <button
+          aria-selected="false"
+          role="tab"
+        >
+          花き
+        </button>
+      </div>
       <section
         class="recommend"
       >
