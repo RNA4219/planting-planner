@@ -81,7 +81,11 @@ test.describe('市場トグルとカテゴリ遷移', () => {
 
     const flowerTab = page.getByRole('tab', { name: '花き' })
     await flowerTab.click()
-    await expect(page.getByText('市場データが一時的に利用できないため、推定値を表示しています。')).toBeVisible()
+    const fallbackNotice = page.getByTestId('market-fallback-notice')
+    await expect(fallbackNotice).toBeVisible()
+    await expect(fallbackNotice).toHaveText(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
     await expect(page.getByRole('row', { name: /バラ/ })).toBeVisible()
     expect.soft(recommendRequests).toEqual(
       expect.arrayContaining([
