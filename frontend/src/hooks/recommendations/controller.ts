@@ -30,6 +30,7 @@ export interface UseRecommendationsResult {
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
   reloadCurrentWeek: () => Promise<void>
+  isMarketFallback: boolean
 }
 
 export const useRecommendations = ({
@@ -65,6 +66,7 @@ export const useRecommendations = ({
     selectedMarket,
     selectedCategory,
     requestRecommendations,
+    isMarketFallback,
   } = useRecommendationLoader({ region, marketScope, category })
   const latestRegionRef = useRef(region)
   const latestWeekRef = useRef(currentWeek)
@@ -252,6 +254,7 @@ export const useRecommendations = ({
     sortedRows,
     handleSubmit,
     reloadCurrentWeek,
+    isMarketFallback,
   }
 }
 

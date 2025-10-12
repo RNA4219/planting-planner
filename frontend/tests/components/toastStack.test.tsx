@@ -20,6 +20,7 @@ describe('ToastStack', () => {
 
     const stack = container.querySelector('.toast-stack')
     expect(stack).not.toBeNull()
+    expect(stack).toHaveAttribute('role', 'status')
     expect(stack).toHaveAttribute('aria-live', 'polite')
   })
 })

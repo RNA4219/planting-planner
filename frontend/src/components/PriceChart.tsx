@@ -19,6 +19,12 @@ type PriceChartProps = {
   range?: { from?: string; to?: string }
 }
 
+const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p role="status" aria-live="polite">
+    {children}
+  </p>
+)
+
 export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
@@ -66,21 +72,27 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   }, [cropId, range?.from, range?.to])
 
   if (cropId == null) {
-    return <p>作物を選択すると価格推移が表示されます。</p>
+    return <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>
   }
 
   if (isLoading) {
-    return <p>価格データを読み込み中です…</p>
+    return <StatusMessage>価格データを読み込み中です…</StatusMessage>
   }
 
   if (labels.length === 0) {
-    return <p>価格データがありません。</p>
+    return <StatusMessage>価格データがありません。</StatusMessage>
   }
 
+  const firstWeek = labels[0]
+  const lastWeek = labels[labels.length - 1]
+  const periodText = firstWeek === lastWeek ? firstWeek : `${firstWeek} 〜 ${lastWeek}`
+  const summary = `${title} の週平均価格。期間: ${periodText}。データ点数: ${labels.length}件。`
+
   return (
-    <div>
+    <figure>
       <h4 style={{ margin: '8px 0' }}>{title}</h4>
       <Line
+        aria-label={`${title} の価格推移`}
         data={{
           labels,
           datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
@@ -91,6 +103,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
           scales: { y: { beginAtZero: false } },
         }}
       />
-    </div>
+      <figcaption>{summary}</figcaption>
+    </figure>
   )
 }

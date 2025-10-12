@@ -6,12 +6,12 @@ import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
-import { ToastStack } from './components/ToastStack'
+import { ToastStack, type ToastStackItem } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
-import { APP_TEXT } from './constants/messages'
+import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 import './App.css'
 
@@ -38,6 +38,7 @@ export const App = () => {
     sortedRows,
     handleSubmit,
     reloadCurrentWeek,
+    isMarketFallback,
   } = useRecommendations({
     favorites,
     initialRegion: initialRegionRef.current,
@@ -46,6 +47,8 @@ export const App = () => {
   })
   const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController()
   const lastSuccessToastIdRef = useRef<string | null>(null)
+  const marketFallbackToastSeqRef = useRef(0)
+  const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +115,45 @@ export const App = () => {
     void reloadCurrentWeek()
   }, [pendingToasts, reloadCurrentWeek])
 
+  useEffect(() => {
+    if (!isMarketFallback) {
+      return
+    }
+    const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
+    marketFallbackToastSeqRef.current += 1
+    setMarketFallbackToasts((prev) => [
+      ...prev,
+      {
+        id,
+        variant: 'warning',
+        message: TOAST_MESSAGES.recommendationFallbackWarning,
+        detail: null,
+      },
+    ])
+  }, [isMarketFallback])
+
+  const handleToastDismiss = useCallback(
+    (id: string) => {
+      let removed = false
+      setMarketFallbackToasts((prev) => {
+        if (!prev.some((toast) => toast.id === id)) {
+          return prev
+        }
+        removed = true
+        return prev.filter((toast) => toast.id !== id)
+      })
+      if (!removed) {
+        dismissToast(id)
+      }
+    },
+    [dismissToast],
+  )
+
+  const combinedToasts = useMemo(
+    () => [...pendingToasts, ...marketFallbackToasts],
+    [marketFallbackToasts, pendingToasts],
+  )
+
   return (
     <div className="app">
       <header className="app__header">
@@ -131,7 +173,7 @@ export const App = () => {
         />
       </header>
       <main className="app__main">
-        <ToastStack toasts={pendingToasts} onDismiss={dismissToast} />
+        <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
         <RecommendationsTable
           region={region}
           displayWeek={displayWeek}
