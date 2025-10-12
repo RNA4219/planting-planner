@@ -48,6 +48,8 @@ RecommendRegionQuery = Annotated[
 PriceCropQuery = Annotated[int, Query(ge=1)]
 FromWeekQuery = Annotated[str | None, Query(description="from ISO week e.g., 2025-W01")]
 ToWeekQuery = Annotated[str | None, Query(description="to ISO week e.g., 2025-W52")]
+
+
 def _market_scope_query(
     value: Annotated[
         str | None,

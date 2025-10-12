@@ -12,6 +12,8 @@ from ..dependencies import (
 )
 
 router = APIRouter()
+
+
 def _resolve_market_scope(
     conn: ConnDependency, scope: schemas.MarketScope | None, week: str
 ) -> tuple[schemas.MarketScope, bool]:

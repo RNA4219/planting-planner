@@ -93,9 +93,7 @@ def price_series(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     scope = market_scope or schemas.DEFAULT_MARKET_SCOPE
-    rows = _select_market_prices(
-        conn, crop_id=crop_id, scope=scope, frm=frm, to=to
-    )
+    rows = _select_market_prices(conn, crop_id=crop_id, scope=scope, frm=frm, to=to)
     fallback = False
     if scope != schemas.DEFAULT_MARKET_SCOPE and not rows:
         fallback = True

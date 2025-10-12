@@ -37,6 +37,7 @@ def test_parse_market_scope_invalid(raw: object) -> None:
 def test_default_market_scope_constant() -> None:
     assert DEFAULT_MARKET_SCOPE == "national"
     assert isinstance(DEFAULT_MARKET_SCOPE, str)
+
     # Ensure type compatibility
     def _accept_scope(scope: MarketScope) -> MarketScope:
         return scope

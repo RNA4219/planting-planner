@@ -24,6 +24,4 @@ def list_crops(
         f"SELECT id, name, category FROM crops{where} ORDER BY name",
         params,
     ).fetchall()
-    return [
-        schemas.Crop(id=row["id"], name=row["name"], category=row["category"]) for row in rows
-    ]
+    return [schemas.Crop(id=row["id"], name=row["name"], category=row["category"]) for row in rows]
