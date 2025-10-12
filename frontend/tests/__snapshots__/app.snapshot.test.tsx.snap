@@ -50,6 +50,28 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         <div
           class="app__controls-group"
         >
+          <label
+            class="app__market"
+            for="market-scope-select"
+          >
+            市場
+            <select
+              aria-label="市場"
+              id="market-scope-select"
+              name="marketScope"
+            >
+              <option
+                value="national"
+              >
+                全国平均
+              </option>
+              <option
+                value="city:tokyo"
+              >
+                東京都（市況）
+              </option>
+            </select>
+          </label>
           <input
             aria-label="作物検索"
             id="search-input"
@@ -73,6 +95,39 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
               value="2024-W30"
             />
           </label>
+          <div
+            aria-label="カテゴリ"
+            class="app__category-tabs"
+            role="tablist"
+          >
+            <button
+              aria-selected="true"
+              class="app__category-tab app__category-tab--active"
+              role="tab"
+              tabindex="0"
+              type="button"
+            >
+              葉菜類
+            </button>
+            <button
+              aria-selected="false"
+              class="app__category-tab"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              根菜類
+            </button>
+            <button
+              aria-selected="false"
+              class="app__category-tab"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              花卉類
+            </button>
+          </div>
           <div
             class="app__controls-actions"
           >
