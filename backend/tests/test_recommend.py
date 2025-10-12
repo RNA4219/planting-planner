@@ -151,6 +151,16 @@ def test_recommend_blank_market_scope_treated_as_national() -> None:
     assert response.headers.get("x-market-fallback") is None
 
 
+def test_recommend_all_market_scope_treated_as_national() -> None:
+    _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
+    response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "all"},
+    )
+    assert response.status_code == 200
+    assert response.headers.get("x-market-fallback") is None
+
+
 def test_recommend_category_all_returns_full_schedule() -> None:
     default_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
     all_response = client.get(
