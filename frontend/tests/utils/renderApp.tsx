@@ -2,6 +2,18 @@ import { cleanup, render, waitFor, waitForElementToBeRemoved } from '@testing-li
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, vi } from 'vitest'
+import type { ReactNode } from 'react'
+
+const fetchQueryMock = vi.fn(async ({ queryFn }: { queryFn: () => Promise<unknown> }) => {
+  return queryFn()
+})
+
+vi.mock('@tanstack/react-query', () => ({
+  QueryClientProvider: ({ children }: { children: ReactNode }) => children,
+  useQueryClient: () => ({
+    fetchQuery: fetchQueryMock,
+  }),
+}))
 
 import {
   fetchRecommendations,
@@ -45,6 +57,8 @@ vi.mock('../../src/lib/week', () => ({
   compareIsoWeek: (a: string, b: string) => a.localeCompare(b),
 }))
 
+type FakeTimersMode = 'caller' | 'renderApp' | 'off'
+
 let shouldRestoreTimers = false
 const activeQueryClients = new Set<QueryClient>()
 
@@ -53,6 +67,22 @@ const destroyQueryClients = () => {
     client.clear()
   })
   activeQueryClients.clear()
+}
+
+const resolveFakeTimersMode = ({
+  fakeTimers,
+  useFakeTimers,
+}: RenderAppOptions = {}): FakeTimersMode => {
+  if (fakeTimers) {
+    return fakeTimers
+  }
+  if (useFakeTimers === true) {
+    return 'renderApp'
+  }
+  if (useFakeTimers === false) {
+    return 'off'
+  }
+  return 'off'
 }
 
 afterEach(() => {
@@ -65,6 +95,7 @@ afterEach(() => {
 const resetAppMocks = () => {
   resetStorageMocks()
   resetApiMocks()
+  fetchQueryMock.mockClear()
   destroyQueryClients()
 }
 
@@ -72,9 +103,11 @@ export const resetAppSpies = resetAppMocks
 
 interface RenderAppOptions {
   readonly useFakeTimers?: boolean
+  readonly fakeTimers?: FakeTimersMode
 }
 
-export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}) => {
+export const renderApp = async (options: RenderAppOptions = {}) => {
+  const fakeTimersMode = resolveFakeTimersMode(options)
   const App = (await import('../../src/App')).default
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -87,7 +120,7 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
   })
   activeQueryClients.add(queryClient)
   const user = userEvent.setup(
-    useFakeTimers
+    fakeTimersMode !== 'off'
       ? {
           advanceTimers: vi.advanceTimersByTime,
         }
@@ -103,15 +136,19 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
       throw new Error('recommendations not requested yet')
     }
   })
-  if (useFakeTimers) {
+  if (fakeTimersMode === 'renderApp' && !shouldRestoreTimers) {
     vi.useFakeTimers()
     shouldRestoreTimers = true
+  }
+  if (fakeTimersMode === 'off' && shouldRestoreTimers) {
+    vi.useRealTimers()
+    shouldRestoreTimers = false
   }
   const waitForToastToDisappear = async (locator: () => Element | null) => {
     if (typeof locator !== 'function') {
       throw new TypeError('waitForToastToDisappear requires a locator function')
     }
-    if (!useFakeTimers) {
+    if (fakeTimersMode === 'off') {
       await waitForElementToBeRemoved(locator)
       return
     }
