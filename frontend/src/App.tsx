@@ -1,5 +1,13 @@
 
-import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type CSSProperties,
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { CategoryTabs } from './components/CategoryTabs'
@@ -15,6 +23,16 @@ import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 import './App.css'
+
+const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
+  marginBottom: '1rem',
+  padding: '0.75rem 1rem',
+  borderRadius: '0.75rem',
+  border: '1px solid #fed7aa',
+  backgroundColor: '#fff7ed',
+  color: '#9a3412',
+  fontWeight: 600,
+}
 
 const createQueryClient = () =>
   new QueryClient({
@@ -187,6 +205,16 @@ export const AppContent = () => {
       </header>
       <main className="app__main">
         <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
+        {isMarketFallback ? (
+          <div
+            data-testid="market-fallback-notice"
+            role="status"
+            aria-live="polite"
+            style={MARKET_FALLBACK_NOTICE_STYLE}
+          >
+            {TOAST_MESSAGES.recommendationFallbackWarning}
+          </div>
+        ) : null}
         <RecommendationsTable
           region={region}
           displayWeek={displayWeek}
