@@ -62,6 +62,8 @@ def _market_scope_query(
     candidate = value.strip()
     if not candidate:
         return None
+    if candidate.casefold() == "all":
+        return None
     if candidate == "national":
         return schemas.DEFAULT_MARKET_SCOPE
     return schemas.parse_market_scope(candidate)
