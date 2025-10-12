@@ -79,7 +79,7 @@ describe('App refresh', () => {
     expect(startToast).toBeInTheDocument()
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
 
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(5000)
     await Promise.resolve()
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(2)
 

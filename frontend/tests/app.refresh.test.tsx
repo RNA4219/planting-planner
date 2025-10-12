@@ -81,7 +81,7 @@ describe('App refresh workflow', () => {
     expect(screen.queryByText('データ更新が完了しました')).not.toBeInTheDocument()
     expect(screen.queryByText('7件のデータを更新しました。')).not.toBeInTheDocument()
 
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(5000)
     await Promise.resolve()
     await Promise.resolve()
 
