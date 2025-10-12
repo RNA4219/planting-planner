@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   recommendationControllerMocks,
@@ -9,16 +9,15 @@ import {
 
 const fetchQueryMock = vi.fn()
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    fetchQuery: fetchQueryMock,
-    getQueryData: vi.fn(),
-    setQueryData: vi.fn(),
-    invalidateQueries: vi.fn(),
-  }),
-}))
 import type { RecommendationItem } from '../../utils/recommendations'
 import { useRecommendationLoader } from '../../../src/hooks/useRecommendationLoader'
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __recommendationFetchQuery__:
+    | (<T>(key: readonly unknown[], fetcher: () => Promise<T>) => Promise<T>)
+    | undefined
+}
 
 describe('hooks / useRecommendationLoader', () => {
   const { fetcherMock } = recommendationControllerMocks
@@ -26,6 +25,12 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
+    fetchQueryMock.mockImplementation(async (_key, fetcher) => fetcher())
+    globalThis.__recommendationFetchQuery__ = (key, fetcher) => fetchQueryMock(key, fetcher)
+  })
+
+  afterEach(() => {
+    globalThis.__recommendationFetchQuery__ = undefined
   })
 
   it('normalizes week input before requesting recommendations', async () => {
@@ -85,7 +90,6 @@ describe('hooks / useRecommendationLoader', () => {
   })
 
   it('tracks selected market/category and uses them in the cache key', async () => {
-    fetchQueryMock.mockImplementation(async (_key, fetcher) => fetcher())
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
 
     const { result } = renderHook(() =>
@@ -110,8 +114,9 @@ describe('hooks / useRecommendationLoader', () => {
     fetchQueryMock.mockClear()
     fetcherMock.mockResolvedValue({ week: '2024-W31', items: [] })
 
+    let overrideResult: unknown
     await act(async () => {
-      await result.current.requestRecommendations('2024-W31', {
+      overrideResult = await result.current.requestRecommendations('2024-W31', {
         marketScopeOverride: 'city:kyoto',
         categoryOverride: 'root',
       })
@@ -127,5 +132,10 @@ describe('hooks / useRecommendationLoader', () => {
     ])
     expect(result.current.selectedMarket).toBe('city:kyoto')
     expect(result.current.selectedCategory).toBe('root')
+    expect(overrideResult).toEqual({
+      marketScope: 'city:kyoto',
+      category: 'root',
+      week: '2024-W31',
+    })
   })
 })

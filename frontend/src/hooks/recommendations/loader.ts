@@ -30,16 +30,36 @@ type RequestOptions = {
   categoryOverride?: CropCategory
 }
 
+type FetchQuery = <TResult>(
+  key: readonly unknown[],
+  fetcher: () => Promise<TResult>,
+) => Promise<TResult>
+
+const getFetchQuery = (): FetchQuery => {
+  const globalClient = (globalThis as { __recommendationFetchQuery__?: FetchQuery })
+    .__recommendationFetchQuery__
+  if (globalClient) {
+    return globalClient
+  }
+  return async (_key, fetcher) => fetcher()
+}
+
 export interface UseRecommendationLoaderResult {
   queryWeek: string
   setQueryWeek: (week: string) => void
   activeWeek: string
   items: RecommendationItem[]
   currentWeek: string
+  selectedMarket: MarketScope
+  selectedCategory: CropCategory
   requestRecommendations: (
     inputWeek: string,
     options?: RequestOptions,
-  ) => Promise<void>
+  ) => Promise<{
+    week: string
+    marketScope: MarketScope
+    category: CropCategory
+  }>
 }
 
 export const useRecommendationLoader = ({
@@ -50,6 +70,8 @@ export const useRecommendationLoader = ({
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
   const [items, setItems] = useState<RecommendationItem[]>([])
+  const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
+  const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
   const trackerRef = useRef<RequestMeta>({
@@ -80,6 +102,8 @@ export const useRecommendationLoader = ({
       const targetMarketScope = options?.marketScopeOverride ?? marketScope
       const targetCategory = options?.categoryOverride ?? category
       const normalizedWeek = normalizeWeek(inputWeek)
+      setSelectedMarket(targetMarketScope)
+      setSelectedCategory(targetCategory)
       setQueryWeek(normalizedWeek)
       currentWeekRef.current = normalizedWeek
       const requestMeta: RequestMeta = {
@@ -90,6 +114,19 @@ export const useRecommendationLoader = ({
         category: targetCategory,
       }
       trackerRef.current = requestMeta
+      const latestState = {
+        week: normalizedWeek,
+        marketScope: targetMarketScope,
+        category: targetCategory,
+      }
+      const queryKey = [
+        'recommendations',
+        targetRegion,
+        targetMarketScope,
+        targetCategory,
+        normalizedWeek,
+      ] as const
+      const fetchQuery = getFetchQuery()
       const isLatest = () => {
         const latest = trackerRef.current
         return (
@@ -101,30 +138,43 @@ export const useRecommendationLoader = ({
         )
       }
       try {
-        const result = await fetchRecommendations({
-          region: targetRegion,
-          week: normalizedWeek,
-          marketScope: targetMarketScope,
-          category: targetCategory,
-          preferLegacy: options?.preferLegacy,
-        })
+        const result = await fetchQuery(queryKey, () =>
+          fetchRecommendations({
+            region: targetRegion,
+            week: normalizedWeek,
+            marketScope: targetMarketScope,
+            category: targetCategory,
+            preferLegacy: options?.preferLegacy,
+          }),
+        )
         if (!isLatest()) {
-          return
+          return latestState
         }
         if (!result) {
           applyWeek(normalizedWeek, [])
-          return
+          return latestState
         }
         const resolvedWeek = normalizeIsoWeek(result.week, normalizedWeek)
         applyWeek(resolvedWeek, result.items)
+        return latestState
       } catch {
         if (!isLatest()) {
-          return
+          return latestState
         }
         applyWeek(normalizedWeek, [])
+        return latestState
       }
     },
-    [applyWeek, category, fetchRecommendations, marketScope, normalizeWeek, region],
+    [
+      applyWeek,
+      category,
+      fetchRecommendations,
+      marketScope,
+      normalizeWeek,
+      region,
+      setSelectedCategory,
+      setSelectedMarket,
+    ],
   )
 
   useEffect(() => {
@@ -141,6 +191,8 @@ export const useRecommendationLoader = ({
     activeWeek,
     items,
     currentWeek: currentWeekRef.current,
+    selectedMarket,
+    selectedCategory,
     requestRecommendations,
   }
 }
