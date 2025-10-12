@@ -3,6 +3,6 @@ import { configDefaults, defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    exclude: [...configDefaults.exclude, 'playwright/**'],
+    exclude: [...configDefaults.exclude, 'playwright/**', 'tests/e2e/**'],
   },
 })

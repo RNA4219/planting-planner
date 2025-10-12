@@ -1,8 +1,9 @@
-import { type ReactNode } from 'react'
+import { cloneElement, isValidElement, type ReactNode } from 'react'
 
+import { CATEGORY_PANEL_ID, getCategoryTabId } from './CategoryTabs'
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/useRecommendations'
-import type { Region } from '../types'
+import type { CropCategory, Region } from '../types'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -31,14 +32,35 @@ export const RecommendationsTable = ({
   isFavorite,
   headerSlot,
 }: RecommendationsTableProps) => {
+  let labelledBy: string | undefined
+  let headerContent = headerSlot
+
+  if (
+    isValidElement(headerSlot) &&
+    'category' in headerSlot.props &&
+    typeof headerSlot.props.category === 'string'
+  ) {
+    const slotCategory = headerSlot.props.category as CropCategory
+    labelledBy = getCategoryTabId(slotCategory)
+    headerContent =
+      'panelId' in headerSlot.props && headerSlot.props.panelId === CATEGORY_PANEL_ID
+        ? headerSlot
+        : cloneElement(headerSlot, { panelId: CATEGORY_PANEL_ID })
+  }
+
   return (
-    <section className="recommend">
+    <section
+      className="recommend"
+      id={CATEGORY_PANEL_ID}
+      role="tabpanel"
+      aria-labelledby={labelledBy}
+    >
       <div className="recommend__header">
         <div className="recommend__meta">
           <span>対象地域: {REGION_LABEL[region]}</span>
           <span>基準週: {displayWeek}</span>
         </div>
-        {headerSlot}
+        {headerContent}
       </div>
       <table className="recommend__table">
         <thead>

@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest'
+
 /**
  * エントリポイントのスモークテストのみを保持します。
  * 詳細なインタラクションケースは ./forms, ./regions, ./favorites, ./prices 以下に配置してください。
@@ -64,6 +66,7 @@ describe('App interactions smoke', () => {
 
     await renderApp()
 
-    await expect(screen.findByRole('status')).resolves.toHaveAttribute('aria-live', 'polite')
+    const status = await screen.findByRole('status')
+    expect(status).toHaveAttribute('aria-live', 'polite')
   })
 })

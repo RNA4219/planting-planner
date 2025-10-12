@@ -1,6 +1,7 @@
 import { cleanup, render, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
   fetchRecommendations,
@@ -73,7 +74,18 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
         }
       : undefined,
   )
-  render(<App />)
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+  render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  )
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {
       throw new Error('recommendations not requested yet')

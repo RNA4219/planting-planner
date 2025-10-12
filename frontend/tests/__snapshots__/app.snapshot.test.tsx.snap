@@ -119,20 +119,79 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
     <main
       class="app__main"
     >
+      <div
+        aria-atomic="true"
+        aria-live="polite"
+        class="toast-stack"
+        role="status"
+      />
       <section
+        aria-labelledby="category-tab-leaf"
         class="recommend"
+        id="recommendations-panel"
+        role="tabpanel"
       >
         <div
-          class="recommend__meta"
+          class="recommend__header"
         >
-          <span>
-            対象地域: 
-            温暖地
-          </span>
-          <span>
-            基準週: 
-            2024-W30
-          </span>
+          <div
+            class="recommend__meta"
+          >
+            <span>
+              対象地域: 
+              温暖地
+            </span>
+            <span>
+              基準週: 
+              2024-W30
+            </span>
+          </div>
+          <div
+            aria-label="カテゴリ"
+            class="category-tabs"
+            role="tablist"
+          >
+            <button
+              aria-controls="recommendations-panel"
+              aria-selected="true"
+              class="category-tabs__tab category-tabs__tab--active"
+              id="category-tab-leaf"
+              role="tab"
+              type="button"
+            >
+              葉菜
+            </button>
+            <button
+              aria-controls="recommendations-panel"
+              aria-selected="false"
+              class="category-tabs__tab"
+              id="category-tab-root"
+              role="tab"
+              type="button"
+            >
+              根菜
+            </button>
+            <button
+              aria-controls="recommendations-panel"
+              aria-selected="false"
+              class="category-tabs__tab"
+              id="category-tab-flower"
+              role="tab"
+              type="button"
+            >
+              花き
+            </button>
+            <button
+              aria-controls="recommendations-panel"
+              aria-selected="false"
+              class="category-tabs__tab"
+              id="category-tab-fruit"
+              role="tab"
+              type="button"
+            >
+              果菜
+            </button>
+          </div>
         </div>
         <table
           class="recommend__table"

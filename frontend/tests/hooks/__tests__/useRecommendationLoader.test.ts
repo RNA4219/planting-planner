@@ -26,8 +26,20 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
-    fetchQueryMock.mockImplementation(async (_key, fetcher: () => Promise<unknown>) => {
-      return fetcher()
+    fetchQueryMock.mockImplementation(async (options: unknown) => {
+      if (Array.isArray(options)) {
+        const [, fetcher] = options as [unknown, () => Promise<unknown>]
+        return fetcher()
+      }
+      if (
+        options !== null &&
+        typeof options === 'object' &&
+        'queryFn' in options &&
+        typeof (options as { queryFn: unknown }).queryFn === 'function'
+      ) {
+        return (options as { queryFn: () => Promise<unknown> }).queryFn()
+      }
+      throw new TypeError('unexpected fetchQuery call signature')
     })
   })
 
@@ -98,8 +110,9 @@ describe('hooks / useRecommendationLoader', () => {
       expect(fetchQueryMock).toHaveBeenCalled()
     })
 
-    const [initialKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(initialKey).toEqual([
+    const [initialArgs] = fetchQueryMock.mock.calls
+    const initialOptions = initialArgs[0] as { queryKey: unknown[] }
+    expect(initialOptions.queryKey).toEqual([
       'recommendations',
       'temperate',
       'national',
@@ -119,8 +132,9 @@ describe('hooks / useRecommendationLoader', () => {
       })
     })
 
-    const [overrideKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(overrideKey).toEqual([
+    const [overrideArgs] = fetchQueryMock.mock.calls
+    const overrideOptions = overrideArgs[0] as { queryKey: unknown[] }
+    expect(overrideOptions.queryKey).toEqual([
       'recommendations',
       'temperate',
       'city:kyoto',

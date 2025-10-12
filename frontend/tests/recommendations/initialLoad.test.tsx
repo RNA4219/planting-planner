@@ -197,28 +197,44 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         role="tablist"
       >
         <button
+          aria-controls="recommendations-panel"
           aria-selected="true"
           class="category-tabs__tab category-tabs__tab--active"
+          id="category-tab-leaf"
           role="tab"
           type="button"
         >
           葉菜
         </button>
         <button
+          aria-controls="recommendations-panel"
           aria-selected="false"
           class="category-tabs__tab"
+          id="category-tab-root"
           role="tab"
           type="button"
         >
           根菜
         </button>
         <button
+          aria-controls="recommendations-panel"
           aria-selected="false"
           class="category-tabs__tab"
+          id="category-tab-flower"
           role="tab"
           type="button"
         >
           花き
+        </button>
+        <button
+          aria-controls="recommendations-panel"
+          aria-selected="false"
+          class="category-tabs__tab"
+          id="category-tab-fruit"
+          role="tab"
+          type="button"
+        >
+          果菜
         </button>
       </div>
     `)
@@ -233,5 +249,39 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         expect.objectContaining({ marketScope: 'national', category: 'root' }),
       )
     })
+  })
+
+  it('カテゴリタブが推奨テーブルのタブパネルと関連付けられる', async () => {
+    fetchCrops.mockResolvedValue(defaultCrops)
+    fetchRecommendations.mockResolvedValue(createRecommendResponse())
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenCalled()
+    })
+
+    const leafTab = await screen.findByRole('tab', { name: '葉菜' })
+    expect(leafTab).toHaveAttribute('id', 'category-tab-leaf')
+    expect(leafTab).toHaveAttribute('aria-controls', 'recommendations-panel')
+
+    const panel = screen.getByRole('tabpanel')
+    expect(panel).toHaveAttribute('id', 'recommendations-panel')
+    expect(panel).toHaveAttribute('aria-labelledby', 'category-tab-leaf')
+    expect(panel).toHaveAccessibleName('葉菜')
+
+    const rootTab = screen.getByRole('tab', { name: '根菜' })
+    expect(rootTab).toHaveAttribute('id', 'category-tab-root')
+    expect(rootTab).toHaveAttribute('aria-controls', 'recommendations-panel')
+
+    await user.click(rootTab)
+
+    await waitFor(() => {
+      const activeTab = screen.getByRole('tab', { selected: true })
+      expect(activeTab).toHaveAttribute('id', 'category-tab-root')
+      expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', 'category-tab-root')
+    })
+
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('根菜')
   })
 })
