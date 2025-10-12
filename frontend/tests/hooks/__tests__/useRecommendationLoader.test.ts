@@ -26,13 +26,17 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
-    fetchQueryMock.mockImplementation(async (_key, fetcher: () => Promise<unknown>) => {
-      return fetcher()
+    fetchQueryMock.mockImplementation(async (options: unknown) => {
+      if (typeof options === 'function') {
+        return options()
+      }
+      const typed = options as { queryFn: () => Promise<unknown> }
+      return typed.queryFn()
     })
   })
 
   it('normalizes week input before requesting recommendations', async () => {
-    fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
+    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
     const { result } = renderHook(() =>
       useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
     )
@@ -42,7 +46,7 @@ describe('hooks / useRecommendationLoader', () => {
     })
 
     fetcherMock.mockClear()
-    fetcherMock.mockResolvedValue({ week: '2024-W24', items: [] })
+    fetcherMock.mockResolvedValue({ result: { week: '2024-W24', items: [] }, isMarketFallback: false })
 
     await act(async () => {
       await result.current.requestRecommendations('2024/6/12')
@@ -68,7 +72,10 @@ describe('hooks / useRecommendationLoader', () => {
       source: 'local-db',
       growth_days: 40,
     }
-    fetcherMock.mockResolvedValueOnce({ week: '2024-W30', items: [initialItem] })
+    fetcherMock.mockResolvedValueOnce({
+      result: { week: '2024-W30', items: [initialItem] },
+      isMarketFallback: false,
+    })
     fetcherMock.mockRejectedValueOnce(new Error('network error'))
 
     const { result } = renderHook(() =>
@@ -88,7 +95,7 @@ describe('hooks / useRecommendationLoader', () => {
   })
 
   it('tracks selected market/category and uses them in the cache key', async () => {
-    fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
+    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
 
     const { result } = renderHook(() =>
       useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
@@ -98,8 +105,8 @@ describe('hooks / useRecommendationLoader', () => {
       expect(fetchQueryMock).toHaveBeenCalled()
     })
 
-    const [initialKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(initialKey).toEqual([
+    const [initialOptions] = fetchQueryMock.mock.calls[0] as [{ queryKey: unknown[] }]
+    expect(initialOptions.queryKey).toEqual([
       'recommendations',
       'temperate',
       'national',
@@ -110,7 +117,7 @@ describe('hooks / useRecommendationLoader', () => {
     expect(result.current.selectedCategory).toBe('leaf')
 
     fetchQueryMock.mockClear()
-    fetcherMock.mockResolvedValue({ week: '2024-W31', items: [] })
+    fetcherMock.mockResolvedValue({ result: { week: '2024-W31', items: [] }, isMarketFallback: false })
 
     await act(async () => {
       await result.current.requestRecommendations('2024-W31', {
@@ -119,8 +126,8 @@ describe('hooks / useRecommendationLoader', () => {
       })
     })
 
-    const [overrideKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(overrideKey).toEqual([
+    const [overrideOptions] = fetchQueryMock.mock.calls[0] as [{ queryKey: unknown[] }]
+    expect(overrideOptions.queryKey).toEqual([
       'recommendations',
       'temperate',
       'city:kyoto',

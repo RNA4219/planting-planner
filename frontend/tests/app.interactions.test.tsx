@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest'
 /**
  * エントリポイントのスモークテストのみを保持します。
  * 詳細なインタラクションケースは ./forms, ./regions, ./favorites, ./prices 以下に配置してください。
@@ -18,6 +19,7 @@ describe('App interactions smoke', () => {
       week: '2024-W30',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     })
 
     await renderApp()
@@ -37,6 +39,7 @@ describe('App interactions smoke', () => {
       week: '2024-W30',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     })
 
     const { user } = await renderApp()
@@ -53,19 +56,23 @@ describe('App interactions smoke', () => {
     })
   })
 
-  test('都市データ欠損時は警告トーストをpoliteライブリージョンで表示する', async () => {
+  test('市場APIがフォールバックモードの場合に警告トーストを表示する', async () => {
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchCrops.mockResolvedValue([])
-    fetchRecommendations.mockRejectedValueOnce(new Error('city scope unavailable'))
-    fetchRecommend.mockResolvedValue({
+    fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',
       items: [],
+      isMarketFallback: true,
     })
 
     await renderApp()
 
-    const toastStack = await screen.findByRole('status')
-    expect(toastStack).toHaveAttribute('role', 'status')
-    expect(toastStack).toHaveAttribute('aria-live', 'polite')
+    const warningToast = await screen.findByText(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
+    const liveRegion = warningToast.closest('[aria-live]')
+    expect(liveRegion).not.toBeNull()
+    expect(liveRegion).toHaveAttribute('aria-live', 'assertive')
   })
 })

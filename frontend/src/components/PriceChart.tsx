@@ -19,6 +19,12 @@ type PriceChartProps = {
   range?: { from?: string; to?: string }
 }
 
+const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p role="status" aria-live="polite">
+    {children}
+  </p>
+)
+
 export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
@@ -66,15 +72,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
   }, [cropId, range?.from, range?.to])
 
   if (cropId == null) {
-    return <p>作物を選択すると価格推移が表示されます。</p>
+    return <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>
   }
 
   if (isLoading) {
-    return <p>価格データを読み込み中です…</p>
+    return <StatusMessage>価格データを読み込み中です…</StatusMessage>
   }
 
   if (labels.length === 0) {
-    return <p>価格データがありません。</p>
+    return <StatusMessage>価格データがありません。</StatusMessage>
   }
 
   return (

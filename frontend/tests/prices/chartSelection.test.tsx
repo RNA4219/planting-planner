@@ -25,6 +25,7 @@ describe('Price chart interactions', () => {
           growth_days: 70,
         },
       ],
+      isMarketFallback: false,
     })
     fetchPrice.mockResolvedValue({
       crop_id: 1,

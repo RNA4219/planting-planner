@@ -53,6 +53,7 @@ describe('App snapshot', () => {
           growth_days: 45,
         },
       ],
+      isMarketFallback: false,
     })
   })
 

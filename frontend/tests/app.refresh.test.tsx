@@ -28,6 +28,7 @@ describe('App refresh workflow', () => {
       week: '2024-W30',
       region: 'temperate',
       items: [],
+      isMarketFallback: false,
     })
     fetchCrops.mockResolvedValue([])
 
