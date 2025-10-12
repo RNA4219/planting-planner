@@ -54,6 +54,30 @@ describe('useRefreshStatusController', () => {
   const renderController = () =>
     renderHook(() => useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 4000 }))
 
+  it('既定の pollIntervalMs は 5000ms', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success'))
+
+    const { result } = renderHook(() => useRefreshStatusController({ timeoutMs: 4000 }))
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      const latestOptions = capturedOptions.at(-1)
+
+      try {
+        expect(latestOptions?.pollIntervalMs).toBe(5000)
+      } finally {
+        const interval = latestOptions?.pollIntervalMs ?? 0
+        if (interval > 0) {
+          await vi.advanceTimersByTimeAsync(interval)
+        }
+        await vi.runAllTicks()
+        await promise
+      }
+    })
+  })
+
   beforeEach(() => {
     vi.useFakeTimers()
     postRefreshMock.mockReset()
