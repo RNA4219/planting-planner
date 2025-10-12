@@ -83,10 +83,16 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
     return <StatusMessage>価格データがありません。</StatusMessage>
   }
 
+  const firstWeek = labels[0]
+  const lastWeek = labels[labels.length - 1]
+  const periodText = firstWeek === lastWeek ? firstWeek : `${firstWeek} 〜 ${lastWeek}`
+  const summary = `${title} の週平均価格。期間: ${periodText}。データ点数: ${labels.length}件。`
+
   return (
-    <div>
+    <figure>
       <h4 style={{ margin: '8px 0' }}>{title}</h4>
       <Line
+        aria-label={`${title} の価格推移`}
         data={{
           labels,
           datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
@@ -97,6 +103,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
           scales: { y: { beginAtZero: false } },
         }}
       />
-    </div>
+      <figcaption>{summary}</figcaption>
+    </figure>
   )
 }
