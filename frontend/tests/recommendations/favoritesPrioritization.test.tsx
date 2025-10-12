@@ -92,7 +92,11 @@ describe('App recommendations / お気に入り並び替え', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W32')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'cold',
+        '2024-W32',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
 
     const table = await screen.findByRole('table')

@@ -1,6 +1,6 @@
 import { vi, type MockInstance } from 'vitest'
 
-import type { RecommendResponse, Region } from '../../../src/types'
+import type { CropCategory, MarketScope, RecommendResponse, Region } from '../../../src/types'
 
 import { normalizeRecommendationResponse } from '../../../src/utils/recommendations'
 
@@ -34,10 +34,22 @@ export const defaultCrops = [
 
 const applyDefaultRecommendationMocks = () => {
   fetcherMock.mockImplementation(
-    async ({ region, week, preferLegacy }: { region: Region; week: string; preferLegacy?: boolean }) => {
+    async ({
+      region,
+      week,
+      preferLegacy,
+      marketScope,
+      category,
+    }: {
+      region: Region
+      week: string
+      preferLegacy?: boolean
+      marketScope: MarketScope
+      category: CropCategory
+    }) => {
       const callModern = async () => {
         try {
-          return await fetchRecommendations(region, week)
+          return await fetchRecommendations(region, week, { marketScope, category })
         } catch {
           return undefined
         }

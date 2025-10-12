@@ -29,6 +29,10 @@ export {
   saveRegion,
   loadFavorites,
   saveFavorites,
+  loadMarketScope,
+  saveMarketScope,
+  loadSelectedCategory,
+  saveSelectedCategory,
   resetStorageMocks,
 } from './mocks/storage'
 export type { StorageState } from './mocks/storage'

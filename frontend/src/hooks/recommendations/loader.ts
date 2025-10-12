@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { RecommendationItem, Region } from '../../types'
+import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
 import { DEFAULT_ACTIVE_WEEK, DEFAULT_WEEK } from '../../utils/recommendations'
 import * as weekModule from '../../lib/week'
 
@@ -10,8 +10,25 @@ import { normalizeWeekInput } from './weekNormalization'
 const week = weekModule as typeof import('../../lib/week')
 const { normalizeIsoWeek } = week
 
-type RequestMeta = { id: number; region: Region; week: string }
-type RequestOptions = { preferLegacy?: boolean; regionOverride?: Region }
+interface LoaderInput {
+  region: Region
+  marketScope: MarketScope
+  category: CropCategory
+}
+
+type RequestMeta = {
+  id: number
+  region: Region
+  week: string
+  marketScope: MarketScope
+  category: CropCategory
+}
+type RequestOptions = {
+  preferLegacy?: boolean
+  regionOverride?: Region
+  marketScopeOverride?: MarketScope
+  categoryOverride?: CropCategory
+}
 
 export interface UseRecommendationLoaderResult {
   queryWeek: string
@@ -25,13 +42,23 @@ export interface UseRecommendationLoaderResult {
   ) => Promise<void>
 }
 
-export const useRecommendationLoader = (region: Region): UseRecommendationLoaderResult => {
+export const useRecommendationLoader = ({
+  region,
+  marketScope,
+  category,
+}: LoaderInput): UseRecommendationLoaderResult => {
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
   const [items, setItems] = useState<RecommendationItem[]>([])
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
-  const trackerRef = useRef<RequestMeta>({ id: 0, region, week: DEFAULT_WEEK })
+  const trackerRef = useRef<RequestMeta>({
+    id: 0,
+    region,
+    week: DEFAULT_WEEK,
+    marketScope,
+    category,
+  })
   const fetchRecommendations = useRecommendationFetcher()
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
@@ -50,6 +77,8 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
   const requestRecommendations = useCallback(
     async (inputWeek: string, options?: RequestOptions) => {
       const targetRegion = options?.regionOverride ?? region
+      const targetMarketScope = options?.marketScopeOverride ?? marketScope
+      const targetCategory = options?.categoryOverride ?? category
       const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
       currentWeekRef.current = normalizedWeek
@@ -57,16 +86,26 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
         id: trackerRef.current.id + 1,
         region: targetRegion,
         week: normalizedWeek,
+        marketScope: targetMarketScope,
+        category: targetCategory,
       }
       trackerRef.current = requestMeta
       const isLatest = () => {
         const latest = trackerRef.current
-        return latest.id === requestMeta.id && latest.region === requestMeta.region && latest.week === requestMeta.week
+        return (
+          latest.id === requestMeta.id &&
+          latest.region === requestMeta.region &&
+          latest.week === requestMeta.week &&
+          latest.marketScope === requestMeta.marketScope &&
+          latest.category === requestMeta.category
+        )
       }
       try {
         const result = await fetchRecommendations({
           region: targetRegion,
           week: normalizedWeek,
+          marketScope: targetMarketScope,
+          category: targetCategory,
           preferLegacy: options?.preferLegacy,
         })
         if (!isLatest()) {
@@ -85,7 +124,7 @@ export const useRecommendationLoader = (region: Region): UseRecommendationLoader
         applyWeek(normalizedWeek, [])
       }
     },
-    [applyWeek, fetchRecommendations, normalizeWeek, region],
+    [applyWeek, category, fetchRecommendations, marketScope, normalizeWeek, region],
   )
 
   useEffect(() => {

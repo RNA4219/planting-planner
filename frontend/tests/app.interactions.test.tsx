@@ -23,6 +23,10 @@ describe('App interactions smoke', () => {
     await renderApp()
 
     await screen.findByLabelText('地域')
-    expect(fetchRecommendations).toHaveBeenCalledWith('temperate', '2024-W30')
+    expect(fetchRecommendations).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W30',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
   })
 })

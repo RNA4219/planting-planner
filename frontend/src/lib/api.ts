@@ -1,5 +1,7 @@
 import type {
   Crop,
+  CropCategory,
+  MarketScope,
   PriceSeries,
   RecommendResponse,
   RefreshResponse,
@@ -72,9 +74,10 @@ export const fetchCrops = async (): Promise<Crop[]> => {
 
 export const fetchRecommendations = async (
   region: Region,
-  week?: string,
+  week: string | undefined,
+  { marketScope, category }: { marketScope: MarketScope; category: CropCategory },
 ): Promise<RecommendResponse> => {
-  const params = new URLSearchParams({ region })
+  const params = new URLSearchParams({ region, market_scope: marketScope, category })
   if (week) {
     params.set('week', week)
   }

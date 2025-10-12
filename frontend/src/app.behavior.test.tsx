@@ -33,7 +33,11 @@ describe('App behavior', () => {
     await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
   })

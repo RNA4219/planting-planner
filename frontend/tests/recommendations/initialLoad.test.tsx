@@ -38,9 +38,32 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'cold', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        1,
+        'cold',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
+  })
+
+  it('保存済み市場スコープとカテゴリで初回フェッチされる', async () => {
+    storageState.marketScope = 'city:tokyo'
+    storageState.category = 'flower'
+    fetchCrops.mockResolvedValue([])
+    fetchRecommendations.mockResolvedValue(createRecommendResponse())
+
+    await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        1,
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'city:tokyo', category: 'flower' }),
+      )
+    })
   })
 
   it('最新API成功時はレガシーAPIを呼び出さない', async () => {
@@ -52,7 +75,11 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
 
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenCalledTimes(1)
-      expect(fetchRecommendations).toHaveBeenCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
     expect(fetchRecommend).not.toHaveBeenCalled()
   })
@@ -93,14 +120,20 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       expect(fetchRecommendations).toHaveBeenCalledTimes(1)
       expect(fetchRecommend).toHaveBeenCalledTimes(1)
     })
-    expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'temperate', '2024-W30')
+    expect(fetchRecommendations).toHaveBeenNthCalledWith(
+      1,
+      'temperate',
+      '2024-W30',
+      expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+    )
     expect(fetchRecommend).toHaveBeenCalledWith({ region: 'temperate', week: '2024-W30' })
     expect(screen.getByText('春菊')).toBeInTheDocument()
   })
 
   it('週入力は normalizeIsoWeek で揃えてAPIへ送られる', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
+    fetchRecommendations.mockImplementation(async (region, week, options) => {
+      void options
       const resolvedWeek = week ?? '2024-W30'
       return createRecommendResponse({
         week: resolvedWeek,
@@ -112,7 +145,11 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
 
     const select = screen.getByLabelText('地域')
@@ -123,7 +160,11 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W33')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'cold',
+        '2024-W33',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
     })
   })
 })

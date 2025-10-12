@@ -4,9 +4,13 @@ vi.mock('../mocks/storage', () => {
   const resetStorageMocks = vi.fn()
   return {
     resetStorageMocks,
-    storageState: { region: 'temperate', favorites: [] },
+    storageState: { region: 'temperate', favorites: [], marketScope: 'national', category: 'leaf' },
     loadRegion: vi.fn(),
     saveRegion: vi.fn(),
+    loadMarketScope: vi.fn(),
+    saveMarketScope: vi.fn(),
+    loadSelectedCategory: vi.fn(),
+    saveSelectedCategory: vi.fn(),
     loadFavorites: vi.fn(),
     saveFavorites: vi.fn(),
   }
