@@ -28,6 +28,7 @@ export const App = () => {
     setRegion,
     marketScope,
     category,
+    setMarketScope,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -64,6 +65,14 @@ export const App = () => {
       setRegion(next)
     },
     [setRegion, setSelectedCropId],
+  )
+
+  const handleMarketScopeChange = useCallback(
+    (next: MarketScope) => {
+      setSelectedCropId(null)
+      setMarketScope(next)
+    },
+    [setMarketScope, setSelectedCropId],
   )
 
   const normalizedSearchKeyword = useMemo(
@@ -110,6 +119,8 @@ export const App = () => {
           currentWeek={currentWeek}
           onWeekChange={handleWeekChange}
           onRegionChange={handleRegionChange}
+          marketScope={marketScope}
+          onMarketScopeChange={handleMarketScopeChange}
           searchKeyword={searchKeyword}
           onSearchChange={handleSearchChange}
           onSubmit={handleSubmit}
