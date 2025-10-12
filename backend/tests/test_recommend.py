@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 import re
 from datetime import date, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.db.connection import get_conn
 from app.main import app
-
-client = TestClient(app)
+from app.seed import seed
 ISO_WEEK_PATTERN = re.compile(r"^(\d{4})-W(\d{2})$")
 REFERENCE_WEEK = "2024-W40"
 REGION_GROWTH_DAYS: dict[str, dict[str, int]] = {
@@ -25,6 +26,16 @@ REGION_GROWTH_DAYS: dict[str, dict[str, int]] = {
         "マリーゴールド": 85,
     },
 }
+
+
+@pytest.fixture(scope="module")
+def seeded_client() -> Iterator[TestClient]:
+    seed()
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 def _assert_iso_week(value: str) -> tuple[int, int]:
@@ -68,24 +79,30 @@ def _assert_items(payload: dict[str, object], region: str) -> None:
         _assert_iso_week(item["sowing_week"])
 
 
-def test_recommend_default_region_returns_temperate_schedule() -> None:
-    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+def test_recommend_default_region_returns_temperate_schedule(
+    seeded_client: TestClient,
+) -> None:
+    response = seeded_client.get("/api/recommend", params={"week": REFERENCE_WEEK})
     assert response.status_code == 200
 
     payload = response.json()
     _assert_items(payload, region="temperate")
 
 
-def test_recommend_allows_region_override() -> None:
-    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK, "region": "cold"})
+def test_recommend_allows_region_override(seeded_client: TestClient) -> None:
+    response = seeded_client.get(
+        "/api/recommend", params={"week": REFERENCE_WEEK, "region": "cold"}
+    )
     assert response.status_code == 200
 
     payload = response.json()
     _assert_items(payload, region="cold")
 
 
-def test_recommend_ignores_price_sources_for_metadata() -> None:
-    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+def test_recommend_ignores_price_sources_for_metadata(
+    seeded_client: TestClient,
+) -> None:
+    response = seeded_client.get("/api/recommend", params={"week": REFERENCE_WEEK})
     assert response.status_code == 200
 
     payload = response.json()
@@ -116,14 +133,16 @@ def _write_market_prices(records: list[tuple[str, int, str, float | None]] | Non
         conn.close()
 
 
-def test_recommend_city_scope_uses_city_prices_when_available() -> None:
+def test_recommend_city_scope_uses_city_prices_when_available(
+    seeded_client: TestClient,
+) -> None:
     _write_market_prices(
         [
             ("national", 1, REFERENCE_WEEK, 120.0),
             ("city:13", 1, REFERENCE_WEEK, 150.0),
         ]
     )
-    response = client.get(
+    response = seeded_client.get(
         "/api/recommend",
         params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
     )
@@ -131,9 +150,11 @@ def test_recommend_city_scope_uses_city_prices_when_available() -> None:
     assert response.headers.get("x-market-fallback") is None
 
 
-def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
+def test_recommend_city_scope_missing_prices_sets_fallback_header(
+    seeded_client: TestClient,
+) -> None:
     _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
-    response = client.get(
+    response = seeded_client.get(
         "/api/recommend",
         params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
     )
@@ -141,9 +162,11 @@ def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
     assert response.headers.get("x-market-fallback") == "true"
 
 
-def test_recommend_blank_market_scope_treated_as_national() -> None:
+def test_recommend_blank_market_scope_treated_as_national(
+    seeded_client: TestClient,
+) -> None:
     _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
-    response = client.get(
+    response = seeded_client.get(
         "/api/recommend",
         params={"week": REFERENCE_WEEK, "marketScope": ""},
     )
@@ -151,9 +174,11 @@ def test_recommend_blank_market_scope_treated_as_national() -> None:
     assert response.headers.get("x-market-fallback") is None
 
 
-def test_recommend_category_all_returns_full_schedule() -> None:
-    default_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
-    all_response = client.get(
+def test_recommend_category_all_returns_full_schedule(
+    seeded_client: TestClient,
+) -> None:
+    default_response = seeded_client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+    all_response = seeded_client.get(
         "/api/recommend",
         params={"week": REFERENCE_WEEK, "category": "all"},
     )
@@ -163,9 +188,9 @@ def test_recommend_category_all_returns_full_schedule() -> None:
     assert all_response.json() == default_response.json()
 
 
-def test_recommend_legacy_path_returns_same_payload() -> None:
-    api_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
-    legacy_response = client.get("/recommend", params={"week": REFERENCE_WEEK})
+def test_recommend_legacy_path_returns_same_payload(seeded_client: TestClient) -> None:
+    api_response = seeded_client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+    legacy_response = seeded_client.get("/recommend", params={"week": REFERENCE_WEEK})
 
     assert api_response.status_code == 200
     assert legacy_response.status_code == 200
