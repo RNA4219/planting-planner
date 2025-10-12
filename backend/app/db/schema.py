@@ -46,6 +46,21 @@ TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
         ");",
     ),
     (
+        "market_prices",
+        "CREATE TABLE IF NOT EXISTS market_prices ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " crop_id INTEGER NOT NULL,"
+        " scope TEXT NOT NULL,"
+        " week TEXT NOT NULL,"
+        " avg_price REAL,"
+        " stddev REAL,"
+        " unit TEXT NOT NULL DEFAULT '円/kg',"
+        " source TEXT NOT NULL,"
+        " UNIQUE (crop_id, scope, week),"
+        " FOREIGN KEY (crop_id) REFERENCES crops(id) ON DELETE CASCADE"
+        ");",
+    ),
+    (
         "etl_runs",
         "CREATE TABLE IF NOT EXISTS etl_runs ("
         " id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -64,6 +79,7 @@ TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
 INDEX_DEFINITIONS: Final[tuple[str, ...]] = (
     "CREATE INDEX IF NOT EXISTS idx_growth_days_crop_region ON growth_days(crop_id, region);",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_price_weekly_crop_week ON price_weekly(crop_id, week);",
+    "CREATE INDEX IF NOT EXISTS idx_market_prices_scope_week ON market_prices(scope, week);",
 )
 
 
