@@ -2,11 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
-import {
-  DEFAULT_ACTIVE_WEEK,
-  DEFAULT_WEEK,
-  type NormalizeRecommendationResult,
-} from '../../utils/recommendations'
+import { DEFAULT_ACTIVE_WEEK, DEFAULT_WEEK } from '../../utils/recommendations'
 import * as weekModule from '../../lib/week'
 
 import { useRecommendationFetcher, type RecommendationFetchResult } from '../recommendationFetcher'
