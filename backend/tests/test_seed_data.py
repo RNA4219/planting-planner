@@ -26,6 +26,24 @@ def seed_payload() -> data_loader.SeedPayload:
                         "source": "survey",
                     }
                 ],
+                "market_prices": [
+                    {
+                        "scope": "national",
+                        "week": "2023-W01",
+                        "avg_price": 130,
+                        "stddev": 3,
+                        "unit": "円/kg",
+                        "source": "national_seed",
+                    },
+                    {
+                        "scope": "city:tokyo",
+                        "week": 202302,
+                        "avg_price": 15,
+                        "stddev": 0.4,
+                        "unit": "円/100g",
+                        "source": "city_seed",
+                    },
+                ],
             }
         ],
         price_samples=[
@@ -40,6 +58,34 @@ def seed_payload() -> data_loader.SeedPayload:
         ],
         growth_days=[
             {"crop_id": 1, "region": "tokyo", "days": 65},
+        ],
+        market_scopes=[
+            {
+                "scope": "national",
+                "display_name": "全国平均",
+                "timezone": "Asia/Tokyo",
+                "priority": 10,
+                "theme_token": "accent.national",
+            },
+            {
+                "scope": "city:tokyo",
+                "display_name": "東京都中央卸売",
+                "timezone": "Asia/Tokyo",
+                "priority": 20,
+                "theme_token": "accent.tokyo",
+            },
+        ],
+        theme_tokens=[
+            {
+                "token": "accent.national",
+                "hex_color": "#22c55e",
+                "text_color": "#ffffff",
+            },
+            {
+                "token": "accent.tokyo",
+                "hex_color": "#2563eb",
+                "text_color": "#ffffff",
+            },
         ],
     )
 
@@ -81,6 +127,61 @@ def test_seed_inserts_expected_records(
     assert any(
         sql.startswith("INSERT OR IGNORE INTO price_weekly")
         and params == (2, "2023-W02", 150.0, 10.0, "円/kg", "seed")
+        for sql, params in executed
+    )
+
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_prices")
+        and params
+        == (
+            1,
+            "national",
+            "2023-W01",
+            130.0,
+            3.0,
+            "円/kg",
+            "national_seed",
+        )
+        for sql, params in executed
+    )
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_prices")
+        and params
+        == (
+            1,
+            "city:tokyo",
+            "2023-W02",
+            150.0,
+            4.0,
+            "円/kg",
+            "city_seed",
+        )
+        for sql, params in executed
+    )
+
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_scopes")
+        and params
+        == ("national", "全国平均", "Asia/Tokyo", 10, "accent.national")
+        for sql, params in executed
+    )
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_scopes")
+        and params
+        == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo")
+        for sql, params in executed
+    )
+
+    assert any(
+        sql.startswith("INSERT INTO theme_tokens")
+        and "ON CONFLICT" in sql.upper()
+        and params == ("accent.national", "#22c55e", "#ffffff")
+        for sql, params in executed
+    )
+    assert any(
+        sql.startswith("INSERT INTO theme_tokens")
+        and "ON CONFLICT" in sql.upper()
+        and params == ("accent.tokyo", "#2563eb", "#ffffff")
         for sql, params in executed
     )
 

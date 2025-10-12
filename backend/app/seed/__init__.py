@@ -5,7 +5,14 @@ from pathlib import Path
 
 from .. import db as db_legacy
 from .data_loader import DEFAULT_DATA_DIR, SeedPayload, load_seed_payload
-from .writers import write_crops, write_growth_days, write_price_samples, write_seed_payload
+from .writers import (
+    write_crops,
+    write_growth_days,
+    write_market_scopes,
+    write_price_samples,
+    write_seed_payload,
+    write_theme_tokens,
+)
 
 __all__ = [
     "DEFAULT_DATA_DIR",
@@ -15,7 +22,9 @@ __all__ = [
     "seed_from_default_db",
     "write_crops",
     "write_growth_days",
+    "write_market_scopes",
     "write_price_samples",
+    "write_theme_tokens",
     "write_seed_payload",
 ]
 
@@ -33,6 +42,8 @@ def seed(conn: sqlite3.Connection | None = None, data_dir: Path | None = None) -
         crops=payload.crops,
         price_samples=payload.price_samples,
         growth_days=payload.growth_days,
+        market_scopes=payload.market_scopes,
+        theme_tokens=payload.theme_tokens,
     )
     conn.commit()
 

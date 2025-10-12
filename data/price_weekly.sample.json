@@ -1,9 +1,9 @@
 [
-  {"crop_id": 1, "week": "2025-W40", "avg_price": 220, "stddev": 30, "unit": "円/kg", "source": "seed"},
-  {"crop_id": 1, "week": "2025-W41", "avg_price": 210, "stddev": 25, "unit": "円/kg", "source": "seed"},
-  {"crop_id": 1, "week": "2025-W42", "avg_price": 215, "stddev": 28, "unit": "円/kg", "source": "seed"},
+  {"crop_id": 1, "scope": "national", "week": "2025-W40", "avg_price": 220, "stddev": 30, "unit": "円/kg", "source": "seed"},
+  {"crop_id": 1, "scope": "national", "week": "2025-W41", "avg_price": 210, "stddev": 25, "unit": "円/kg", "source": "seed"},
+  {"crop_id": 1, "scope": "city:tokyo", "week": "2025-W42", "avg_price": 24, "stddev": 4, "unit": "円/100g", "source": "seed"},
 
-  {"crop_id": 2, "week": "2025-W40", "avg_price": 180, "stddev": 22, "unit": "円/kg", "source": "seed"},
-  {"crop_id": 2, "week": "2025-W41", "avg_price": 190, "stddev": 24, "unit": "円/kg", "source": "seed"},
-  {"crop_id": 2, "week": "2025-W42", "avg_price": 185, "stddev": 20, "unit": "円/kg", "source": "seed"}
+  {"crop_id": 2, "scope": "national", "week": "2025-W40", "avg_price": 180, "stddev": 22, "unit": "円/kg", "source": "seed"},
+  {"crop_id": 2, "scope": "city:osaka", "week": "2025-W41", "avg_price": 210, "stddev": 18, "unit": "円/kg", "source": "seed"},
+  {"crop_id": 2, "scope": "national", "week": "2025-W42", "avg_price": 185, "stddev": 20, "unit": "円/kg", "source": "seed"}
 ]

@@ -35,6 +35,36 @@ def test_init_db_creates_expected_tables(tmp_path: Path, monkeypatch: pytest.Mon
             "source",
         ]
 
+        market_price_columns = _column_names(conn, "market_prices")
+        assert market_price_columns == [
+            "id",
+            "crop_id",
+            "scope",
+            "week",
+            "avg_price",
+            "stddev",
+            "unit",
+            "source",
+        ]
+
+        scope_columns = _column_names(conn, "market_scopes")
+        assert scope_columns == [
+            "id",
+            "scope",
+            "display_name",
+            "timezone",
+            "priority",
+            "theme_token",
+        ]
+
+        token_columns = _column_names(conn, "theme_tokens")
+        assert token_columns == [
+            "id",
+            "token",
+            "hex_color",
+            "text_color",
+        ]
+
         etl_columns = _column_names(conn, "etl_runs")
         assert etl_columns == [
             "id",
@@ -63,8 +93,41 @@ def test_tables_use_autoincrement(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
         rows = cursor.fetchall()
         table_sql = {row["name"]: str(row["sql"]) for row in rows}
 
-        for table in ("crops", "growth_days", "price_weekly", "etl_runs"):
+        for table in (
+            "crops",
+            "growth_days",
+            "price_weekly",
+            "market_prices",
+            "market_scopes",
+            "theme_tokens",
+            "etl_runs",
+        ):
             assert "AUTOINCREMENT" in table_sql[table]
+    finally:
+        conn.close()
+
+
+def test_market_metadata_view_exposes_expected_columns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_db = tmp_path / "schema.db"
+    monkeypatch.setattr(db, "DATABASE_FILE", test_db)
+
+    conn = db.get_conn()
+    try:
+        db.init_db(conn)
+
+        columns = _column_names(conn, "market_metadata")
+        assert columns == [
+            "scope",
+            "display_name",
+            "timezone",
+            "priority",
+            "theme_token",
+            "hex_color",
+            "text_color",
+            "effective_from",
+        ]
     finally:
         conn.close()
 
