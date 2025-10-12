@@ -167,4 +167,64 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       )
     })
   })
+
+  it('カテゴリタブ切替でカテゴリ指定のリクエストとタブスナップショットが一致する', async () => {
+    fetchCrops.mockResolvedValue(defaultCrops)
+    fetchRecommendations.mockResolvedValue(
+      createRecommendResponse({
+        items: [
+          createItem({ crop: '春菊', category: 'leaf' }),
+          createItem({ crop: 'にんじん', category: 'root' }),
+        ],
+      }),
+    )
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        1,
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
+    })
+
+    await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
+      <div
+        aria-label="カテゴリ"
+        role="tablist"
+      >
+        <button
+          aria-selected="true"
+          role="tab"
+        >
+          葉菜
+        </button>
+        <button
+          aria-selected="false"
+          role="tab"
+        >
+          根菜
+        </button>
+        <button
+          aria-selected="false"
+          role="tab"
+        >
+          花き
+        </button>
+      </div>
+    `)
+
+    const rootTab = await screen.findByRole('tab', { name: '根菜' })
+    await user.click(rootTab)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'root' }),
+      )
+    })
+  })
 })
