@@ -173,7 +173,11 @@ describe('fetchRecommendations', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string, 'https://dummy')
+    const call = fetchMock.mock.calls[0]
+    if (!call) {
+      throw new Error('fetch が呼び出されていません')
+    }
+    const requestUrl = new URL(call[0] as string, 'https://dummy')
     expect(requestUrl.pathname).toBe('/api/recommend')
     expect(requestUrl.searchParams.get('marketScope')).toBe('national')
     expect(requestUrl.searchParams.get('category')).toBe('leaf')
@@ -220,7 +224,11 @@ describe('fetchPrice', () => {
     const result = await fetchPrice(1, undefined, undefined, 'national')
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string, 'https://dummy')
+    const call = fetchMock.mock.calls[0]
+    if (!call) {
+      throw new Error('fetch が呼び出されていません')
+    }
+    const requestUrl = new URL(call[0] as string, 'https://dummy')
     expect(requestUrl.pathname).toBe('/api/price')
     expect(requestUrl.searchParams.get('marketScope')).toBe('national')
     expect(result).toEqual(payload)

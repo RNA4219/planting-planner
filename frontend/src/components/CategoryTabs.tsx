@@ -4,9 +4,10 @@ const CATEGORY_LABELS: Record<CropCategory, string> = {
   leaf: '葉菜',
   root: '根菜',
   flower: '花き',
+  fruit: '果菜',
 }
 
-const CATEGORY_ORDER: CropCategory[] = ['leaf', 'root', 'flower']
+const CATEGORY_ORDER: CropCategory[] = ['leaf', 'root', 'flower', 'fruit']
 
 interface CategoryTabsProps {
   category: CropCategory
