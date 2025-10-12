@@ -101,6 +101,13 @@ def test_refresh_triggers_background_job_and_updates_status() -> None:
         assert started_at <= finished_at
 
 
+def test_refresh_with_force_flag_returns_error() -> None:
+    response = client.post(REFRESH_ENDPOINT, json={"force": True})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "force refresh is not supported"}
+
+
 def test_refresh_emits_cache_update_log_on_success(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
