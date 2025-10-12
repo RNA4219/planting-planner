@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
 import { DEFAULT_ACTIVE_WEEK, DEFAULT_WEEK } from '../../utils/recommendations'
@@ -64,6 +65,7 @@ export const useRecommendationLoader = ({
     category,
   })
   const fetchRecommendations = useRecommendationFetcher()
+  const queryClient = useQueryClient()
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
       setItems(nextItems)
@@ -107,13 +109,22 @@ export const useRecommendationLoader = ({
         )
       }
       try {
-        const result = await fetchRecommendations({
-          region: targetRegion,
-          week: normalizedWeek,
-          marketScope: targetMarketScope,
-          category: targetCategory,
-          preferLegacy: options?.preferLegacy,
-        })
+        const queryKey = [
+          'recommendations',
+          targetRegion,
+          targetMarketScope,
+          targetCategory,
+          normalizedWeek,
+        ] as const
+        const result = await queryClient.fetchQuery(queryKey, () =>
+          fetchRecommendations({
+            region: targetRegion,
+            week: normalizedWeek,
+            marketScope: targetMarketScope,
+            category: targetCategory,
+            preferLegacy: options?.preferLegacy,
+          }),
+        )
         if (!isLatest()) {
           return
         }
@@ -130,7 +141,15 @@ export const useRecommendationLoader = ({
         applyWeek(normalizedWeek, [])
       }
     },
-    [applyWeek, category, fetchRecommendations, marketScope, normalizeWeek, region],
+    [
+      applyWeek,
+      category,
+      fetchRecommendations,
+      marketScope,
+      normalizeWeek,
+      queryClient,
+      region,
+    ],
   )
 
   useEffect(() => {

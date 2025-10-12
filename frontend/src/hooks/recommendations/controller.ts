@@ -26,6 +26,8 @@ export interface UseRecommendationsResult {
   queryWeek: string
   setQueryWeek: (week: string) => void
   currentWeek: string
+  selectedMarket: MarketScope
+  selectedCategory: CropCategory
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -248,6 +250,8 @@ export const useRecommendations = ({
     queryWeek,
     setQueryWeek,
     currentWeek,
+    selectedMarket,
+    selectedCategory,
     displayWeek,
     sortedRows,
     handleSubmit,
