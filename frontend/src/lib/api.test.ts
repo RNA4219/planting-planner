@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { RecommendResponse } from '../types'
+import type { PriceSeries, RecommendResponse } from '../types'
 
 type FetchRecommend = typeof import('./api')['fetchRecommend']
+type FetchRecommendations = typeof import('./api')['fetchRecommendations']
+type FetchPrice = typeof import('./api')['fetchPrice']
 
 let fetchRecommend: FetchRecommend
+let fetchRecommendations: FetchRecommendations
+let fetchPrice: FetchPrice
 let apiEndpoint: string
 
 describe('fetchRecommend', () => {
@@ -126,5 +130,99 @@ describe('fetchRecommend', () => {
     await expect(fetchRecommend({ region: 'temperate' })).rejects.toThrow(
       'internal error',
     )
+  })
+})
+
+describe('fetchRecommendations', () => {
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
+
+  beforeEach(() => {
+    vi.resetModules()
+    apiEndpoint = '/api'
+    fetchMock = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  const loadFetchRecommendations = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchRecommendations } = await import('./api'))
+  }
+
+  it('marketScope クエリを送信する', async () => {
+    const payload: RecommendResponse = {
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchRecommendations()
+    const result = await fetchRecommendations('temperate', '2024-W30', {
+      marketScope: 'national',
+      category: 'leaf',
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string, 'https://dummy')
+    expect(requestUrl.pathname).toBe('/api/recommend')
+    expect(requestUrl.searchParams.get('marketScope')).toBe('national')
+    expect(requestUrl.searchParams.get('category')).toBe('leaf')
+    expect(result).toEqual(payload)
+  })
+})
+
+describe('fetchPrice', () => {
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
+
+  beforeEach(() => {
+    vi.resetModules()
+    apiEndpoint = '/api'
+    fetchMock = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  const loadFetchPrice = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchPrice } = await import('./api'))
+  }
+
+  it('marketScope 引数をクエリへ反映する', async () => {
+    const payload: PriceSeries = {
+      crop_id: 1,
+      crop: 'Spinach',
+      unit: 'kg',
+      source: 'test',
+      prices: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchPrice()
+    const result = await fetchPrice(1, undefined, undefined, 'national')
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string, 'https://dummy')
+    expect(requestUrl.pathname).toBe('/api/price')
+    expect(requestUrl.searchParams.get('marketScope')).toBe('national')
+    expect(result).toEqual(payload)
   })
 })
