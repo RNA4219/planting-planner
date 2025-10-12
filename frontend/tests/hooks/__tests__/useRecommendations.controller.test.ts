@@ -79,6 +79,9 @@ describe('hooks / useRecommendations controller', () => {
       result.current.setCategory('flower')
     })
 
+    expect(result.current.selectedMarket).toBe('city:osaka')
+    expect(result.current.selectedCategory).toBe('flower')
+
     await waitFor(() => {
       expect(fetcherMock).toHaveBeenCalledWith(
         expect.objectContaining({ marketScope: 'city:osaka', category: 'flower' }),

@@ -36,6 +36,8 @@ export interface UseRecommendationLoaderResult {
   activeWeek: string
   items: RecommendationItem[]
   currentWeek: string
+  selectedMarket: MarketScope
+  selectedCategory: CropCategory
   requestRecommendations: (
     inputWeek: string,
     options?: RequestOptions,
@@ -50,6 +52,8 @@ export const useRecommendationLoader = ({
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
   const [items, setItems] = useState<RecommendationItem[]>([])
+  const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
+  const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
   const trackerRef = useRef<RequestMeta>({
@@ -82,6 +86,8 @@ export const useRecommendationLoader = ({
       const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
       currentWeekRef.current = normalizedWeek
+      setSelectedMarket((prev) => (prev === targetMarketScope ? prev : targetMarketScope))
+      setSelectedCategory((prev) => (prev === targetCategory ? prev : targetCategory))
       const requestMeta: RequestMeta = {
         id: trackerRef.current.id + 1,
         region: targetRegion,
@@ -141,6 +147,8 @@ export const useRecommendationLoader = ({
     activeWeek,
     items,
     currentWeek: currentWeekRef.current,
+    selectedMarket,
+    selectedCategory,
     requestRecommendations,
   }
 }
