@@ -19,6 +19,8 @@ export const TOAST_MESSAGES = {
   refreshUnknown: '更新ステータスが不明です。',
   refreshStatusUnknownDetail: '詳細不明のエラー',
   refreshStatusFetchFailureMessage: '更新状況の取得に失敗しました',
+  refreshStatusTimeout: '更新状況の取得がタイムアウトしました',
+  refreshStatusTimeoutDetail: null,
   refreshRequestFailure: '更新リクエストに失敗しました。',
   refreshRequestStarted: '更新を開始しました。進行状況を確認しています…',
   refreshRequestFailureWithDetail: (detail: string) =>

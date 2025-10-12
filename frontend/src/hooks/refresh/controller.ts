@@ -171,7 +171,11 @@ export const useRefreshStatusController = (
     })
 
     timeoutTimer.current = setTimeout(() => {
-      finish({ variant: 'warning', message: '更新状況の取得がタイムアウトしました', detail: null })
+      finish({
+        variant: 'warning',
+        message: TOAST_MESSAGES.refreshStatusTimeout,
+        detail: TOAST_MESSAGES.refreshStatusTimeoutDetail,
+      })
     }, settings.timeoutMs)
 
     try {
