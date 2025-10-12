@@ -42,14 +42,26 @@ test.describe('市場トグルとカテゴリ遷移', () => {
       const url = new URL(route.request().url())
       const params = Object.fromEntries(url.searchParams.entries())
       recommendRequests.push(params)
-      const scope = params.market_scope ?? 'national'
+      const scope = params.marketScope ?? 'national'
       const category = params.category ?? 'leaf'
       const items = RECOMMENDATIONS[scope]?.[category]
-      if (!items) {
-        await fulfillJson(route, { error: 'not_found' }, 404)
+      if (items) {
+        await fulfillJson(route, { week: '2024-W30', region: 'temperate', items })
         return
       }
-      await fulfillJson(route, { week: '2024-W30', region: 'temperate', items })
+
+      const fallbackItems = RECOMMENDATIONS.national?.[category]
+      if (fallbackItems) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          headers: { 'x-market-fallback': 'true' },
+          body: JSON.stringify({ week: '2024-W30', region: 'temperate', items: fallbackItems }),
+        })
+        return
+      }
+
+      await fulfillJson(route, { error: 'not_found' }, 404)
     })
     await page.route('**/api/price?**', (route) =>
       fulfillJson(route, { crop_id: 1, crop: '春菊', unit: 'kg', source: 'mock', prices: [] }),
@@ -58,7 +70,7 @@ test.describe('市場トグルとカテゴリ遷移', () => {
     await page.goto('/')
 
     await expect(page.getByRole('heading', { name: 'Planting Planner' })).toBeVisible()
-    await expect(page.getByRole('tab', { name: '葉菜類' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tab', { name: '葉菜' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByRole('row', { name: /春菊/ })).toBeVisible()
 
     const marketSelect = page.getByRole('combobox', { name: '市場' })
@@ -69,15 +81,13 @@ test.describe('市場トグルとカテゴリ遷移', () => {
 
     const flowerTab = page.getByRole('tab', { name: '花き' })
     await flowerTab.click()
-    await expect(page.getByText('東京都の花きデータが見つからず全国平均を表示しています')).toBeVisible()
+    await expect(page.getByText('市場データが一時的に利用できないため、推定値を表示しています。')).toBeVisible()
     await expect(page.getByRole('row', { name: /バラ/ })).toBeVisible()
-
     expect.soft(recommendRequests).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ market_scope: 'national', category: 'leaf' }),
-        expect.objectContaining({ market_scope: 'city:tokyo', category: 'leaf' }),
-        expect.objectContaining({ market_scope: 'city:tokyo', category: 'flower' }),
-        expect.objectContaining({ market_scope: 'national', category: 'flower' }),
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+        expect.objectContaining({ marketScope: 'city:tokyo', category: 'leaf' }),
+        expect.objectContaining({ marketScope: 'city:tokyo', category: 'flower' }),
       ]),
     )
   })
