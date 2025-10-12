@@ -75,6 +75,22 @@ def seed_payload() -> data_loader.SeedPayload:
                 "theme_token": "accent.tokyo",
             },
         ],
+        market_scope_categories=[
+            {
+                "scope": "national",
+                "category": "leaf",
+                "display_name": "葉菜類",
+                "priority": 5,
+                "source": "seed",
+            },
+            {
+                "scope": "city:tokyo",
+                "category": "leaf",
+                "display_name": "葉菜類",
+                "priority": 10,
+                "source": "seed",
+            },
+        ],
         theme_tokens=[
             {
                 "token": "accent.national",
@@ -169,6 +185,19 @@ def test_seed_inserts_expected_records(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
         and params
         == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo")
+        for sql, params in executed
+    )
+
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_scope_categories")
+        and params
+        == ("national", "leaf", "葉菜類", 5, "seed")
+        for sql, params in executed
+    )
+    assert any(
+        sql.startswith("INSERT OR REPLACE INTO market_scope_categories")
+        and params
+        == ("city:tokyo", "leaf", "葉菜類", 10, "seed")
         for sql, params in executed
     )
 
