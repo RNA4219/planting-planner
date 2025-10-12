@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { FormEvent } from 'react'
 
@@ -8,6 +8,7 @@ import {
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
 import { useRecommendations } from '../../../src/hooks/useRecommendations'
+import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
 describe('hooks / useRecommendations controller', () => {
   const { fetcherMock } = recommendationControllerMocks
@@ -18,7 +19,7 @@ describe('hooks / useRecommendations controller', () => {
 
   it('updates region via handleSubmit and requests override region', async () => {
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
-    const { result } = renderHook(() =>
+    const { result } = renderHookWithQueryClient(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate' }),
     )
 
@@ -60,7 +61,7 @@ describe('hooks / useRecommendations controller', () => {
   it('exposes selected market/category synced with controller setters', async () => {
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
 
-    const { result } = renderHook(() =>
+    const { result } = renderHookWithQueryClient(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
     )
 
