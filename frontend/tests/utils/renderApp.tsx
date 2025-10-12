@@ -1,19 +1,6 @@
 import { cleanup, render, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, vi } from 'vitest'
-import type { ReactNode } from 'react'
-
-const fetchQueryMock = vi.fn(async ({ queryFn }: { queryFn: () => Promise<unknown> }) => {
-  return queryFn()
-})
-
-vi.mock('@tanstack/react-query', () => ({
-  QueryClientProvider: ({ children }: { children: ReactNode }) => children,
-  useQueryClient: () => ({
-    fetchQuery: fetchQueryMock,
-  }),
-}))
 
 import {
   fetchRecommendations,
@@ -60,14 +47,7 @@ vi.mock('../../src/lib/week', () => ({
 type FakeTimersMode = 'caller' | 'renderApp' | 'off'
 
 let shouldRestoreTimers = false
-const activeQueryClients = new Set<QueryClient>()
-
-const destroyQueryClients = () => {
-  activeQueryClients.forEach((client) => {
-    client.clear()
-  })
-  activeQueryClients.clear()
-}
+const destroyQueryClients = () => {}
 
 const resolveFakeTimersMode = ({
   fakeTimers,
@@ -95,7 +75,6 @@ afterEach(() => {
 const resetAppMocks = () => {
   resetStorageMocks()
   resetApiMocks()
-  fetchQueryMock.mockClear()
   destroyQueryClients()
 }
 
@@ -109,16 +88,6 @@ interface RenderAppOptions {
 export const renderApp = async (options: RenderAppOptions = {}) => {
   const fakeTimersMode = resolveFakeTimersMode(options)
   const App = (await import('../../src/App')).default
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-    },
-  })
-  activeQueryClients.add(queryClient)
   const user = userEvent.setup(
     fakeTimersMode !== 'off'
       ? {
@@ -127,9 +96,7 @@ export const renderApp = async (options: RenderAppOptions = {}) => {
       : undefined,
   )
   render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>,
+    <App />,
   )
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {

@@ -123,16 +123,62 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         class="recommend"
       >
         <div
-          class="recommend__meta"
+          class="recommend__header"
         >
-          <span>
-            対象地域: 
-            温暖地
-          </span>
-          <span>
-            基準週: 
-            2024-W30
-          </span>
+          <div
+            class="recommend__meta"
+          >
+            <span>
+              対象地域: 
+              温暖地
+            </span>
+            <span>
+              基準週: 
+              2024-W30
+            </span>
+          </div>
+          <div
+            aria-label="カテゴリ"
+            class="category-tabs"
+            role="tablist"
+          >
+            <button
+              aria-selected="true"
+              class="category-tabs__tab category-tabs__tab--active"
+              role="tab"
+              tabindex="0"
+              type="button"
+            >
+              葉菜
+            </button>
+            <button
+              aria-selected="false"
+              class="category-tabs__tab"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              根菜
+            </button>
+            <button
+              aria-selected="false"
+              class="category-tabs__tab"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              花き
+            </button>
+            <button
+              aria-selected="false"
+              class="category-tabs__tab"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              果菜
+            </button>
+          </div>
         </div>
         <table
           aria-label="温暖地向けの推奨一覧（基準週: 2024-W30）"
@@ -238,7 +284,10 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         <h2>
           価格推移
         </h2>
-        <p>
+        <p
+          aria-live="polite"
+          role="status"
+        >
           作物を選択すると価格推移が表示されます。
         </p>
         <p

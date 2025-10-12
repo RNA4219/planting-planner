@@ -200,6 +200,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
           aria-selected="true"
           class="category-tabs__tab category-tabs__tab--active"
           role="tab"
+          tabindex="0"
           type="button"
         >
           葉菜
@@ -208,6 +209,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
           aria-selected="false"
           class="category-tabs__tab"
           role="tab"
+          tabindex="-1"
           type="button"
         >
           根菜
@@ -216,9 +218,19 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
           aria-selected="false"
           class="category-tabs__tab"
           role="tab"
+          tabindex="-1"
           type="button"
         >
           花き
+        </button>
+        <button
+          aria-selected="false"
+          class="category-tabs__tab"
+          role="tab"
+          tabindex="-1"
+          type="button"
+        >
+          果菜
         </button>
       </div>
     `)

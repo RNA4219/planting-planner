@@ -1,5 +1,6 @@
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
@@ -15,7 +16,18 @@ import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 import './App.css'
 
-export const App = () => {
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+        staleTime: 0,
+      },
+    },
+  })
+
+export const AppContent = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -187,6 +199,22 @@ export const App = () => {
         <PriceChartSection selectedCropId={selectedCropId} />
       </main>
     </div>
+  )
+}
+
+export const App = () => {
+  const [queryClient] = useState(createQueryClient)
+
+  useEffect(() => {
+    return () => {
+      queryClient.clear()
+    }
+  }, [queryClient])
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
   )
 }
 

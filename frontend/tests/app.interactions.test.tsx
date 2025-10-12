@@ -73,6 +73,6 @@ describe('App interactions smoke', () => {
     )
     const liveRegion = warningToast.closest('[aria-live]')
     expect(liveRegion).not.toBeNull()
-    expect(liveRegion).toHaveAttribute('aria-live', 'assertive')
+    expect(liveRegion).toHaveAttribute('aria-live', 'polite')
   })
 })
