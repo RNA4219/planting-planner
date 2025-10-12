@@ -19,8 +19,10 @@ export interface UseRecommendationsResult {
   setRegion: (region: Region) => void
   marketScope: MarketScope
   setMarketScope: (scope: MarketScope) => void
+  selectedMarket: MarketScope
   category: CropCategory
   setCategory: (category: CropCategory) => void
+  selectedCategory: CropCategory
   queryWeek: string
   setQueryWeek: (week: string) => void
   currentWeek: string
@@ -83,6 +85,14 @@ export const useRecommendations = ({
   useEffect(() => {
     latestCategoryRef.current = category
   }, [category])
+
+  useEffect(() => {
+    latestMarketScopeRef.current = selectedMarket
+  }, [selectedMarket])
+
+  useEffect(() => {
+    latestCategoryRef.current = selectedCategory
+  }, [selectedCategory])
 
   useEffect(() => {
     latestWeekRef.current = currentWeek
@@ -233,8 +243,10 @@ export const useRecommendations = ({
     setRegion,
     marketScope,
     setMarketScope,
+    selectedMarket,
     category,
     setCategory,
+    selectedCategory,
     queryWeek,
     setQueryWeek,
     currentWeek,

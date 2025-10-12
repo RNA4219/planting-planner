@@ -88,8 +88,8 @@ export const useRecommendationLoader = ({
       const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
       currentWeekRef.current = normalizedWeek
-      setSelectedMarket(targetMarketScope)
-      setSelectedCategory(targetCategory)
+      setSelectedMarket((prev) => (prev === targetMarketScope ? prev : targetMarketScope))
+      setSelectedCategory((prev) => (prev === targetCategory ? prev : targetCategory))
       const requestMeta: RequestMeta = {
         id: trackerRef.current.id + 1,
         region: targetRegion,
