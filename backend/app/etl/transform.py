@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-import sqlite3
 import json
+import logging
+import sqlite3
 from collections import defaultdict
 from datetime import UTC, date, datetime
 from typing import Any, cast
 
 from .. import utils_week
+from . import expectations
 from .loader import DataLoader, load_price_feed
 
 __all__ = ["run_etl"]
 
 _UNIT_FACTORS: dict[str, float] = {"円/kg": 1.0, "円/100g": 10.0, "円/500g": 2.0, "円/g": 1000.0}
+_LOGGER = logging.getLogger(__name__)
 
 
 def _normalize_week(value: Any) -> str:
@@ -44,7 +47,7 @@ def _utc_now() -> str:
 
 
 def _transform_legacy_records(
-    records: list[dict[str, Any]]
+    records: list[dict[str, Any]],
 ) -> list[tuple[int, str, float | None, float | None, str, str]]:
     converted: list[tuple[int, str, float | None, float | None, str]] = []
     for record in records:
@@ -75,7 +78,7 @@ def _transform_legacy_records(
 
 
 def _transform_market_records(
-    records: list[dict[str, Any]]
+    records: list[dict[str, Any]],
 ) -> list[tuple[int, str, str, float | None, float | None, str, str]]:
     converted: list[tuple[int, str, str, float | None, float | None, str]] = []
     for record in records:
@@ -118,7 +121,7 @@ def _refresh_market_metadata_cache(conn: sqlite3.Connection) -> None:
     cursor = conn.execute(
         """
         SELECT scope, display_name, timezone, priority, theme_token,
-               hex_color, text_color, effective_from
+               hex_color, text_color, effective_from, categories
         FROM market_metadata
         ORDER BY priority ASC, scope ASC
         """
@@ -135,6 +138,7 @@ def _refresh_market_metadata_cache(conn: sqlite3.Connection) -> None:
                 "text_color": row["text_color"],
             },
             "effective_from": row["effective_from"],
+            "categories": _resolve_categories(conn, row["scope"], row["categories"]),
         }
         for row in cursor.fetchall()
     ]
@@ -152,6 +156,38 @@ def _refresh_market_metadata_cache(conn: sqlite3.Connection) -> None:
         """,
         ("market_metadata", payload, generated_at),
     )
+
+
+def _resolve_categories(
+    conn: sqlite3.Connection, scope: str, categories_payload: str | None
+) -> list[dict[str, Any]]:
+    if categories_payload:
+        try:
+            parsed = json.loads(categories_payload)
+        except json.JSONDecodeError:  # pragma: no cover - defensive
+            parsed = []
+        else:
+            if isinstance(parsed, list) and parsed:
+                return [dict(item) for item in parsed]
+    fallback_rows = conn.execute(
+        """
+        SELECT DISTINCT crops.category
+        FROM market_prices
+        JOIN crops ON crops.id = market_prices.crop_id
+        WHERE market_prices.scope = ?
+        ORDER BY crops.category ASC
+        """,
+        (scope,),
+    ).fetchall()
+    return [
+        {
+            "category": str(row["category"]),
+            "display_name": str(row["category"]),
+            "priority": 100,
+            "source": "fallback",
+        }
+        for row in fallback_rows
+    ]
 
 
 def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) -> int:
@@ -190,6 +226,25 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
         )
 
     if transformed_market:
+        dataset = [
+            {
+                "crop_id": crop_id,
+                "scope": scope,
+                "week": week_iso,
+                "avg_price": avg_price,
+                "stddev": stddev,
+                "unit": unit,
+                "source": source,
+            }
+            for crop_id, scope, week_iso, avg_price, stddev, unit, source in transformed_market
+        ]
+        try:
+            valid = expectations.validate_market_prices(conn, dataset)
+        except Exception as exc:  # pragma: no cover - exercised via tests
+            _LOGGER.warning("Great Expectations validation failed: %s", exc, exc_info=True)
+        else:
+            if not valid:
+                _LOGGER.warning("Great Expectations validation failed: dataset rejected")
         conn.executemany(
             """
             INSERT INTO market_prices (

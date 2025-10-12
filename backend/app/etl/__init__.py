@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .. import etl_runner as _etl_runner
+from . import expectations
 from .loader import DataLoader, load_price_feed
 from .transform import run_etl
 
@@ -17,6 +18,7 @@ __all__ = [
     "DataLoader",
     "load_price_feed",
     "run_etl",
+    "expectations",
     "STATE_FAILURE",
     "STATE_RUNNING",
     "STATE_STALE",

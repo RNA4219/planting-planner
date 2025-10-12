@@ -7,7 +7,6 @@ from fastapi import BackgroundTasks
 
 from . import etl_runner, schemas
 
-
 logger = logging.getLogger(__name__)
 
 

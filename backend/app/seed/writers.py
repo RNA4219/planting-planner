@@ -114,9 +114,7 @@ def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) ->
         )
 
 
-def write_theme_tokens(
-    conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]
-) -> None:
+def write_theme_tokens(conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]) -> None:
     for token in theme_tokens:
         conn.execute(
             """
@@ -150,6 +148,26 @@ def write_market_scopes(
                 scope.get("timezone", "Asia/Tokyo"),
                 int(scope.get("priority", 100)),
                 scope["theme_token"],
+            ),
+        )
+
+
+def write_market_scope_categories(
+    conn: sqlite3.Connection, categories: Iterable[Mapping[str, Any]]
+) -> None:
+    for category in categories:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO market_scope_categories (
+                scope, category, display_name, priority, source
+            ) VALUES (?, ?, ?, ?, ?)
+            """.strip(),
+            (
+                category["scope"],
+                category["category"],
+                category.get("display_name", category["category"]),
+                int(category.get("priority", 100)),
+                category.get("source", "seed"),
             ),
         )
 
@@ -197,6 +215,7 @@ def write_seed_payload(
     price_samples: Iterable[Mapping[str, Any]],
     growth_days: Iterable[Mapping[str, Any]],
     market_scopes: Iterable[Mapping[str, Any]] = (),
+    market_scope_categories: Iterable[Mapping[str, Any]] = (),
     theme_tokens: Iterable[Mapping[str, Any]] = (),
 ) -> None:
     theme_list = list(theme_tokens)
@@ -207,6 +226,10 @@ def write_seed_payload(
     if scope_list:
         write_market_scopes(conn, scope_list)
 
+    category_list = list(market_scope_categories)
+    if category_list:
+        write_market_scope_categories(conn, category_list)
+
     write_crops(conn, crops)
     write_price_samples(conn, price_samples)
     write_growth_days(conn, growth_days)
@@ -215,6 +238,7 @@ def write_seed_payload(
 __all__ = [
     "write_crops",
     "write_market_scopes",
+    "write_market_scope_categories",
     "write_price_samples",
     "write_growth_days",
     "write_theme_tokens",
