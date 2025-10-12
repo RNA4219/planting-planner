@@ -49,25 +49,27 @@ const applyDefaultRecommendationMocks = () => {
     }) => {
       const callModern = async () => {
         try {
-          return await fetchRecommendations(region, week, { marketScope, category })
+          const response = await fetchRecommendations(region, week, { marketScope, category })
+          return { response, source: 'modern' as const }
         } catch {
           return undefined
         }
       }
       const callLegacy = async () => {
         try {
-          return await fetchRecommend({ region, week })
+          const response = await fetchRecommend({ region, week })
+          return { response, source: 'legacy' as const }
         } catch {
           return undefined
         }
       }
       const primary = preferLegacy ? callLegacy : callModern
       const secondary = preferLegacy ? callModern : callLegacy
-      const response = (await primary()) ?? (await secondary())
-      if (!response) {
+      const result = (await primary()) ?? (await secondary())
+      if (!result) {
         return null
       }
-      return normalizeRecommendationResponse(response, week)
+      return normalizeRecommendationResponse(result.response, week, result.source)
     },
   )
   cropCatalogState.catalog = new Map(
