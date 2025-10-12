@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from 'vitest'
 
 import type {
   Crop,
+  CropCategory,
   RefreshStatus,
   RefreshStatusResponse,
   SearchFilter,
@@ -18,6 +19,11 @@ describe('type definitions', () => {
 
   it('Crop は variety プロパティをオプションで受け取れる', () => {
     expectTypeOf<Crop>().toMatchTypeOf<{ variety?: string }>()
+  })
+
+  it('CropCategory は fruit を許容する', () => {
+    type _ = ExpectTrue<ExpectEqual<Extract<'fruit', CropCategory>, 'fruit'>>
+    expectTypeOf<'fruit'>().toMatchTypeOf<CropCategory>()
   })
 
   it('RefreshStatus は UI 仕様のフィールド名を提供する', () => {

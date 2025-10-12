@@ -88,7 +88,7 @@ export const saveMarketScope = (marketScope: MarketScope): void => {
 }
 
 const isCropCategory = (value: unknown): value is CropCategory =>
-  value === 'leaf' || value === 'root' || value === 'flower'
+  value === 'leaf' || value === 'root' || value === 'flower' || value === 'fruit'
 
 export const loadSelectedCategory = (): CropCategory => {
   const category = readJson<CropCategory | null>(CATEGORY_KEY, null)
