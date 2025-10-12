@@ -1,3 +1,5 @@
+import { type ReactNode } from 'react'
+
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/useRecommendations'
 import type { Region } from '../types'
@@ -16,6 +18,7 @@ interface RecommendationsTableProps {
   onSelect: (cropId: number | null) => void
   onToggleFavorite: (cropId?: number) => void
   isFavorite: (cropId?: number) => boolean
+  headerSlot?: ReactNode
 }
 
 export const RecommendationsTable = ({
@@ -26,12 +29,16 @@ export const RecommendationsTable = ({
   onSelect,
   onToggleFavorite,
   isFavorite,
+  headerSlot,
 }: RecommendationsTableProps) => {
   return (
     <section className="recommend">
-      <div className="recommend__meta">
-        <span>対象地域: {REGION_LABEL[region]}</span>
-        <span>基準週: {displayWeek}</span>
+      <div className="recommend__header">
+        <div className="recommend__meta">
+          <span>対象地域: {REGION_LABEL[region]}</span>
+          <span>基準週: {displayWeek}</span>
+        </div>
+        {headerSlot}
       </div>
       <table className="recommend__table">
         <thead>

@@ -1,6 +1,7 @@
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
@@ -27,6 +28,7 @@ export const App = () => {
     region,
     setRegion,
     marketScope,
+    setCategory,
     category,
     queryWeek,
     setQueryWeek,
@@ -127,6 +129,7 @@ export const App = () => {
           onSelect={setSelectedCropId}
           onToggleFavorite={toggleFavorite}
           isFavorite={isFavorite}
+          headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
         />
         <PriceChartSection selectedCropId={selectedCropId} />
       </main>
