@@ -1,25 +1,37 @@
 import '@testing-library/jest-dom/vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
-import type { FormEvent } from 'react'
+import type { QueryClient } from '@tanstack/react-query'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { FormEvent, PropsWithChildren } from 'react'
 
 import {
   recommendationControllerMocks,
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
+import { createQueryClientWrapper } from '../../utils/queryClient'
 import { useRecommendations } from '../../../src/hooks/useRecommendations'
 
 describe('hooks / useRecommendations controller', () => {
   const { fetcherMock } = recommendationControllerMocks
+  let queryClient: QueryClient
+  let Wrapper: (props: PropsWithChildren) => JSX.Element
 
   beforeEach(() => {
     resetRecommendationControllerMocks()
+    const setup = createQueryClientWrapper()
+    queryClient = setup.queryClient
+    Wrapper = setup.Wrapper
+  })
+
+  afterEach(() => {
+    queryClient.clear()
   })
 
   it('updates region via handleSubmit and requests override region', async () => {
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
     const { result } = renderHook(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+      { wrapper: Wrapper },
     )
 
     await waitFor(() => {
@@ -62,6 +74,7 @@ describe('hooks / useRecommendations controller', () => {
 
     const { result } = renderHook(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
+      { wrapper: Wrapper },
     )
 
     await waitFor(() => {

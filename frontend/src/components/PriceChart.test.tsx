@@ -34,10 +34,10 @@ describe('PriceChart', () => {
   it('作物選択直後は価格データ未取得メッセージを表示しない', async () => {
     fetchPrice.mockReturnValue(new Promise(() => {}) as ReturnType<FetchPrice>)
 
-    render(<PriceChart cropId={1} />)
+    render(<PriceChart cropId={1} marketScope="national" />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined, 'national')
     })
 
     expect(screen.queryByText('価格データがありません。')).not.toBeInTheDocument()
@@ -56,10 +56,10 @@ describe('PriceChart', () => {
       ],
     })
 
-    render(<PriceChart cropId={0} />)
+    render(<PriceChart cropId={0} marketScope="national" />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined, 'national')
     })
 
     await waitFor(() => {

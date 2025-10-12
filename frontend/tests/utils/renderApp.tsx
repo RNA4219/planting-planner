@@ -1,5 +1,6 @@
 import { cleanup, render, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, vi } from 'vitest'
 
 import {
@@ -13,6 +14,7 @@ import {
 } from './mocks/api'
 import type { StorageState } from './mocks/storage'
 import { resetStorageMocks, storageState } from './mocks/storage'
+import { createTestQueryClient } from './queryClient'
 
 export {
   fetchRecommendations,
@@ -45,6 +47,7 @@ vi.mock('../../src/lib/week', () => ({
 }))
 
 let shouldRestoreTimers = false
+const activeQueryClients = new Set<QueryClient>()
 
 afterEach(() => {
   if (shouldRestoreTimers) {
@@ -56,6 +59,10 @@ afterEach(() => {
 const resetAppMocks = () => {
   resetStorageMocks()
   resetApiMocks()
+  activeQueryClients.forEach((client) => {
+    client.clear()
+  })
+  activeQueryClients.clear()
 }
 
 export const resetAppSpies = resetAppMocks
@@ -66,6 +73,8 @@ interface RenderAppOptions {
 
 export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}) => {
   const App = (await import('../../src/App')).default
+  const queryClient = createTestQueryClient()
+  activeQueryClients.add(queryClient)
   const user = userEvent.setup(
     useFakeTimers
       ? {
@@ -73,7 +82,11 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
         }
       : undefined,
   )
-  render(<App />)
+  render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  )
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {
       throw new Error('recommendations not requested yet')

@@ -61,7 +61,7 @@ describe('Region switching resets crop selection', () => {
     await user.click(tomatoRow)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined, 'national')
     })
 
     await waitFor(() => {

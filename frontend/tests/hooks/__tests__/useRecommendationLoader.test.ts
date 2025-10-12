@@ -26,8 +26,19 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
-    fetchQueryMock.mockImplementation(async (_key, fetcher: () => Promise<unknown>) => {
-      return fetcher()
+    fetchQueryMock.mockImplementation(async (options: unknown) => {
+      if (
+        options &&
+        typeof options === 'object' &&
+        'queryFn' in options &&
+        typeof (options as { queryFn?: () => Promise<unknown> }).queryFn === 'function'
+      ) {
+        return (options as { queryFn: () => Promise<unknown> }).queryFn()
+      }
+      if (typeof options === 'function') {
+        return options()
+      }
+      return undefined
     })
   })
 
@@ -98,8 +109,8 @@ describe('hooks / useRecommendationLoader', () => {
       expect(fetchQueryMock).toHaveBeenCalled()
     })
 
-    const [initialKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(initialKey).toEqual([
+    const [initialCall] = fetchQueryMock.mock.calls as [[{ queryKey: unknown[] }]]
+    expect(initialCall.queryKey).toEqual([
       'recommendations',
       'temperate',
       'national',
@@ -119,8 +130,8 @@ describe('hooks / useRecommendationLoader', () => {
       })
     })
 
-    const [overrideKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(overrideKey).toEqual([
+    const [overrideCall] = fetchQueryMock.mock.calls as [[{ queryKey: unknown[] }]]
+    expect(overrideCall.queryKey).toEqual([
       'recommendations',
       'temperate',
       'city:kyoto',

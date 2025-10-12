@@ -10,6 +10,7 @@ import {
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 
+import type { MarketScope } from '../types'
 import { fetchPrice } from '../lib/api'
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend)
@@ -17,9 +18,10 @@ ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip,
 type PriceChartProps = {
   cropId: number | null
   range?: { from?: string; to?: string }
+  marketScope: MarketScope
 }
 
-export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
+export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range, marketScope }) => {
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
@@ -41,7 +43,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
     setTitle('')
     ;(async () => {
       try {
-        const res = await fetchPrice(cropId, range?.from, range?.to)
+        const res = await fetchPrice(cropId, range?.from, range?.to, marketScope)
         if (!active) return
         setTitle(`${res.crop} (${res.unit})`)
         const points = res.prices ?? []
@@ -63,7 +65,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, range }) => {
     return () => {
       active = false
     }
-  }, [cropId, range?.from, range?.to])
+  }, [cropId, range?.from, range?.to, marketScope])
 
   if (cropId == null) {
     return <p>作物を選択すると価格推移が表示されます。</p>

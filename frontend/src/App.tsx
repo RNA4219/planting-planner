@@ -28,6 +28,7 @@ export const App = () => {
     region,
     setRegion,
     marketScope,
+    selectedMarket,
     setCategory,
     category,
     setMarketScope,
@@ -142,7 +143,10 @@ export const App = () => {
           isFavorite={isFavorite}
           headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
         />
-        <PriceChartSection selectedCropId={selectedCropId} />
+        <PriceChartSection
+          selectedCropId={selectedCropId}
+          marketScope={selectedMarket}
+        />
       </main>
     </div>
   )
