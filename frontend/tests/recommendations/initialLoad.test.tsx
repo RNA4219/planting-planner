@@ -38,7 +38,13 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'cold', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        1,
+        'cold',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
   })
@@ -52,7 +58,12 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
 
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenCalledTimes(1)
-      expect(fetchRecommendations).toHaveBeenCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
     expect(fetchRecommend).not.toHaveBeenCalled()
   })
@@ -93,26 +104,39 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       expect(fetchRecommendations).toHaveBeenCalledTimes(1)
       expect(fetchRecommend).toHaveBeenCalledTimes(1)
     })
-    expect(fetchRecommendations).toHaveBeenNthCalledWith(1, 'temperate', '2024-W30')
+    expect(fetchRecommendations).toHaveBeenNthCalledWith(
+      1,
+      'temperate',
+      '2024-W30',
+      'domestic',
+      'all',
+    )
     expect(fetchRecommend).toHaveBeenCalledWith({ region: 'temperate', week: '2024-W30' })
     expect(screen.getByText('春菊')).toBeInTheDocument()
   })
 
   it('週入力は normalizeIsoWeek で揃えてAPIへ送られる', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
-      const resolvedWeek = week ?? '2024-W30'
+    fetchRecommendations.mockImplementation(
+      async (region, week, _marketScope, _category) => {
+        const resolvedWeek = week ?? '2024-W30'
       return createRecommendResponse({
         week: resolvedWeek,
         region,
         items: [createItem({ crop: '春菊' })],
       })
-    })
+      },
+    )
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     const select = screen.getByLabelText('地域')
@@ -123,7 +147,12 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('cold', '2024-W33')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'cold',
+        '2024-W33',
+        'domestic',
+        'all',
+      )
     })
   })
 })

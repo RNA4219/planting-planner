@@ -37,7 +37,12 @@ describe('App recommendations', () => {
     )
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W31')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W31',
+        'domestic',
+        'all',
+      )
     })
 
     await waitFor(() => {

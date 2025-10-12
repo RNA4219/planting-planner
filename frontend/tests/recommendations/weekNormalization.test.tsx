@@ -28,19 +28,26 @@ describe('App recommendations / 週入力正規化', () => {
 
   it('週番号が先に来る形式を 2024-W24 に整形して送信する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
-      const resolvedWeek = week ?? '2024-W30'
-      return createRecommendResponse({
-        week: resolvedWeek,
-        region,
-        items: [createItem({ crop: '春菊' })],
-      })
-    })
+    fetchRecommendations.mockImplementation(
+      async (region, week, _marketScope, _category) => {
+        const resolvedWeek = week ?? '2024-W30'
+        return createRecommendResponse({
+          week: resolvedWeek,
+          region,
+          items: [createItem({ crop: '春菊' })],
+        })
+      },
+    )
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     const weekInput = screen.getByLabelText('週')
@@ -49,25 +56,37 @@ describe('App recommendations / 週入力正規化', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W24')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W24',
+        'domestic',
+        'all',
+      )
     })
   })
 
   it('英語表現が含まれる形式を 2024-W24 に整形して送信する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
-      const resolvedWeek = week ?? '2024-W30'
-      return createRecommendResponse({
-        week: resolvedWeek,
-        region,
-        items: [createItem({ crop: '春菊' })],
-      })
-    })
+    fetchRecommendations.mockImplementation(
+      async (region, week, _marketScope, _category) => {
+        const resolvedWeek = week ?? '2024-W30'
+        return createRecommendResponse({
+          week: resolvedWeek,
+          region,
+          items: [createItem({ crop: '春菊' })],
+        })
+      },
+    )
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     const weekInput = screen.getByLabelText('週')
@@ -76,25 +95,37 @@ describe('App recommendations / 週入力正規化', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W24')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W24',
+        'domestic',
+        'all',
+      )
     })
   })
 
   it('和文日付を 2024-W27 に整形して送信する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
-      const resolvedWeek = week ?? '2024-W30'
-      return createRecommendResponse({
-        week: resolvedWeek,
-        region,
-        items: [createItem({ crop: '春菊' })],
-      })
-    })
+    fetchRecommendations.mockImplementation(
+      async (region, week, _marketScope, _category) => {
+        const resolvedWeek = week ?? '2024-W30'
+        return createRecommendResponse({
+          week: resolvedWeek,
+          region,
+          items: [createItem({ crop: '春菊' })],
+        })
+      },
+    )
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     const weekInput = screen.getByLabelText('週')
@@ -104,25 +135,37 @@ describe('App recommendations / 週入力正規化', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W27')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W27',
+        'domestic',
+        'all',
+      )
     })
   })
 
   it('週番号が1桁の場合もゼロ埋めして送信する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops.slice(0, 2))
-    fetchRecommendations.mockImplementation(async (region, week) => {
-      const resolvedWeek = week ?? '2024-W30'
-      return createRecommendResponse({
-        week: resolvedWeek,
-        region,
-        items: [createItem({ crop: '春菊' })],
-      })
-    })
+    fetchRecommendations.mockImplementation(
+      async (region, week, _marketScope, _category) => {
+        const resolvedWeek = week ?? '2024-W30'
+        return createRecommendResponse({
+          week: resolvedWeek,
+          region,
+          items: [createItem({ crop: '春菊' })],
+        })
+      },
+    )
 
     const { user } = await renderApp()
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     const weekInput = screen.getByLabelText('週')
@@ -131,7 +174,12 @@ describe('App recommendations / 週入力正規化', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W06')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W06',
+        'domestic',
+        'all',
+      )
     })
   })
 })

@@ -12,6 +12,9 @@ export type RecommendationItem = RecommendResponse['items'][number]
 const fetcherMock = vi.fn()
 const cropCatalogState = { catalog: new Map(), isLoading: false }
 
+type MarketScope = 'domestic' | 'global'
+type CropCategory = 'all' | 'leaf' | 'root'
+
 vi.mock('../../../src/hooks/recommendationFetcher', () => ({
   useRecommendationFetcher: () => fetcherMock,
 }))
@@ -34,10 +37,22 @@ export const defaultCrops = [
 
 const applyDefaultRecommendationMocks = () => {
   fetcherMock.mockImplementation(
-    async ({ region, week, preferLegacy }: { region: Region; week: string; preferLegacy?: boolean }) => {
+    async ({
+      region,
+      week,
+      preferLegacy,
+      marketScope = 'domestic',
+      category = 'all',
+    }: {
+      region: Region
+      week: string
+      preferLegacy?: boolean
+      marketScope?: MarketScope
+      category?: CropCategory
+    }) => {
       const callModern = async () => {
         try {
-          return await fetchRecommendations(region, week)
+          return await fetchRecommendations(region, week, marketScope, category)
         } catch {
           return undefined
         }

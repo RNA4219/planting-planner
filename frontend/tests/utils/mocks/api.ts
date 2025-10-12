@@ -9,8 +9,16 @@ import type {
   Region,
 } from '../../../src/types'
 
+type MarketScope = 'domestic' | 'global'
+type CropCategory = 'all' | 'leaf' | 'root'
+
 export const fetchRecommendations = vi.fn<
-  (region: Region, week?: string) => Promise<RecommendResponse>
+  (
+    region: Region,
+    week: string,
+    marketScope: MarketScope,
+    category: CropCategory,
+  ) => Promise<RecommendResponse>
 >()
 
 export const fetchRecommend = vi.fn<

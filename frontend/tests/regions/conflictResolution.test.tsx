@@ -34,8 +34,8 @@ describe('Region switching interactions', () => {
     const firstRequest = createDeferred<RecommendResponse>()
     const secondRequest = createDeferred<RecommendResponse>()
 
-    fetchRecommendations.mockImplementationOnce(() => firstRequest.promise)
-    fetchRecommendations.mockImplementationOnce(() => secondRequest.promise)
+    fetchRecommendations.mockImplementationOnce((_, __, ___, ____) => firstRequest.promise)
+    fetchRecommendations.mockImplementationOnce((_, __, ___, ____) => secondRequest.promise)
 
     const { user } = await renderApp()
 
@@ -43,7 +43,13 @@ describe('Region switching interactions', () => {
     await user.selectOptions(regionSelect, 'cold')
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenNthCalledWith(2, 'cold', '2024-W30')
+      expect(fetchRecommendations).toHaveBeenNthCalledWith(
+        2,
+        'cold',
+        '2024-W30',
+        'domestic',
+        'all',
+      )
     })
 
     secondRequest.resolve({

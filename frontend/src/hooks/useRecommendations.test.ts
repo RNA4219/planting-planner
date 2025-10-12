@@ -7,7 +7,15 @@ import type { RecommendResponse, Region } from '../types'
 import { useRecommendationLoader } from './useRecommendationLoader'
 import { useRecommendations } from './useRecommendations'
 
-type FetchRecommendationsMock = (region: Region, week: string) => Promise<RecommendResponse>
+type MarketScope = 'domestic' | 'global'
+type CropCategory = 'all' | 'leaf' | 'root'
+
+type FetchRecommendationsMock = (
+  region: Region,
+  week: string,
+  marketScope: MarketScope,
+  category: CropCategory,
+) => Promise<RecommendResponse>
 
 const { fetchCropsMock, fetchRecommendationsMock } = vi.hoisted(() => ({
   fetchCropsMock: vi.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
@@ -32,16 +40,20 @@ const createDeferred = <T>() => {
 describe('useRecommendationLoader', () => {
   beforeEach(() => {
     fetchRecommendationsMock.mockReset()
-    fetchRecommendationsMock.mockImplementationOnce(async () => ({
-      week: '2099-W52',
-      region: 'temperate',
-      items: [],
-    }))
-    fetchRecommendationsMock.mockImplementation(async () => ({
-      week: '2024-W06',
-      region: 'temperate',
-      items: [],
-    }))
+    fetchRecommendationsMock.mockImplementationOnce(
+      async (_region, _week, _marketScope, _category) => ({
+        week: '2099-W52',
+        region: 'temperate',
+        items: [],
+      }),
+    )
+    fetchRecommendationsMock.mockImplementation(
+      async (_region, _week, _marketScope, _category) => ({
+        week: '2024-W06',
+        region: 'temperate',
+        items: [],
+      }),
+    )
     fetchCropsMock.mockClear()
   })
 
@@ -58,7 +70,12 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024-W6')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W06')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W06',
+      'domestic',
+      'all',
+    )
   })
 
   it('requestRecommendations は日付形式 (YYYY-MM-DD) を ISO 週へ変換して API へ渡す', async () => {
@@ -74,7 +91,12 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024-07-01')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W27',
+      'domestic',
+      'all',
+    )
   })
 
   it('requestRecommendations は日付形式 (YYYY/MM/DD) を ISO 週へ変換して API へ渡す', async () => {
@@ -90,7 +112,12 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024/07/01')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W27')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W27',
+      'domestic',
+      'all',
+    )
   })
 
   it('requestRecommendations は 6 桁の数値入力を最終週へクランプして API へ渡す', async () => {
@@ -106,7 +133,12 @@ describe('useRecommendationLoader', () => {
       await result.current.requestRecommendations('202460')
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenCalledWith('temperate', '2024-W53')
+    expect(fetchRecommendationsMock).toHaveBeenCalledWith(
+      'temperate',
+      '2024-W53',
+      'domestic',
+      'all',
+    )
   })
 
   it('API が不正な週を返した場合でも activeWeek はリクエスト週を保持する', async () => {
@@ -117,11 +149,13 @@ describe('useRecommendationLoader', () => {
     })
 
     fetchRecommendationsMock.mockClear()
-    fetchRecommendationsMock.mockImplementationOnce(async () => ({
-      week: 'invalid',
-      region: 'temperate',
-      items: [],
-    }))
+    fetchRecommendationsMock.mockImplementationOnce(
+      async (_region, _week, _marketScope, _category) => ({
+        week: 'invalid',
+        region: 'temperate',
+        items: [],
+      }),
+    )
 
     await act(async () => {
       await result.current.requestRecommendations('2024-W10')
@@ -137,9 +171,9 @@ describe('useRecommendationLoader', () => {
 
     fetchRecommendationsMock.mockReset()
     fetchRecommendationsMock
-      .mockImplementationOnce(() => initial.promise)
-      .mockImplementationOnce(() => first.promise)
-      .mockImplementationOnce(() => second.promise)
+      .mockImplementationOnce((_, __, ___, ____) => initial.promise)
+      .mockImplementationOnce((_, __, ___, ____) => first.promise)
+      .mockImplementationOnce((_, __, ___, ____) => second.promise)
 
     const { result } = renderHook(() => useRecommendationLoader('temperate'))
 
@@ -283,7 +317,12 @@ describe('useRecommendations', () => {
 
     expect(result.current.region).toBe('cold')
     expect(result.current.currentWeek).toBe('2024-W05')
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', baselineWeek)
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      baselineWeek,
+      'domestic',
+      'all',
+    )
   })
 
   it('reloadCurrentWeek は最後にリクエストした地域・週で再フェッチし参照が安定している', async () => {
@@ -323,13 +362,23 @@ describe('useRecommendations', () => {
     })
 
     expect(result.current.reloadCurrentWeek).toBe(reloadHandle)
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      '2024-W05',
+      'domestic',
+      'all',
+    )
 
     await act(async () => {
       await result.current.reloadCurrentWeek()
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('cold', '2024-W05')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'cold',
+      '2024-W05',
+      'domestic',
+      'all',
+    )
   })
 
   it('handleSubmit で週を変更すると正規化済みの週で再検索される', async () => {
@@ -377,7 +426,12 @@ describe('useRecommendations', () => {
       await result.current.handleSubmit(event)
     })
 
-    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith('temperate', '2024-W07')
+    expect(fetchRecommendationsMock).toHaveBeenLastCalledWith(
+      'temperate',
+      '2024-W07',
+      'domestic',
+      'all',
+    )
     expect(result.current.currentWeek).toBe('2024-W07')
     expect(result.current.displayWeek).toBe('2024-W07')
   })

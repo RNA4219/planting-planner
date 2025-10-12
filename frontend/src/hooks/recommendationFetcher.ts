@@ -4,7 +4,19 @@ import * as apiModule from '../lib/api'
 import type { RecommendResponse, Region } from '../types'
 import { normalizeRecommendationResponse, type NormalizeRecommendationResult } from '../utils/recommendations'
 
+type MarketScope = 'domestic' | 'global'
+type CropCategory = 'all' | 'leaf' | 'root'
+
+const DEFAULT_MARKET_SCOPE: MarketScope = 'domestic'
+const DEFAULT_CATEGORY: CropCategory = 'all'
+
 const api = apiModule as typeof import('../lib/api') & {
+  fetchRecommendations: (
+    region: Region,
+    week: string,
+    marketScope: MarketScope,
+    category: CropCategory,
+  ) => Promise<RecommendResponse>
   fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
 }
 
@@ -26,7 +38,12 @@ export const useRecommendationFetcher = (): RecommendationFetcher => {
           return undefined
         }
         try {
-          return await api.fetchRecommendations(region, week)
+          return await api.fetchRecommendations(
+            region,
+            week,
+            DEFAULT_MARKET_SCOPE,
+            DEFAULT_CATEGORY,
+          )
         } catch {
           return undefined
         }

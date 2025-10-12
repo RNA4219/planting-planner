@@ -49,7 +49,12 @@ describe('Favorites interactions', () => {
     await user.click(screen.getByRole('button', { name: 'この条件で見る' }))
 
     await waitFor(() => {
-      expect(fetchRecommendations).toHaveBeenLastCalledWith('temperate', '2024-W31')
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W31',
+        'domestic',
+        'all',
+      )
     })
 
     const tomatoCell = screen.getByText('トマト')
