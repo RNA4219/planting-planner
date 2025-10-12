@@ -2,7 +2,11 @@ import { useCallback } from 'react'
 
 import * as apiModule from '../lib/api'
 import type { CropCategory, MarketScope, RecommendResponse, Region } from '../types'
-import { normalizeRecommendationResponse, type NormalizeRecommendationResult } from '../utils/recommendations'
+import {
+  normalizeRecommendationResponse,
+  type NormalizeRecommendationResult,
+  type RecommendationSource,
+} from '../utils/recommendations'
 
 const api = apiModule as typeof import('../lib/api') & {
   fetchRecommend?: (input: { region: Region; week?: string }) => Promise<RecommendResponse>
@@ -23,23 +27,29 @@ export type RecommendationFetcher = (
 export const useRecommendationFetcher = (): RecommendationFetcher => {
   return useCallback<RecommendationFetcher>(
     async ({ region, week, marketScope, category, preferLegacy = false }) => {
-      const callModern = async (): Promise<RecommendResponse | undefined> => {
+      const callModern = async (): Promise<
+        { response: RecommendResponse; source: RecommendationSource } | undefined
+      > => {
         if (typeof api.fetchRecommendations !== 'function') {
           return undefined
         }
         try {
-          return await api.fetchRecommendations(region, week, { marketScope, category })
+          const response = await api.fetchRecommendations(region, week, { marketScope, category })
+          return { response, source: 'modern' }
         } catch {
           return undefined
         }
       }
 
-      const callLegacy = async (): Promise<RecommendResponse | undefined> => {
+      const callLegacy = async (): Promise<
+        { response: RecommendResponse; source: RecommendationSource } | undefined
+      > => {
         if (typeof api.fetchRecommend !== 'function') {
           return undefined
         }
         try {
-          return await api.fetchRecommend({ region, week })
+          const response = await api.fetchRecommend({ region, week })
+          return { response, source: 'legacy' }
         } catch {
           return undefined
         }
@@ -48,12 +58,12 @@ export const useRecommendationFetcher = (): RecommendationFetcher => {
       const primary = preferLegacy ? callLegacy : callModern
       const secondary = preferLegacy ? callModern : callLegacy
 
-      const response = (await primary()) ?? (await secondary())
-      if (!response) {
+      const result = (await primary()) ?? (await secondary())
+      if (!result) {
         return null
       }
 
-      return normalizeRecommendationResponse(response, week)
+      return normalizeRecommendationResponse(result.response, week, result.source)
     },
     [],
   )

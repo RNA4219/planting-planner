@@ -2,7 +2,7 @@
  * エントリポイントのスモークテストのみを保持します。
  * 詳細なインタラクションケースは ./forms, ./regions, ./favorites, ./prices 以下に配置してください。
  */
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { createInteractionsHarness } from './utils/interactionsHarness'
@@ -28,5 +28,42 @@ describe('App interactions smoke', () => {
       '2024-W30',
       expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
     )
+  })
+
+  test('市場スコープを都市に切り替えるとAPI引数が更新される', async () => {
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    fetchCrops.mockResolvedValue([])
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    })
+
+    const { user } = await renderApp()
+
+    const marketSelect = await screen.findByLabelText('市場')
+    await user.selectOptions(marketSelect, 'city:tokyo')
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'city:tokyo', category: 'leaf' }),
+      )
+    })
+  })
+
+  test('都市データ欠損時は警告トーストをpoliteライブリージョンで表示する', async () => {
+    fetchCrops.mockResolvedValue([])
+    fetchRecommendations.mockRejectedValueOnce(new Error('city scope unavailable'))
+    fetchRecommend.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+    })
+
+    await renderApp()
+
+    await expect(screen.findByRole('status')).resolves.toHaveAttribute('aria-live', 'polite')
   })
 })

@@ -1,4 +1,5 @@
-import { cleanup, waitFor } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
+import { cleanup, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
@@ -64,8 +65,7 @@ describe('App snapshot', () => {
   test('初期表示をスナップショット保存する', async () => {
     await renderApp()
     await waitFor(() => {
-      const rows = document.querySelectorAll('.recommend__row')
-      expect(rows.length).toBeGreaterThan(0)
+      expect(screen.getByRole('row', { name: /トマト/ })).toBeInTheDocument()
     })
 
     const container = document.body.firstElementChild
