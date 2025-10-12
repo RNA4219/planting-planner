@@ -77,7 +77,7 @@ export const fetchRecommendations = async (
   week: string | undefined,
   { marketScope, category }: { marketScope: MarketScope; category: CropCategory },
 ): Promise<RecommendResponse> => {
-  const params = new URLSearchParams({ region, market_scope: marketScope, category })
+  const params = new URLSearchParams({ region, marketScope, category })
   if (week) {
     params.set('week', week)
   }
@@ -118,10 +118,12 @@ export const fetchPrice = async (
   cropId: number,
   frm?: string,
   to?: string,
+  marketScope?: MarketScope,
 ): Promise<PriceSeries> => {
   const params = new URLSearchParams({ crop_id: String(cropId) })
   if (frm) params.set('frm', frm)
   if (to) params.set('to', to)
+  if (marketScope) params.set('marketScope', marketScope)
   const url = buildUrl('/price', params)
   return request<PriceSeries>(url)
 }
