@@ -53,16 +53,31 @@ export const saveFavorites = (favorites: number[]): void => {
   storage.setItem(FAVORITES_KEY, JSON.stringify(unique))
 }
 
+const isRegion = (value: unknown): value is Region =>
+  value === 'cold' || value === 'temperate' || value === 'warm'
+
 export const loadRegion = (): Region => {
-  const region = readJson<Region | null>(REGION_KEY, null)
-  if (region === 'cold' || region === 'temperate' || region === 'warm') {
-    return region
+  const raw = storage.getItem(REGION_KEY)
+  if (!raw) {
+    return 'temperate'
   }
+  try {
+    const parsed = JSON.parse(raw)
+    if (isRegion(parsed)) {
+      return parsed
+    }
+  } catch {
+    if (isRegion(raw)) {
+      saveRegion(raw)
+      return raw
+    }
+  }
+  storage.removeItem(REGION_KEY)
   return 'temperate'
 }
 
 export const saveRegion = (region: Region): void => {
-  storage.setItem(REGION_KEY, region)
+  storage.setItem(REGION_KEY, JSON.stringify(region))
 }
 
 const isMarketScope = (value: unknown): value is MarketScope => {
