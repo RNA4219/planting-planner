@@ -2,7 +2,7 @@ export type Region = 'cold' | 'temperate' | 'warm'
 
 export type MarketScope = 'national' | `city:${string}`
 
-export type CropCategory = 'leaf' | 'root' | 'flower'
+export type CropCategory = 'leaf' | 'root' | 'flower' | 'fruit'
 
 export interface Crop {
   id: number
