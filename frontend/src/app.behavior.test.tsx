@@ -91,4 +91,22 @@ describe('App behavior', () => {
       expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'city:tokyo')
     })
   })
+
+  it('市場データのフォールバック時に警告メッセージを常時表示する', async () => {
+    fetchCrops.mockResolvedValue([])
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+      isMarketFallback: true,
+    })
+
+    await renderApp()
+
+    const notice = await screen.findByTestId('market-fallback-notice')
+    expect(notice).toBeVisible()
+    expect(notice).toHaveTextContent(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
+  })
 })
