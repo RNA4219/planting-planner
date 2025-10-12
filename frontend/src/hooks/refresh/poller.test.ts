@@ -13,8 +13,13 @@ const buildStatus = (state: RefreshStatusResponse['state']): RefreshStatusRespon
 
 describe('createRefreshStatusPoller', () => {
   it('stop 時に cancel が呼ばれる', async () => {
-    const timer = 1 as ReturnType<typeof setTimeout>
-    const schedule = vi.fn<typeof setTimeout>().mockImplementation(() => timer)
+    const timer = 1 as unknown as ReturnType<typeof setTimeout>
+    const schedule = Object.assign(
+      vi.fn<(...args: Parameters<typeof setTimeout>) => ReturnType<typeof setTimeout>>().mockImplementation(
+        () => timer,
+      ),
+      { __promisify__: (setTimeout as typeof setTimeout & { __promisify__?: unknown }).__promisify__ },
+    ) as unknown as typeof setTimeout
     const cancel = vi.fn<typeof clearTimeout>()
     const poller = createRefreshStatusPoller({
       pollIntervalMs: 1000,
@@ -50,15 +55,18 @@ describe('createRefreshStatusPoller', () => {
 
   it('エラー時に onError 後 stop される', async () => {
     let scheduledHandler: (() => void) | undefined
-    const timer = 1 as ReturnType<typeof setTimeout>
-    const schedule = vi
-      .fn<typeof setTimeout>()
-      .mockImplementation((handler) => {
+    const timer = 1 as unknown as ReturnType<typeof setTimeout>
+    const schedule = Object.assign(
+      vi
+        .fn<(...args: Parameters<typeof setTimeout>) => ReturnType<typeof setTimeout>>()
+        .mockImplementation((handler) => {
         if (typeof handler === 'function') {
           scheduledHandler = handler as () => void
         }
         return timer
-      })
+        }),
+      { __promisify__: (setTimeout as typeof setTimeout & { __promisify__?: unknown }).__promisify__ },
+    ) as unknown as typeof setTimeout
     const cancel = vi.fn<typeof clearTimeout>()
     const onError = vi.fn()
     const fetchStatus = vi
