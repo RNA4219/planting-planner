@@ -47,6 +47,6 @@ describe('Price chart interactions', () => {
     await waitFor(() => {
       expect(fetchPrice).toHaveBeenCalledTimes(1)
     })
-    expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined)
+    expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'national')
   })
 })

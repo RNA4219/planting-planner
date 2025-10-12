@@ -17,6 +17,7 @@ ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip,
 
 type PriceChartProps = {
   cropId: number | null
+  marketScope?: MarketScope
   range?: { from?: string; to?: string }
   marketScope?: MarketScope
 }

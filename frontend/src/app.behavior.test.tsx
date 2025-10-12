@@ -1,11 +1,17 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
 type UseRecommendationsModule = typeof import('./hooks/useRecommendations')
 
-import { fetchCrops, fetchRecommendations, renderApp, resetAppSpies } from '../tests/utils/renderApp'
+import {
+  fetchCrops,
+  fetchPrice,
+  fetchRecommendations,
+  renderApp,
+  resetAppSpies,
+} from '../tests/utils/renderApp'
 
 describe('App behavior', () => {
   let useRecommendationsModule: UseRecommendationsModule
@@ -40,5 +46,48 @@ describe('App behavior', () => {
       )
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
+  })
+
+  it('市場切替後の作物選択で価格APIが市場スコープを受け取る', async () => {
+    fetchCrops.mockResolvedValue([
+      { id: 1, name: 'トマト', category: '果菜類' },
+      { id: 2, name: 'レタス', category: '葉菜類' },
+    ])
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [
+        {
+          crop: 'トマト',
+          sowing_week: '2024-W28',
+          harvest_week: '2024-W35',
+          source: 'テストデータ',
+          growth_days: 70,
+        },
+      ],
+      isMarketFallback: false,
+    })
+    fetchPrice.mockResolvedValue({
+      crop_id: 1,
+      crop: 'トマト',
+      unit: 'kg',
+      source: 'テストデータ',
+      prices: [],
+    })
+
+    const { user } = await renderApp()
+
+    const marketSelect = await screen.findByLabelText('市場')
+    await user.selectOptions(marketSelect, 'city:tokyo')
+
+    const table = await screen.findByRole('table')
+    const rows = within(table).getAllByRole('row').slice(1)
+    const targetRow = rows.find((row) => within(row).queryByText('トマト'))
+    expect(targetRow).toBeDefined()
+    await user.click(targetRow as HTMLTableRowElement)
+
+    await waitFor(() => {
+      expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'city:tokyo')
+    })
   })
 })
