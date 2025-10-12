@@ -31,6 +31,8 @@ export const RecommendationsTable = ({
   isFavorite,
   headerSlot,
 }: RecommendationsTableProps) => {
+  const tableLabel = `${REGION_LABEL[region]}向けの推奨一覧（基準週: ${displayWeek}）`
+
   return (
     <section className="recommend">
       <div className="recommend__header">
@@ -40,7 +42,7 @@ export const RecommendationsTable = ({
         </div>
         {headerSlot}
       </div>
-      <table className="recommend__table">
+      <table className="recommend__table" aria-label={tableLabel}>
         <thead>
           <tr>
             <th scope="col">作物</th>
