@@ -173,12 +173,14 @@ def test_seed_inserts_expected_records(
     )
 
     assert any(
-        sql.startswith("INSERT OR REPLACE INTO theme_tokens")
+        sql.startswith("INSERT INTO theme_tokens")
+        and "ON CONFLICT" in sql.upper()
         and params == ("accent.national", "#22c55e", "#ffffff")
         for sql, params in executed
     )
     assert any(
-        sql.startswith("INSERT OR REPLACE INTO theme_tokens")
+        sql.startswith("INSERT INTO theme_tokens")
+        and "ON CONFLICT" in sql.upper()
         and params == ("accent.tokyo", "#2563eb", "#ffffff")
         for sql, params in executed
     )

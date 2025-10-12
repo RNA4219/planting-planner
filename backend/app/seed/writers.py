@@ -119,7 +119,13 @@ def write_theme_tokens(
 ) -> None:
     for token in theme_tokens:
         conn.execute(
-            "INSERT OR REPLACE INTO theme_tokens (token, hex_color, text_color) VALUES (?, ?, ?)",
+            """
+            INSERT INTO theme_tokens (token, hex_color, text_color)
+            VALUES (?, ?, ?)
+            ON CONFLICT(token) DO UPDATE SET
+                hex_color = excluded.hex_color,
+                text_color = excluded.text_color
+            """.strip(),
             (
                 token["token"],
                 token["hex_color"],
