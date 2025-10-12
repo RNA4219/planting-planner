@@ -45,4 +45,4 @@
 - [x] `__tests__/useRefreshStatus.controller.test.ts` に重複したケースを移管した後、当ファイルのレガシーテストを削除。
 
 ## frontend/src/hooks/useRecommendations.test.ts
-- [ ] ファイルを `hooks/__tests__/useRecommendations.controller.test.ts` などに分割し、共通モックを `tests/utils/recommendations` へ抽出して 200 行未満にするリファクタリングを実施。
+- [x] ファイルを `hooks/__tests__/useRecommendations.controller.test.ts` などに分割し、共通モックを `tests/utils/recommendations` へ抽出して 200 行未満にするリファクタリングを実施。

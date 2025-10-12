@@ -1,22 +1,22 @@
 import { vi, type MockInstance } from 'vitest'
 
-import type { RecommendResponse, Region } from '../../src/types'
+import type { RecommendResponse, Region } from '../../../src/types'
 
-import { normalizeRecommendationResponse } from '../../src/utils/recommendations'
+import { normalizeRecommendationResponse } from '../../../src/utils/recommendations'
 
-import { fetchRecommend, fetchRecommendations, resetAppSpies } from './renderApp'
+import { fetchRecommend, fetchRecommendations, resetAppSpies } from '../renderApp'
 
-type UseRecommendationsModule = typeof import('../../src/hooks/useRecommendations')
+type UseRecommendationsModule = typeof import('../../../src/hooks/useRecommendations')
 export type RecommendationItem = RecommendResponse['items'][number]
 
 const fetcherMock = vi.fn()
 const cropCatalogState = { catalog: new Map(), isLoading: false }
 
-vi.mock('../../src/hooks/recommendationFetcher', () => ({
+vi.mock('../../../src/hooks/recommendationFetcher', () => ({
   useRecommendationFetcher: () => fetcherMock,
 }))
 
-vi.mock('../../src/hooks/useCropCatalog', () => ({
+vi.mock('../../../src/hooks/useCropCatalog', () => ({
   useCropCatalog: () => cropCatalogState,
 }))
 
@@ -99,7 +99,7 @@ export const setupRecommendationsTest = async (): Promise<SetupRecommendationsTe
   applyDefaultRecommendationMocks()
   fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
   const useRecommendationsModule: UseRecommendationsModule = await import(
-    '../../src/hooks/useRecommendations'
+    '../../../src/hooks/useRecommendations'
   )
   const useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
   return { useRecommendationsModule, useRecommendationsSpy }
