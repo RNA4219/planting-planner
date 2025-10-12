@@ -29,10 +29,10 @@ MarketScope = Annotated[str, AfterValidator(_validate_market_scope)]
 def parse_market_scope(value: str) -> MarketScope:
     """Parse and validate a market scope string."""
 
-    return cast(MarketScope, _validate_market_scope(value))
+    return _validate_market_scope(value)
 
 
-DEFAULT_MARKET_SCOPE: MarketScope = cast(MarketScope, "national")
+DEFAULT_MARKET_SCOPE: MarketScope = "national"
 
 
 class Crop(BaseModel):
