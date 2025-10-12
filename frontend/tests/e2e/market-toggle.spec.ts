@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+const { expect, test } = await import('@playwright/test')
 import type { Route } from '@playwright/test'
 
 const CROPS = [
