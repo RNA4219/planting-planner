@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RefreshStatusResponse } from '../../types'
 import type { RefreshStatusPollerOptions } from '../refresh/poller'
 
+import { TOAST_MESSAGES } from '../../constants/messages'
 import { useRefreshStatusController } from '../refresh/controller'
 
 const capturedOptions = vi.hoisted<RefreshStatusPollerOptions[]>(() => [])
@@ -202,6 +203,28 @@ describe('useRefreshStatusController', () => {
       variant: 'error',
       message: 'データ更新に失敗しました',
       detail: 'fatal',
+    })
+  })
+
+  it('タイムアウト時に警告トーストを追加する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValue(createStatus('running'))
+
+    const { result } = renderHook(() =>
+      useRefreshStatusController({ pollIntervalMs: 1000, timeoutMs: 2000 }),
+    )
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(2000)
+      await vi.runAllTicks()
+      await promise
+    })
+
+    expect(result.current.pendingToasts.at(-1)).toMatchObject({
+      variant: 'warning',
+      message: TOAST_MESSAGES.refreshStatusTimeout,
+      detail: TOAST_MESSAGES.refreshStatusTimeoutDetail,
     })
   })
 
