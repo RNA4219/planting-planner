@@ -82,8 +82,8 @@ export const useRecommendations = ({
     requestRef.current = requestRecommendations
   }, [requestRecommendations])
 
-  const reloadCurrentWeek = useCallback(() => {
-    return requestRef.current(latestWeekRef.current, {
+  const reloadCurrentWeek = useCallback(async () => {
+    await requestRef.current(latestWeekRef.current, {
       regionOverride: latestRegionRef.current,
       marketScopeOverride: latestMarketScopeRef.current,
       categoryOverride: latestCategoryRef.current,
