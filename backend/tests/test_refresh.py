@@ -3,6 +3,9 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 
+import logging
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app import db, seed
@@ -12,6 +15,8 @@ client = TestClient(app)
 
 REFRESH_ENDPOINT = "/api/refresh"
 REFRESH_STATUS_ENDPOINT = f"{REFRESH_ENDPOINT}/status"
+
+MARKET_CACHE_LOG = "market_metadata cache refresh confirmed"
 
 
 def _reset_etl_runs() -> None:
@@ -79,3 +84,13 @@ def test_refresh_triggers_background_job_and_updates_status() -> None:
         assert started_at is not None
         assert finished_at is not None
         assert started_at <= finished_at
+
+
+def test_refresh_emits_cache_update_log(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+
+    response = client.post(REFRESH_ENDPOINT)
+    assert response.status_code == 200
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(MARKET_CACHE_LOG in message for message in messages)
