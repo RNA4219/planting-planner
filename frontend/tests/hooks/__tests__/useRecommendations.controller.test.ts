@@ -56,4 +56,36 @@ describe('hooks / useRecommendations controller', () => {
       expect.objectContaining({ region: 'warm', week: '2024-W31' }),
     )
   })
+
+  it('exposes selected market/category synced with controller setters', async () => {
+    fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
+
+    const { result } = renderHook(() =>
+      useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
+    )
+
+    await waitFor(() => {
+      expect(fetcherMock).toHaveBeenCalled()
+    })
+
+    expect(result.current.selectedMarket).toBe('national')
+    expect(result.current.selectedCategory).toBe('leaf')
+
+    fetcherMock.mockClear()
+    fetcherMock.mockResolvedValue({ week: '2024-W31', items: [] })
+
+    await act(async () => {
+      result.current.setMarketScope('city:osaka')
+      result.current.setCategory('flower')
+    })
+
+    await waitFor(() => {
+      expect(fetcherMock).toHaveBeenCalledWith(
+        expect.objectContaining({ marketScope: 'city:osaka', category: 'flower' }),
+      )
+    })
+
+    expect(result.current.selectedMarket).toBe('city:osaka')
+    expect(result.current.selectedCategory).toBe('flower')
+  })
 })
