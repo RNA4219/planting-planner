@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal, NotRequired, cast
+from typing import Annotated, Literal, NotRequired
 
 from pydantic import AfterValidator, BaseModel
 from typing_extensions import TypedDict
