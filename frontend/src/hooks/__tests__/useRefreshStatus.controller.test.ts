@@ -5,6 +5,7 @@ import type { RefreshStatusResponse } from '../../types'
 import type { RefreshStatusPollerOptions } from '../refresh/poller'
 
 import { TOAST_MESSAGES } from '../../constants/messages'
+import { TOAST_AUTO_DISMISS_MS } from '../../constants/toast'
 import { useRefreshStatusController } from '../refresh/controller'
 
 const capturedOptions = vi.hoisted<RefreshStatusPollerOptions[]>(() => [])
@@ -206,6 +207,53 @@ describe('useRefreshStatusController', () => {
     })
   })
 
+  it('トーストは自動クローズで削除される', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 2, last_error: null })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      await result.current.startRefresh()
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(1)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(TOAST_AUTO_DISMISS_MS)
+      await vi.runAllTicks()
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(0)
+  })
+
+  it('dismissToast は手動でトーストを削除しタイマーを停止する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 2, last_error: null })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      await result.current.startRefresh()
+    })
+
+    const toastId = result.current.pendingToasts.at(-1)?.id
+    expect(toastId).toBeDefined()
+
+    act(() => {
+      if (toastId) {
+        result.current.dismissToast(toastId)
+      }
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(0)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(TOAST_AUTO_DISMISS_MS)
+      await vi.runAllTicks()
+    })
+
+    expect(result.current.pendingToasts).toHaveLength(0)
+  })
+
   it('タイムアウト時に警告トーストを追加する', async () => {
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
     fetchRefreshStatusMock.mockResolvedValue(createStatus('running'))
@@ -238,5 +286,48 @@ describe('useRefreshStatusController', () => {
     })
 
     expect(result.current.pendingToasts.at(-1)).toMatchObject({ variant: 'warning' })
+  })
+
+  it('stale 応答は警告トーストを重複追加しない', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      const latestOptions = capturedOptions.at(-1)
+      expect(latestOptions).toBeDefined()
+      latestOptions?.onTerminal(createStatus('stale'))
+      latestOptions?.onTerminal(createStatus('stale'))
+      await promise
+    })
+
+    const warningToasts = result.current.pendingToasts.filter((toast) => toast.variant === 'warning')
+    expect(warningToasts).toHaveLength(1)
+    expect(warningToasts[0]).toMatchObject({
+      message: TOAST_MESSAGES.refreshUnknown,
+    })
+  })
+
+  it('フェッチエラーはエラートーストを重複追加しない', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      const latestOptions = capturedOptions.at(-1)
+      expect(latestOptions).toBeDefined()
+      latestOptions?.onError(new Error('network fail'))
+      latestOptions?.onError(new Error('network fail'))
+      await promise
+    })
+
+    const errorToasts = result.current.pendingToasts.filter((toast) => toast.variant === 'error')
+    expect(errorToasts).toHaveLength(1)
+    expect(errorToasts[0]).toMatchObject({
+      message: TOAST_MESSAGES.refreshStatusFetchFailureMessage,
+      detail: 'network fail',
+    })
   })
 })
