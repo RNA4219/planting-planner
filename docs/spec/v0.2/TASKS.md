@@ -3,8 +3,8 @@
 > スコープ: 各タスクは 1 ファイルあたり 1 回のみ指定。テスト追加→実装修正の順。
 
 ## frontend/src/hooks/__tests__/useRefreshStatus.controller.test.ts
-- [ ] 5 秒後の自動クローズと `dismissToast` 手動クローズをフェイクタイマーで検証するケースを追加。
-- [ ] `stale` レスポンスとフェッチエラー時のトースト種別・重複抑止を検証するケースを追加。
+- [x] 5 秒後の自動クローズと `dismissToast` 手動クローズをフェイクタイマーで検証するケースを追加。
+- [x] `stale` レスポンスとフェッチエラー時のトースト種別・重複抑止を検証するケースを追加。
 
 ## frontend/src/hooks/refresh/controller.ts
 - [x] テスト追加後、トーストごとにタイマーを保持して自動クローズし、`dismissToast` がタイマーを片付けるよう実装を更新。
