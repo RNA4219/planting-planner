@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException, status
 
 from . import etl_runner, schemas
 
@@ -12,8 +12,14 @@ logger = logging.getLogger(__name__)
 
 def start_refresh(
     background_tasks: BackgroundTasks,
-    _payload: schemas.RefreshTriggerPayload | None = None,
+    payload: schemas.RefreshTriggerPayload | None = None,
 ) -> schemas.RefreshResponse:
+    if payload and payload.get("force"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="force refresh is not supported",
+        )
+
     background_tasks.add_task(etl_runner.start_etl_job)
     return schemas.RefreshResponse(state=etl_runner.STATE_RUNNING)
 

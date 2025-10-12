@@ -32,6 +32,7 @@ describe('Favorites interactions', () => {
           growth_days: 45,
         },
       ],
+      isMarketFallback: false,
     })
 
     const { user } = await renderApp()

@@ -9,7 +9,7 @@ import {
 } from '../../utils/recommendations'
 import * as weekModule from '../../lib/week'
 
-import { useRecommendationFetcher } from '../recommendationFetcher'
+import { useRecommendationFetcher, type RecommendationFetchResult } from '../recommendationFetcher'
 import { normalizeWeekInput } from './weekNormalization'
 
 const week = weekModule as typeof import('../../lib/week')
@@ -43,6 +43,7 @@ export interface UseRecommendationLoaderResult {
   currentWeek: string
   selectedMarket: MarketScope
   selectedCategory: CropCategory
+  isMarketFallback: boolean
   requestRecommendations: (
     inputWeek: string,
     options?: RequestOptions,
@@ -59,6 +60,7 @@ export const useRecommendationLoader = ({
   const [items, setItems] = useState<RecommendationItem[]>([])
   const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
   const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
+  const [isMarketFallback, setIsMarketFallback] = useState(false)
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
   const trackerRef = useRef<RequestMeta>({
@@ -120,7 +122,7 @@ export const useRecommendationLoader = ({
           targetCategory,
           normalizedWeek,
         ] as const
-        const result = await queryClient.fetchQuery<NormalizeRecommendationResult | null>({
+        const result = await queryClient.fetchQuery<RecommendationFetchResult>({
           queryKey,
           queryFn: () =>
             fetchRecommendations({
@@ -134,16 +136,18 @@ export const useRecommendationLoader = ({
         if (!isLatest()) {
           return
         }
-        if (!result) {
+        setIsMarketFallback(result.isMarketFallback)
+        if (!result.result) {
           applyWeek(normalizedWeek, [])
           return
         }
-        const resolvedWeek = normalizeIsoWeek(result.week, normalizedWeek)
-        applyWeek(resolvedWeek, result.items)
+        const resolvedWeek = normalizeIsoWeek(result.result.week, normalizedWeek)
+        applyWeek(resolvedWeek, result.result.items)
       } catch {
         if (!isLatest()) {
           return
         }
+        setIsMarketFallback(false)
         applyWeek(normalizedWeek, [])
       }
     },
@@ -174,6 +178,7 @@ export const useRecommendationLoader = ({
     currentWeek: currentWeekRef.current,
     selectedMarket,
     selectedCategory,
+    isMarketFallback,
     requestRecommendations,
   }
 }
