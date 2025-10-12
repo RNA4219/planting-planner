@@ -84,6 +84,20 @@ TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
         ");",
     ),
     (
+        "market_scope_categories",
+        "CREATE TABLE IF NOT EXISTS market_scope_categories ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " scope TEXT NOT NULL,"
+        " category TEXT NOT NULL,"
+        " display_name TEXT NOT NULL,"
+        " priority INTEGER NOT NULL DEFAULT 100,"
+        " source TEXT NOT NULL,"
+        " UNIQUE (scope, category),"
+        " FOREIGN KEY (scope) REFERENCES market_scopes(scope)"
+        "     ON DELETE CASCADE ON UPDATE CASCADE"
+        ");",
+    ),
+    (
         "metadata_cache",
         "CREATE TABLE IF NOT EXISTS metadata_cache ("
         " cache_key TEXT PRIMARY KEY,"
@@ -112,6 +126,8 @@ INDEX_DEFINITIONS: Final[tuple[str, ...]] = (
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_price_weekly_crop_week ON price_weekly(crop_id, week);",
     "CREATE INDEX IF NOT EXISTS idx_market_prices_scope_week ON market_prices(scope, week);",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_market_scopes_scope ON market_scopes(scope);",
+    "CREATE INDEX IF NOT EXISTS idx_market_scope_categories_scope_category"
+    " ON market_scope_categories(scope, priority, category);",
 )
 
 VIEW_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
@@ -131,7 +147,27 @@ VIEW_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
                 SELECT MAX(week)
                 FROM market_prices AS mp
                 WHERE mp.scope = scopes.scope
-            ) AS effective_from
+            ) AS effective_from,
+            (
+                SELECT json_group_array(
+                    json_object(
+                        'category', cat.category,
+                        'display_name', cat.display_name,
+                        'priority', cat.priority,
+                        'source', cat.source
+                    )
+                )
+                FROM (
+                    SELECT
+                        category,
+                        display_name,
+                        priority,
+                        source
+                    FROM market_scope_categories
+                    WHERE scope = scopes.scope
+                    ORDER BY priority ASC, category ASC
+                ) AS cat
+            ) AS categories
         FROM market_scopes AS scopes
         LEFT JOIN theme_tokens AS tokens
             ON tokens.token = scopes.theme_token
@@ -183,7 +219,9 @@ def ensure_indexes(conn: sqlite3.Connection, *, index_sql: Iterable[str] | None 
         conn.execute(statement)
 
 
-def ensure_views(conn: sqlite3.Connection, *, view_sql: Iterable[tuple[str, str]] | None = None) -> None:
+def ensure_views(
+    conn: sqlite3.Connection, *, view_sql: Iterable[tuple[str, str]] | None = None
+) -> None:
     definitions = VIEW_DEFINITIONS if view_sql is None else tuple(view_sql)
     for name, statement in definitions:
         conn.execute(f"DROP VIEW IF EXISTS {name}")

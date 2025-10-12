@@ -43,6 +43,7 @@ def seed(conn: sqlite3.Connection | None = None, data_dir: Path | None = None) -
         price_samples=payload.price_samples,
         growth_days=payload.growth_days,
         market_scopes=payload.market_scopes,
+        market_scope_categories=payload.market_scope_categories,
         theme_tokens=payload.theme_tokens,
     )
     conn.commit()

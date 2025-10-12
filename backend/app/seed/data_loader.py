@@ -14,6 +14,7 @@ class SeedPayload:
     price_samples: list[dict[str, Any]]
     growth_days: list[dict[str, Any]]
     market_scopes: list[dict[str, Any]] = field(default_factory=list)
+    market_scope_categories: list[dict[str, Any]] = field(default_factory=list)
     theme_tokens: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -43,6 +44,7 @@ def load_seed_payload(data_dir: Path | None = None) -> SeedPayload:
     price_sample_data = _load_optional_json(price_sample_path)
 
     market_scopes = _load_optional_json(base_dir / "market_scopes.json")
+    market_scope_categories = _load_optional_json(base_dir / "market_scope_categories.json")
     theme_tokens = _load_optional_json(base_dir / "theme_tokens.json")
 
     return SeedPayload(
@@ -50,6 +52,7 @@ def load_seed_payload(data_dir: Path | None = None) -> SeedPayload:
         price_samples=price_sample_data,
         growth_days=growth_days_data,
         market_scopes=market_scopes,
+        market_scope_categories=market_scope_categories,
         theme_tokens=theme_tokens,
     )
 
