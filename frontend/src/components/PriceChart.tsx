@@ -19,6 +19,7 @@ type PriceChartProps = {
   cropId: number | null
   marketScope?: MarketScope
   range?: { from?: string; to?: string }
+  marketScope?: MarketScope
 }
 
 const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -27,7 +28,11 @@ const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   </p>
 )
 
-export const PriceChart: React.FC<PriceChartProps> = ({ cropId, marketScope, range }) => {
+export const PriceChart: React.FC<PriceChartProps> = ({
+  cropId,
+  range,
+  marketScope = 'national',
+}) => {
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
@@ -71,7 +76,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ cropId, marketScope, ran
     return () => {
       active = false
     }
-  }, [cropId, marketScope, range?.from, range?.to])
+  }, [cropId, range?.from, range?.to, marketScope])
 
   if (cropId == null) {
     return <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>

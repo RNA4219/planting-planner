@@ -135,6 +135,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
           </span>
         </div>
         <table
+          aria-label="温暖地向けの推奨一覧（基準週: 2024-W30）"
           class="recommend__table"
         >
           <thead>

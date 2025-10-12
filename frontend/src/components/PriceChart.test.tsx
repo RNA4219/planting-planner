@@ -37,7 +37,7 @@ describe('PriceChart', () => {
     render(<PriceChart cropId={1} />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined, 'national')
     })
 
     expect(screen.queryByText('価格データがありません。')).not.toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('PriceChart', () => {
     render(<PriceChart cropId={0} />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined, 'national')
     })
 
     await waitFor(() => {
@@ -68,6 +68,32 @@ describe('PriceChart', () => {
       expect(calls.length).toBeGreaterThan(0)
       const [lastCall] = calls[calls.length - 1] as [{ data: { labels: string[] } }]
       expect(lastCall.data.labels).toEqual(['2024-W01', '2024-W02'])
+    })
+  })
+
+  it('marketScope が指定されると fetchPrice の第4引数に渡し、変更時に再取得する', async () => {
+    fetchPrice.mockResolvedValue({
+      crop_id: 1,
+      crop: 'テスト作物',
+      unit: 'kg',
+      source: 'テスト',
+      prices: [],
+    })
+
+    const { rerender } = render(<PriceChart cropId={1} marketScope="national" />)
+
+    await waitFor(() => {
+      expect(fetchPrice).toHaveBeenCalledTimes(1)
+      expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'national')
+    })
+
+    fetchPrice.mockClear()
+
+    rerender(<PriceChart cropId={1} marketScope="city:tokyo" />)
+
+    await waitFor(() => {
+      expect(fetchPrice).toHaveBeenCalledTimes(1)
+      expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'city:tokyo')
     })
   })
 })
