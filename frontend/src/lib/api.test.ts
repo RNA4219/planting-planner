@@ -2,9 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RecommendResponse } from '../types'
 
+type FetchRecommendations = typeof import('./api')['fetchRecommendations']
+type FetchPrice = typeof import('./api')['fetchPrice']
+
 type FetchRecommend = typeof import('./api')['fetchRecommend']
 
 let fetchRecommend: FetchRecommend
+let fetchRecommendations: FetchRecommendations
+let fetchPrice: FetchPrice
 let apiEndpoint: string
 
 describe('fetchRecommend', () => {
@@ -125,6 +130,85 @@ describe('fetchRecommend', () => {
     await loadFetchRecommend()
     await expect(fetchRecommend({ region: 'temperate' })).rejects.toThrow(
       'internal error',
+    )
+  })
+})
+
+describe('fetchRecommendations', () => {
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
+
+  beforeEach(() => {
+    vi.resetModules()
+    apiEndpoint = '/api'
+    fetchMock = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  const loadFetchRecommendations = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchRecommendations } = await import('./api'))
+  }
+
+  it('marketScope クエリを付与する', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ items: [], week: '2024-W30', region: 'temperate' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchRecommendations()
+    await fetchRecommendations('temperate', '2024-W30', {
+      marketScope: 'city:tokyo',
+      category: 'leaf',
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('marketScope=city%3Atokyo'),
+      expect.any(Object),
+    )
+  })
+})
+
+describe('fetchPrice', () => {
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>
+
+  beforeEach(() => {
+    vi.resetModules()
+    apiEndpoint = '/api'
+    fetchMock = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  const loadFetchPrice = async () => {
+    vi.stubEnv('VITE_API_ENDPOINT', apiEndpoint)
+    ;({ fetchPrice } = await import('./api'))
+  }
+
+  it('marketScope クエリを付与する', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchPrice()
+    await fetchPrice(1, undefined, undefined, 'national')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('marketScope=national'),
+      expect.any(Object),
     )
   })
 })
