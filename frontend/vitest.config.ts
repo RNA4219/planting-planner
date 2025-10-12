@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    exclude: [...configDefaults.exclude, 'playwright/**'],
+    exclude: [...configDefaults.exclude, 'playwright/**', 'tests/e2e/**'],
     setupFiles: ['./vitest.setup.ts'],
   },
 })

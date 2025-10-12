@@ -39,14 +39,18 @@ const setupFetchQueryMock = () => {
   })
 }
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    fetchQuery: fetchQueryMock,
-    getQueryData: vi.fn(),
-    setQueryData: vi.fn(),
-    invalidateQueries: vi.fn(),
-  }),
-}))
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      fetchQuery: fetchQueryMock,
+      getQueryData: vi.fn(),
+      setQueryData: vi.fn(),
+      invalidateQueries: vi.fn(),
+    }),
+  }
+})
 
 const createDeferred = <T>() => {
   let resolve!: (value: T | PromiseLike<T>) => void

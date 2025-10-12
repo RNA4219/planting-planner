@@ -9,14 +9,18 @@ import {
 
 const fetchQueryMock = vi.fn()
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    fetchQuery: fetchQueryMock,
-    getQueryData: vi.fn(),
-    setQueryData: vi.fn(),
-    invalidateQueries: vi.fn(),
-  }),
-}))
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      fetchQuery: fetchQueryMock,
+      getQueryData: vi.fn(),
+      setQueryData: vi.fn(),
+      invalidateQueries: vi.fn(),
+    }),
+  }
+})
 import type { RecommendationItem } from '../../utils/recommendations'
 import { useRecommendationLoader } from '../../../src/hooks/useRecommendationLoader'
 
