@@ -64,6 +64,8 @@ describe('App interactions smoke', () => {
 
     await renderApp()
 
-    await expect(screen.findByRole('status')).resolves.toHaveAttribute('aria-live', 'polite')
+    const toastStack = await screen.findByRole('status')
+    expect(toastStack).toHaveAttribute('role', 'status')
+    expect(toastStack).toHaveAttribute('aria-live', 'polite')
   })
 })
