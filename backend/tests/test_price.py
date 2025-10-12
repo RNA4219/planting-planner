@@ -69,7 +69,7 @@ def test_price_series_city_scope_uses_city_prices() -> None:
 
 
 def test_price_series_city_scope_falls_back_to_national() -> None:
-    _write_market_prices([( "national", 1, "2025-W40", 210.0)])
+    _write_market_prices([("national", 1, "2025-W40", 210.0)])
     response = client.get(
         "/api/price",
         params={"crop_id": 1, "frm": "2025-W40", "to": "2025-W40", "marketScope": "city:13"},
@@ -82,7 +82,7 @@ def test_price_series_city_scope_falls_back_to_national() -> None:
 
 
 def test_price_series_blank_market_scope_uses_national_without_fallback() -> None:
-    _write_market_prices([( "national", 1, "2025-W40", 210.0)])
+    _write_market_prices([("national", 1, "2025-W40", 210.0)])
     response = client.get(
         "/api/price",
         params={"crop_id": 1, "frm": "2025-W40", "to": "2025-W40", "marketScope": ""},
@@ -95,7 +95,7 @@ def test_price_series_blank_market_scope_uses_national_without_fallback() -> Non
 
 
 def test_price_series_all_market_scope_uses_national_without_fallback() -> None:
-    _write_market_prices([( "national", 1, "2025-W40", 210.0)])
+    _write_market_prices([("national", 1, "2025-W40", 210.0)])
     response = client.get(
         "/api/price",
         params={"crop_id": 1, "frm": "2025-W40", "to": "2025-W40", "marketScope": "all"},

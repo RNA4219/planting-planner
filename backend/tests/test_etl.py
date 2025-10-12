@@ -247,9 +247,7 @@ def test_run_etl_logs_and_continues_when_validation_fails(
         def failing_validate(*_: object, **__: object) -> bool:
             raise RuntimeError("boom")
 
-        monkeypatch.setattr(
-            etl.expectations, "validate_market_prices", failing_validate
-        )
+        monkeypatch.setattr(etl.expectations, "validate_market_prices", failing_validate)
 
         caplog.set_level("WARNING")
 
@@ -268,11 +266,7 @@ def test_run_etl_logs_and_continues_when_validation_fails(
         updated = etl.run_etl(conn, data_loader=lambda: records)
         assert updated == 1
         assert "Great Expectations validation failed" in caplog.text
-        rows = conn.execute(
-            "SELECT scope, week FROM market_prices"
-        ).fetchall()
-        assert [(row["scope"], row["week"]) for row in rows] == [
-            ("national", "2024-W05")
-        ]
+        rows = conn.execute("SELECT scope, week FROM market_prices").fetchall()
+        assert [(row["scope"], row["week"]) for row in rows] == [("national", "2024-W05")]
     finally:
         conn.close()
