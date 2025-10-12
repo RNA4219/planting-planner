@@ -16,7 +16,9 @@ from .seed import (  # noqa: F401
     seed_from_default_db,
     write_crops,
     write_growth_days,
+    write_market_scopes,
     write_price_samples,
+    write_theme_tokens,
     write_seed_payload,
 )
 
@@ -28,6 +30,8 @@ __all__ = [
     "seed_from_default_db",
     "write_crops",
     "write_growth_days",
+    "write_market_scopes",
     "write_price_samples",
+    "write_theme_tokens",
     "write_seed_payload",
 ]

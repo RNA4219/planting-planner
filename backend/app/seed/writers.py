@@ -7,6 +7,12 @@ from typing import Any
 from .. import utils_week
 
 _NUMERIC_TYPES = (int, float, str)
+_UNIT_CONVERSIONS: dict[str, tuple[str, float]] = {
+    "円/kg": ("円/kg", 1.0),
+    "円/100g": ("円/kg", 10.0),
+    "円/500g": ("円/kg", 2.0),
+    "円/g": ("円/kg", 1000.0),
+}
 
 
 def _optional_float(value: Any) -> float | None:
@@ -17,12 +23,32 @@ def _optional_float(value: Any) -> float | None:
     raise TypeError(f"Unsupported numeric value: {value!r}")
 
 
+def _normalize_week_value(value: Any) -> str:
+    if isinstance(value, int):
+        return utils_week.iso_week_from_int(int(value))
+    return str(value)
+
+
+def _convert_unit(value: str) -> tuple[str, float]:
+    normalized_unit, factor = _UNIT_CONVERSIONS.get(value, (value, 1.0))
+    return normalized_unit, factor
+
+
 def _iter_price_records(
     crops: Iterable[Mapping[str, Any]],
 ) -> Iterable[tuple[int, Mapping[str, Any]]]:
     for crop in crops:
         crop_id = int(crop["id"])
         for price in crop.get("price_weekly", []) or []:
+            yield crop_id, price
+
+
+def _iter_market_price_records(
+    crops: Iterable[Mapping[str, Any]],
+) -> Iterable[tuple[int, Mapping[str, Any]]]:
+    for crop in crops:
+        crop_id = int(crop["id"])
+        for price in crop.get("market_prices", []) or []:
             yield crop_id, price
 
 
@@ -42,11 +68,7 @@ def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) ->
         )
 
     for crop_id, price in _iter_price_records(crops_list):
-        week_value = price["week"]
-        if isinstance(week_value, int):
-            week_iso = utils_week.iso_week_from_int(int(week_value))
-        else:
-            week_iso = str(week_value)
+        week_iso = _normalize_week_value(price["week"])
         conn.execute(
             """
             INSERT OR REPLACE INTO price_weekly (
@@ -60,6 +82,68 @@ def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) ->
                 _optional_float(price.get("stddev")),
                 price.get("unit", "円/kg"),
                 price.get("source", "seed"),
+            ),
+        )
+
+    for crop_id, price in _iter_market_price_records(crops_list):
+        scope = str(price["scope"])
+        week_iso = _normalize_week_value(price["week"])
+        normalized_unit, factor = _convert_unit(str(price.get("unit", "円/kg")))
+        avg_price = price.get("avg_price", price.get("price"))
+        avg_value = _optional_float(avg_price)
+        if avg_value is not None:
+            avg_value *= factor
+        stddev_value = _optional_float(price.get("stddev"))
+        if stddev_value is not None:
+            stddev_value *= factor
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO market_prices (
+                crop_id, scope, week, avg_price, stddev, unit, source
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """.strip(),
+            (
+                crop_id,
+                scope,
+                week_iso,
+                avg_value,
+                stddev_value,
+                normalized_unit,
+                price.get("source", "seed"),
+            ),
+        )
+
+
+def write_theme_tokens(
+    conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]
+) -> None:
+    for token in theme_tokens:
+        conn.execute(
+            "INSERT OR REPLACE INTO theme_tokens (token, hex_color, text_color) VALUES (?, ?, ?)",
+            (
+                token["token"],
+                token["hex_color"],
+                token.get("text_color", "#000000"),
+            ),
+        )
+
+
+def write_market_scopes(
+    conn: sqlite3.Connection, market_scopes: Iterable[Mapping[str, Any]]
+) -> None:
+    for scope in market_scopes:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO market_scopes (
+                scope, display_name, timezone, priority, theme_token
+            ) VALUES (?, ?, ?, ?, ?)
+            """.strip(),
+            (
+                scope["scope"],
+                scope["display_name"],
+                scope.get("timezone", "Asia/Tokyo"),
+                int(scope.get("priority", 100)),
+                scope["theme_token"],
             ),
         )
 
@@ -106,7 +190,17 @@ def write_seed_payload(
     crops: Iterable[Mapping[str, Any]],
     price_samples: Iterable[Mapping[str, Any]],
     growth_days: Iterable[Mapping[str, Any]],
+    market_scopes: Iterable[Mapping[str, Any]] = (),
+    theme_tokens: Iterable[Mapping[str, Any]] = (),
 ) -> None:
+    theme_list = list(theme_tokens)
+    if theme_list:
+        write_theme_tokens(conn, theme_list)
+
+    scope_list = list(market_scopes)
+    if scope_list:
+        write_market_scopes(conn, scope_list)
+
     write_crops(conn, crops)
     write_price_samples(conn, price_samples)
     write_growth_days(conn, growth_days)
@@ -114,7 +208,9 @@ def write_seed_payload(
 
 __all__ = [
     "write_crops",
+    "write_market_scopes",
     "write_price_samples",
     "write_growth_days",
+    "write_theme_tokens",
     "write_seed_payload",
 ]

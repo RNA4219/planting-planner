@@ -9,6 +9,7 @@ __all__ = [
     "INDEX_DEFINITIONS",
     "ensure_tables",
     "ensure_indexes",
+    "ensure_views",
 ]
 
 TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
@@ -61,6 +62,36 @@ TABLE_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
         ");",
     ),
     (
+        "theme_tokens",
+        "CREATE TABLE IF NOT EXISTS theme_tokens ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " token TEXT NOT NULL UNIQUE,"
+        " hex_color TEXT NOT NULL,"
+        " text_color TEXT NOT NULL"
+        ");",
+    ),
+    (
+        "market_scopes",
+        "CREATE TABLE IF NOT EXISTS market_scopes ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " scope TEXT NOT NULL UNIQUE,"
+        " display_name TEXT NOT NULL,"
+        " timezone TEXT NOT NULL DEFAULT 'Asia/Tokyo',"
+        " priority INTEGER NOT NULL DEFAULT 100,"
+        " theme_token TEXT NOT NULL,"
+        " FOREIGN KEY (theme_token) REFERENCES theme_tokens(token)"
+        "     ON DELETE RESTRICT ON UPDATE CASCADE"
+        ");",
+    ),
+    (
+        "metadata_cache",
+        "CREATE TABLE IF NOT EXISTS metadata_cache ("
+        " cache_key TEXT PRIMARY KEY,"
+        " payload TEXT NOT NULL,"
+        " generated_at TEXT NOT NULL"
+        ");",
+    ),
+    (
         "etl_runs",
         "CREATE TABLE IF NOT EXISTS etl_runs ("
         " id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -80,6 +111,33 @@ INDEX_DEFINITIONS: Final[tuple[str, ...]] = (
     "CREATE INDEX IF NOT EXISTS idx_growth_days_crop_region ON growth_days(crop_id, region);",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_price_weekly_crop_week ON price_weekly(crop_id, week);",
     "CREATE INDEX IF NOT EXISTS idx_market_prices_scope_week ON market_prices(scope, week);",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_market_scopes_scope ON market_scopes(scope);",
+)
+
+VIEW_DEFINITIONS: Final[tuple[tuple[str, str], ...]] = (
+    (
+        "market_metadata",
+        """
+        CREATE VIEW IF NOT EXISTS market_metadata AS
+        SELECT
+            scopes.scope AS scope,
+            scopes.display_name AS display_name,
+            scopes.timezone AS timezone,
+            scopes.priority AS priority,
+            scopes.theme_token AS theme_token,
+            tokens.hex_color AS hex_color,
+            tokens.text_color AS text_color,
+            (
+                SELECT MAX(week)
+                FROM market_prices AS mp
+                WHERE mp.scope = scopes.scope
+            ) AS effective_from
+        FROM market_scopes AS scopes
+        LEFT JOIN theme_tokens AS tokens
+            ON tokens.token = scopes.theme_token
+        ;
+        """.strip(),
+    ),
 )
 
 
@@ -122,4 +180,11 @@ def ensure_tables(conn: sqlite3.Connection) -> None:
 def ensure_indexes(conn: sqlite3.Connection, *, index_sql: Iterable[str] | None = None) -> None:
     statements = INDEX_DEFINITIONS if index_sql is None else tuple(index_sql)
     for statement in statements:
+        conn.execute(statement)
+
+
+def ensure_views(conn: sqlite3.Connection, *, view_sql: Iterable[tuple[str, str]] | None = None) -> None:
+    definitions = VIEW_DEFINITIONS if view_sql is None else tuple(view_sql)
+    for name, statement in definitions:
+        conn.execute(f"DROP VIEW IF EXISTS {name}")
         conn.execute(statement)
