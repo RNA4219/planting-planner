@@ -7,7 +7,7 @@ import type {
   RefreshResponse,
   RefreshStatusResponse,
   Region,
-} from '../../src/types'
+} from '../../../src/types'
 
 export const fetchRecommendations = vi.fn<
   (region: Region, week?: string) => Promise<RecommendResponse>

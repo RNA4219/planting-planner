@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 
-import type { FavoritesStorage, Region, RegionStorage } from '../../src/types'
+import type { FavoritesStorage, Region, RegionStorage } from '../../../src/types'
 
 export type StorageState = FavoritesStorage & RegionStorage
 
