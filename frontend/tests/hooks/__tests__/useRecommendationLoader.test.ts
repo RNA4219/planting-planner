@@ -26,6 +26,9 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
+    fetchQueryMock.mockImplementation(async (_key, fetcher: () => Promise<unknown>) => {
+      return fetcher()
+    })
   })
 
   it('normalizes week input before requesting recommendations', async () => {
@@ -85,7 +88,6 @@ describe('hooks / useRecommendationLoader', () => {
   })
 
   it('tracks selected market/category and uses them in the cache key', async () => {
-    fetchQueryMock.mockImplementation(async (_key, fetcher) => fetcher())
     fetcherMock.mockResolvedValue({ week: '2024-W30', items: [] })
 
     const { result } = renderHook(() =>

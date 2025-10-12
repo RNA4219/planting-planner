@@ -24,6 +24,8 @@ export interface UseRecommendationsResult {
   queryWeek: string
   setQueryWeek: (week: string) => void
   currentWeek: string
+  selectedMarket: MarketScope
+  selectedCategory: CropCategory
   displayWeek: string
   sortedRows: RecommendationRow[]
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -54,8 +56,16 @@ export const useRecommendations = ({
     })
     return map
   }, [cropCatalog])
-  const { queryWeek, setQueryWeek: setRawQueryWeek, activeWeek, items, currentWeek, requestRecommendations } =
-    useRecommendationLoader({ region, marketScope, category })
+  const {
+    queryWeek,
+    setQueryWeek: setRawQueryWeek,
+    activeWeek,
+    items,
+    currentWeek,
+    selectedMarket,
+    selectedCategory,
+    requestRecommendations,
+  } = useRecommendationLoader({ region, marketScope, category })
   const latestRegionRef = useRef(region)
   const latestWeekRef = useRef(currentWeek)
   const latestMarketScopeRef = useRef(marketScope)
@@ -228,6 +238,8 @@ export const useRecommendations = ({
     queryWeek,
     setQueryWeek,
     currentWeek,
+    selectedMarket,
+    selectedCategory,
     displayWeek,
     sortedRows,
     handleSubmit,
