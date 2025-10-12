@@ -37,7 +37,7 @@ describe('PriceChart', () => {
     render(<PriceChart cropId={1} />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(1, undefined, undefined, undefined)
     })
 
     expect(screen.queryByText('価格データがありません。')).not.toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('PriceChart', () => {
     render(<PriceChart cropId={0} />)
 
     await waitFor(() => {
-      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined)
+      expect(fetchPrice).toHaveBeenCalledWith(0, undefined, undefined, undefined)
     })
 
     await waitFor(() => {
