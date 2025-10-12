@@ -14,26 +14,26 @@ from ..dependencies import (
 router = APIRouter()
 def _resolve_market_scope(
     conn: ConnDependency, scope: schemas.MarketScope | None, week: str
-) -> tuple[str, bool]:
-    if scope is None or scope == "national":
-        return "national", False
+) -> tuple[schemas.MarketScope, bool]:
+    if scope is None or scope == schemas.DEFAULT_MARKET_SCOPE:
+        return schemas.DEFAULT_MARKET_SCOPE, False
     exists = conn.execute(
         "SELECT 1 FROM market_prices WHERE scope = ? AND week = ? LIMIT 1",
         (scope, week),
     ).fetchone()
     if exists is not None:
         return scope, False
-    return "national", True
+    return schemas.DEFAULT_MARKET_SCOPE, True
 
 
 @router.get("/api/recommend", response_model=schemas.RecommendResponse)
 @router.get("/recommend", response_model=schemas.RecommendResponse)
 # NOTE: keep both legacy "/recommend" and current "/api/recommend" paths wired to this handler.
 def recommend(
+    market_scope: MarketScopeQuery,
+    category: CategoryQuery,
     week: RecommendWeekQuery = None,
     region: RecommendRegionQuery = schemas.DEFAULT_REGION,
-    market_scope: MarketScopeQuery = None,
-    category: CategoryQuery = None,
     *,
     response: Response,
     conn: ConnDependency,

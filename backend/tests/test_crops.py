@@ -46,3 +46,12 @@ def test_list_crops_filters_by_category(seeded_client: TestClient) -> None:
     body = response.json()
     assert body, "expected at least one crop in leaf category"
     assert all(item["category"] == "leaf" for item in body)
+
+
+def test_list_crops_category_all_returns_full_dataset(seeded_client: TestClient) -> None:
+    default_response = seeded_client.get("/api/crops")
+    all_response = seeded_client.get("/api/crops", params={"category": "all"})
+
+    assert default_response.status_code == 200
+    assert all_response.status_code == 200
+    assert all_response.json() == default_response.json()

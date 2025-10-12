@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal, NotRequired
+from typing import Annotated, Literal, NotRequired, cast
 
 from pydantic import AfterValidator, BaseModel
 from typing_extensions import TypedDict
@@ -22,6 +22,15 @@ def _validate_market_scope(value: str) -> str:
 
 
 MarketScope = Annotated[str, AfterValidator(_validate_market_scope)]
+
+
+def parse_market_scope(value: str) -> MarketScope:
+    """Parse and validate a market scope string."""
+
+    return cast(MarketScope, _validate_market_scope(value))
+
+
+DEFAULT_MARKET_SCOPE: MarketScope = cast(MarketScope, "national")
 
 
 class Crop(BaseModel):

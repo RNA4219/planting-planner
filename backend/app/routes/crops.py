@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/crops")
 
 @router.get("", response_model=list[schemas.Crop])
 def list_crops(
-    category: CategoryQuery = None,
+    category: CategoryQuery,
     *,
     conn: ConnDependency,
 ) -> list[schemas.Crop]:

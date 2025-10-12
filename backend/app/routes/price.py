@@ -70,9 +70,9 @@ def _select_price_weekly(
 @router.get("", response_model=schemas.PriceSeries)
 def price_series(
     crop_id: PriceCropQuery,
+    market_scope: MarketScopeQuery,
     frm: FromWeekQuery = None,
     to: ToWeekQuery = None,
-    market_scope: MarketScopeQuery = None,
     *,
     response: Response,
     conn: ConnDependency,
@@ -92,15 +92,19 @@ def price_series(
     except utils_week.WeekFormatError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    scope = market_scope or "national"
+    scope = market_scope or schemas.DEFAULT_MARKET_SCOPE
     rows = _select_market_prices(
         conn, crop_id=crop_id, scope=scope, frm=frm, to=to
     )
     fallback = False
-    if scope != "national" and not rows:
+    if scope != schemas.DEFAULT_MARKET_SCOPE and not rows:
         fallback = True
         rows = _select_market_prices(
-            conn, crop_id=crop_id, scope="national", frm=frm, to=to
+            conn,
+            crop_id=crop_id,
+            scope=schemas.DEFAULT_MARKET_SCOPE,
+            frm=frm,
+            to=to,
         )
     if not rows:
         rows = _select_price_weekly(conn, crop_id=crop_id, frm=frm, to=to)

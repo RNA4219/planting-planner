@@ -141,6 +141,28 @@ def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
     assert response.headers.get("x-market-fallback") == "true"
 
 
+def test_recommend_blank_market_scope_treated_as_national() -> None:
+    _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
+    response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": ""},
+    )
+    assert response.status_code == 200
+    assert response.headers.get("x-market-fallback") is None
+
+
+def test_recommend_category_all_returns_full_schedule() -> None:
+    default_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+    all_response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "category": "all"},
+    )
+
+    assert default_response.status_code == 200
+    assert all_response.status_code == 200
+    assert all_response.json() == default_response.json()
+
+
 def test_recommend_legacy_path_returns_same_payload() -> None:
     api_response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
     legacy_response = client.get("/recommend", params={"week": REFERENCE_WEEK})
