@@ -47,6 +47,31 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </option>
           </select>
         </label>
+        <select
+          aria-label="市場"
+          name="marketScope"
+        >
+          <option
+            value="national"
+          >
+            全国平均
+          </option>
+          <option
+            value="city:tokyo"
+          >
+            東京都中央卸売
+          </option>
+          <option
+            value="city:osaka"
+          >
+            大阪市中央卸売
+          </option>
+          <option
+            value="city:nagoya"
+          >
+            名古屋市中央卸売
+          </option>
+        </select>
         <div
           class="app__controls-group"
         >

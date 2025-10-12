@@ -1,14 +1,17 @@
 import type { ChangeEvent, FormEvent } from 'react'
 
 import { RegionSelect } from './RegionSelect'
-import type { Region } from '../types'
+import type { MarketScope, Region } from '../types'
 import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
+import { MARKET_SCOPE_OPTIONS } from '../constants/marketScopes'
 
 interface SearchControlsProps {
   queryWeek: string
   currentWeek: string
   onWeekChange: (event: ChangeEvent<HTMLInputElement>) => void
   onRegionChange: (region: Region) => void
+  marketScope: MarketScope
+  onMarketScopeChange: (scope: MarketScope) => void
   searchKeyword: string
   onSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -21,6 +24,8 @@ export const SearchControls = ({
   currentWeek,
   onWeekChange,
   onRegionChange,
+  marketScope,
+  onMarketScopeChange,
   searchKeyword,
   onSearchChange,
   onSubmit,
@@ -30,6 +35,20 @@ export const SearchControls = ({
   return (
     <form className="app__controls" onSubmit={onSubmit} noValidate>
       <RegionSelect onChange={onRegionChange} />
+      <select
+        aria-label="市場"
+        name="marketScope"
+        value={marketScope}
+        onChange={(event) => {
+          onMarketScopeChange(event.target.value as MarketScope)
+        }}
+      >
+        {MARKET_SCOPE_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       <div className="app__controls-group">
         <input
           id="search-input"
