@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import App from './App'
+import { AppProviders } from './AppProviders'
 
 const container = document.getElementById('root')
 if (!container) {
@@ -10,6 +11,8 @@ if (!container) {
 
 createRoot(container).render(
   <React.StrictMode>
-    <App />
+    <AppProviders>
+      <App />
+    </AppProviders>
   </React.StrictMode>,
 )

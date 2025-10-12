@@ -1,11 +1,17 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { FormEvent } from 'react'
+import { createElement } from 'react'
+import type { FormEvent, PropsWithChildren, ReactElement } from 'react'
 
 import type { CropCategory, MarketScope, RecommendResponse, Region } from '../types'
 
 import { useRecommendationLoader } from './useRecommendationLoader'
 import { useRecommendations } from './useRecommendations'
+import { AppProviders } from '../AppProviders'
+
+const QueryClientTestWrapper = ({ children }: PropsWithChildren): ReactElement => {
+  return createElement(AppProviders, undefined, children)
+}
 
 type FetchRecommendationsMock = (
   region: Region,
@@ -50,8 +56,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('requestRecommendations は入力週を ISO 形式に正規化して API へ渡す', async () => {
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -72,8 +79,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('requestRecommendations は日付形式 (YYYY-MM-DD) を ISO 週へ変換して API へ渡す', async () => {
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -94,8 +102,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('requestRecommendations は日付形式 (YYYY/MM/DD) を ISO 週へ変換して API へ渡す', async () => {
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -116,8 +125,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('requestRecommendations は 6 桁の数値入力を最終週へクランプして API へ渡す', async () => {
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -138,8 +148,9 @@ describe('useRecommendationLoader', () => {
   })
 
   it('API が不正な週を返した場合でも activeWeek はリクエスト週を保持する', async () => {
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -171,8 +182,9 @@ describe('useRecommendationLoader', () => {
       .mockImplementationOnce(() => first.promise)
       .mockImplementationOnce(() => second.promise)
 
-    const { result } = renderHook(() =>
-      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    const { result } = renderHook(
+      () => useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -255,8 +267,9 @@ describe('useRecommendations', () => {
       ],
     })
 
-    const { result } = renderHook(() =>
-      useRecommendations({ favorites: [1], initialRegion: 'temperate' }),
+    const { result } = renderHook(
+      () => useRecommendations({ favorites: [1], initialRegion: 'temperate' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -296,8 +309,9 @@ describe('useRecommendations', () => {
         items: [],
       })
 
-    const { result } = renderHook(() =>
-      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    const { result } = renderHook(
+      () => useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -343,8 +357,9 @@ describe('useRecommendations', () => {
         items: [],
       })
 
-    const { result } = renderHook(() =>
-      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    const { result } = renderHook(
+      () => useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {
@@ -392,8 +407,9 @@ describe('useRecommendations', () => {
         items: [],
       })
 
-    const { result } = renderHook(() =>
-      useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+    const { result } = renderHook(
+      () => useRecommendations({ favorites: [], initialRegion: 'temperate' }),
+      { wrapper: QueryClientTestWrapper },
     )
 
     await act(async () => {

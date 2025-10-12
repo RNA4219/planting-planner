@@ -65,7 +65,10 @@ interface RenderAppOptions {
 }
 
 export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}) => {
-  const App = (await import('../../src/App')).default
+  const [{ AppProviders }, { default: App }] = await Promise.all([
+    import('../../src/AppProviders'),
+    import('../../src/App'),
+  ])
   const user = userEvent.setup(
     useFakeTimers
       ? {
@@ -73,7 +76,11 @@ export const renderApp = async ({ useFakeTimers = false }: RenderAppOptions = {}
         }
       : undefined,
   )
-  render(<App />)
+  render(
+    <AppProviders>
+      <App />
+    </AppProviders>,
+  )
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {
       throw new Error('recommendations not requested yet')

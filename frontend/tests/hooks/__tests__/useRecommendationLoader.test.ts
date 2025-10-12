@@ -7,7 +7,12 @@ import {
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
 
-const fetchQueryMock = vi.fn()
+interface FetchQueryCall {
+  readonly queryKey: readonly unknown[]
+  readonly queryFn: () => Promise<unknown>
+}
+
+const fetchQueryMock = vi.fn(async (options: FetchQueryCall) => options.queryFn())
 
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({
@@ -26,9 +31,7 @@ describe('hooks / useRecommendationLoader', () => {
   beforeEach(() => {
     resetRecommendationControllerMocks()
     fetchQueryMock.mockReset()
-    fetchQueryMock.mockImplementation(async (_key, fetcher: () => Promise<unknown>) => {
-      return fetcher()
-    })
+    fetchQueryMock.mockImplementation(async (options: FetchQueryCall) => options.queryFn())
   })
 
   it('normalizes week input before requesting recommendations', async () => {
@@ -98,8 +101,8 @@ describe('hooks / useRecommendationLoader', () => {
       expect(fetchQueryMock).toHaveBeenCalled()
     })
 
-    const [initialKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(initialKey).toEqual([
+    const initialCall = fetchQueryMock.mock.calls[0]?.[0] as FetchQueryCall | undefined
+    expect(initialCall?.queryKey).toEqual([
       'recommendations',
       'temperate',
       'national',
@@ -119,8 +122,8 @@ describe('hooks / useRecommendationLoader', () => {
       })
     })
 
-    const [overrideKey] = fetchQueryMock.mock.calls[0] as [unknown[]]
-    expect(overrideKey).toEqual([
+    const overrideCall = fetchQueryMock.mock.calls[0]?.[0] as FetchQueryCall | undefined
+    expect(overrideCall?.queryKey).toEqual([
       'recommendations',
       'temperate',
       'city:kyoto',
