@@ -120,11 +120,11 @@ def test_seed_inserts_expected_records(
 
     assert (
         "INSERT OR IGNORE INTO crops (id, name, category) VALUES (?, ?, ?)",
-        (1, "Lettuce", "Leafy"),
+        (1, "Lettuce", "leaf"),
     ) in executed
     assert (
         "UPDATE crops SET name = ?, category = ? WHERE id = ?",
-        ("Lettuce", "Leafy", 1),
+        ("Lettuce", "leaf", 1),
     ) in executed
 
     assert any(
@@ -220,3 +220,47 @@ def test_seed_inserts_expected_records(
     ) in executed
 
     conn.commit.assert_called_once_with()
+
+
+def test_seed_normalizes_crop_categories(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(seed_module.db, "init_db", lambda conn: None)
+
+    payload = data_loader.SeedPayload(
+        crops=[
+            {"id": 10, "name": "Kale", "category": "Leafy"},
+            {"id": 11, "name": "Carrot", "category": "ROOT"},
+            {"id": 12, "name": "Broccoli", "category": "flowering"},
+            {"id": 13, "name": "Mystery", "category": "unknown"},
+        ],
+        price_samples=[],
+        growth_days=[],
+        market_scopes=[],
+        market_scope_categories=[],
+        theme_tokens=[],
+    )
+
+    monkeypatch.setattr(seed_module, "load_seed_payload", lambda data_dir=None: payload)
+
+    conn = MagicMock()
+
+    seed_module.seed(conn=conn)
+
+    executed = [call.args for call in conn.execute.call_args_list]
+
+    insert_categories = {
+        params[0]: params[2]
+        for sql, params in executed
+        if sql.startswith("INSERT OR IGNORE INTO crops")
+    }
+    update_categories = {
+        params[2]: params[1]
+        for sql, params in executed
+        if sql.startswith("UPDATE crops SET name = ?, category = ? WHERE id = ?")
+    }
+
+    expected = {10: "leaf", 11: "root", 12: "flower", 13: "leaf"}
+
+    assert insert_categories == expected
+    assert update_categories == expected
