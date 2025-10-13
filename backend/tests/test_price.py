@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.db.connection import get_conn
@@ -111,14 +112,15 @@ def test_price_series_all_market_scope_uses_national_without_fallback() -> None:
     assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
-def test_price_series_invalid_market_scope_returns_422() -> None:
+@pytest.mark.parametrize("market_scope", ["city:", " city:", "city:   "])
+def test_price_series_invalid_market_scope_returns_422(market_scope: str) -> None:
     response = client.get(
         "/api/price",
         params={
             "crop_id": 1,
             "frm": "2025-W40",
             "to": "2025-W40",
-            "marketScope": "city:",
+            "marketScope": market_scope,
         },
     )
     assert response.status_code == 422
