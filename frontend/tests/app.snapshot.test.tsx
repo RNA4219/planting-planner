@@ -5,6 +5,7 @@ import type { MockInstance } from 'vitest'
 
 type UseRecommendationsModule = typeof import('../src/hooks/useRecommendations')
 
+import { MARKET_SCOPE_FALLBACK_DEFINITIONS } from '../src/constants/marketScopes'
 import {
   fetchCrops,
   fetchRecommend,
@@ -16,6 +17,39 @@ import {
 describe('App snapshot', () => {
   let useRecommendationsModule: UseRecommendationsModule
   let useRecommendationsSpy: MockInstance
+
+  const getNationalMarketScopeTheme = () => {
+    const nationalDefinition = MARKET_SCOPE_FALLBACK_DEFINITIONS.find(
+      (definition) => definition.scope === 'national',
+    )
+
+    if (!nationalDefinition) {
+      throw new Error('national market scope definition is missing')
+    }
+
+    const {
+      theme: { token, text },
+    } = nationalDefinition
+
+    const textColor = (() => {
+      if (!text.startsWith('#') || text.length !== 7) {
+        throw new Error(`unexpected theme text color: ${text}`)
+      }
+
+      const hex = text.slice(1)
+      const red = Number.parseInt(hex.slice(0, 2), 16)
+      const green = Number.parseInt(hex.slice(2, 4), 16)
+      const blue = Number.parseInt(hex.slice(4, 6), 16)
+
+      return `rgb(${red}, ${green}, ${blue})`
+    })()
+
+    return {
+      token,
+      className: `bg-${token}`,
+      textColor,
+    }
+  }
 
   beforeEach(async () => {
     resetAppSpies()
@@ -69,10 +103,12 @@ describe('App snapshot', () => {
       expect(screen.getByRole('row', { name: /トマト/ })).toBeInTheDocument()
     })
 
+    const { className, textColor, token } = getNationalMarketScopeTheme()
+
     const marketSelect = screen.getByRole('combobox', { name: '市場' })
-    expect(marketSelect).toHaveAttribute('data-theme', 'market-national')
-    expect(marketSelect.className).toContain('bg-market-national')
-    expect(marketSelect).toHaveStyle({ color: 'rgb(255, 255, 255)' })
+    expect(marketSelect).toHaveAttribute('data-theme', token)
+    expect(marketSelect.className).toContain(className)
+    expect(marketSelect).toHaveStyle({ color: textColor })
 
     const container = document.body.firstElementChild
     expect(container).not.toBeNull()
