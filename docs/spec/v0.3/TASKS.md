@@ -17,5 +17,7 @@
      - 完了理由: `.github/workflows/ci.yml` の `frontend-e2e` ジョブが `npm run test:e2e` を実行し、`frontend-lighthouse` ジョブが Lighthouse スモーク (`lhci autorun`) を走らせている。
 6. ドキュメント:
    - [x] アーキテクチャ概要の品質・テーマ項目を現行 CI / Playwright モック方針と Tailwind 移行状況に更新。
+   - [x] ETL 仕様のバリデーション項目を現行の独自検証と全国平均フォールバック方針へ更新。
+     - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で `validate_market_prices` による scope/価格レンジ検証とフォールバック挙動を明記した。
    - [x] ETL 仕様のバリデーション記述を `backend/app/etl/expectations.validate_market_prices` に合わせて全国平均フォールバック挙動を明記。
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で Great Expectations 言及を置換し、独自検証とフォールバック手順を記録した。
