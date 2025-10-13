@@ -22,6 +22,12 @@ const fetcherMock = vi.fn<
 >()
 const cropCatalogState = { catalog: new Map(), isLoading: false }
 
+const CATEGORY_DISPLAY_MAP: Record<CropCategory, string> = {
+  leaf: '葉菜類',
+  root: '根菜類',
+  flower: '花き',
+}
+
 vi.mock('../../../src/hooks/recommendationFetcher', () => ({
   useRecommendationFetcher: () => fetcherMock,
 }))
@@ -87,7 +93,15 @@ const applyDefaultRecommendationMocks = () => {
     },
   )
   cropCatalogState.catalog = new Map(
-    defaultCrops.map((crop) => [crop.name, { id: crop.id, name: crop.name, category: crop.category }]),
+    defaultCrops.map((crop) => [
+      crop.name,
+      {
+        id: crop.id,
+        name: crop.name,
+        category: crop.category,
+        displayCategory: CATEGORY_DISPLAY_MAP[crop.category],
+      },
+    ]),
   )
   cropCatalogState.isLoading = false
 }

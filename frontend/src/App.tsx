@@ -19,7 +19,7 @@ import { ToastStack, type ToastStackItem } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatusController } from './hooks/refresh/controller'
-import type { CropCategory, MarketScope, Region } from './types'
+import { isCropCategory, type CropCategory, type MarketScope, type Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
 const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
@@ -30,6 +30,41 @@ const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
   backgroundColor: '#fff7ed',
   color: '#9a3412',
   fontWeight: 600,
+}
+
+const CATEGORY_CANONICAL_ENTRIES = [
+  ['葉菜', 'leaf'],
+  ['葉菜類', 'leaf'],
+  ['果菜', 'leaf'],
+  ['果菜類', 'leaf'],
+  ['根菜', 'root'],
+  ['根菜類', 'root'],
+  ['花き', 'flower'],
+  ['花き類', 'flower'],
+] as const satisfies readonly [string, CropCategory][]
+
+const CATEGORY_CANONICAL_MAP = new Map<string, CropCategory>(
+  CATEGORY_CANONICAL_ENTRIES.map(([label, canonical]) => [
+    label.normalize('NFKC').trim(),
+    canonical,
+  ]),
+)
+
+const resolveCategoryCanonical = (value?: string): CropCategory | null => {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const normalized = value.normalize('NFKC')
+  const trimmed = normalized.trim()
+  const mapped = CATEGORY_CANONICAL_MAP.get(trimmed)
+  if (mapped) {
+    return mapped
+  }
+  const lowered = trimmed.toLowerCase()
+  if (isCropCategory(lowered)) {
+    return lowered
+  }
+  return null
 }
 
 const createQueryClient = () =>
@@ -120,10 +155,13 @@ export const AppContent = () => {
     }
     return sortedRows.filter((row) => {
       const cropName = row.crop.normalize('NFKC').toLowerCase()
-      const category = row.category?.normalize('NFKC').toLowerCase() ?? ''
+      const categoryDisplay = row.category?.normalize('NFKC').toLowerCase() ?? ''
+      const categoryCanonical = resolveCategoryCanonical(row.category)
+      const categoryKeyword = categoryCanonical ?? ''
       return (
         cropName.includes(normalizedSearchKeyword) ||
-        category.includes(normalizedSearchKeyword)
+        categoryDisplay.includes(normalizedSearchKeyword) ||
+        categoryKeyword.includes(normalizedSearchKeyword)
       )
     })
   }, [normalizedSearchKeyword, sortedRows])

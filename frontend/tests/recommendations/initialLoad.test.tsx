@@ -196,7 +196,6 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜', '根菜', '花き'])
     expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
 
-    const rootTab = tabs[1]!
     await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
       <div
         aria-label="カテゴリ"
@@ -229,15 +228,6 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
           type="button"
         >
           花き
-        </button>
-        <button
-          aria-selected="false"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          果菜
         </button>
       </div>
     `)
