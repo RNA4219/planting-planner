@@ -22,6 +22,23 @@ describe('main entrypoint', () => {
     const element = renderMock.mock.calls[0]?.[0]
     expect(elementContainsQueryClientProvider(element)).toBe(true)
   })
+
+  it('imports global styles', async () => {
+    vi.resetModules()
+    renderMock.mockClear()
+    document.body.innerHTML = '<div id="root"></div>'
+
+    const cssImport = vi.fn()
+    vi.doMock('./index.css', () => {
+      cssImport()
+      return { default: undefined }
+    })
+
+    await import('./main')
+
+    expect(cssImport).toHaveBeenCalledTimes(1)
+    vi.doUnmock('./index.css')
+  })
 })
 
 function elementContainsQueryClientProvider(node: ReactNode): boolean {
