@@ -65,14 +65,14 @@ def seed_payload() -> data_loader.SeedPayload:
                 "display_name": "全国平均",
                 "timezone": "Asia/Tokyo",
                 "priority": 10,
-                "theme_token": "accent.national",
+                "theme_token": "market.national",
             },
             {
                 "scope": "city:tokyo",
                 "display_name": "東京都中央卸売",
                 "timezone": "Asia/Tokyo",
                 "priority": 20,
-                "theme_token": "accent.tokyo",
+                "theme_token": "market.city",
             },
         ],
         market_scope_categories=[
@@ -93,14 +93,14 @@ def seed_payload() -> data_loader.SeedPayload:
         ],
         theme_tokens=[
             {
-                "token": "accent.national",
+                "token": "market.national",
                 "hex_color": "#22c55e",
-                "text_color": "#ffffff",
+                "text_color": "#0f172a",
             },
             {
-                "token": "accent.tokyo",
+                "token": "market.city",
                 "hex_color": "#2563eb",
-                "text_color": "#ffffff",
+                "text_color": "#f8fafc",
             },
         ],
     )
@@ -177,12 +177,12 @@ def test_seed_inserts_expected_records(
 
     assert any(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
-        and params == ("national", "全国平均", "Asia/Tokyo", 10, "accent.national")
+        and params == ("national", "全国平均", "Asia/Tokyo", 10, "market.national")
         for sql, params in executed
     )
     assert any(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
-        and params == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo")
+        and params == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "market.city")
         for sql, params in executed
     )
 
@@ -200,13 +200,13 @@ def test_seed_inserts_expected_records(
     assert any(
         sql.startswith("INSERT INTO theme_tokens")
         and "ON CONFLICT" in sql.upper()
-        and params == ("accent.national", "#22c55e", "#ffffff")
+        and params == ("market.national", "#22c55e", "#0f172a")
         for sql, params in executed
     )
     assert any(
         sql.startswith("INSERT INTO theme_tokens")
         and "ON CONFLICT" in sql.upper()
-        and params == ("accent.tokyo", "#2563eb", "#ffffff")
+        and params == ("market.city", "#2563eb", "#f8fafc")
         for sql, params in executed
     )
 
@@ -264,3 +264,15 @@ def test_seed_normalizes_crop_categories(
 
     assert insert_categories == expected
     assert update_categories == expected
+
+
+def test_market_scopes_use_market_theme_tokens() -> None:
+    payload = data_loader.load_seed_payload()
+
+    tokens = [scope["theme_token"] for scope in payload.market_scopes if "theme_token" in scope]
+
+    assert tokens, "market scopes must define at least one theme token"
+    assert all(
+        token.startswith("market.")
+        for token in tokens
+    ), "market scope theme tokens should use the market.* namespace"

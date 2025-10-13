@@ -42,6 +42,17 @@ const REQUIRED_MARKET_COLOR_KEYS = [
   'city',
 ] as const
 
+const REQUIRED_MARKET_SCOPE_TOKENS = ['market.national', 'market.city'] as const
+
+const marketScopesModule = (await import('../src/constants/marketScopes')) as {
+  MARKET_SCOPE_FALLBACK_DEFINITIONS: ReadonlyArray<{
+    readonly scope: string
+    readonly theme: { readonly token: string }
+  }>
+}
+
+const marketScopeFallbacks = marketScopesModule.MARKET_SCOPE_FALLBACK_DEFINITIONS
+
 describe('tailwind config', () => {
   test('market colors match theme tokens', () => {
     expect(tailwindConfig.theme.colors?.market).toEqual(expectedMarketColors)
@@ -52,6 +63,29 @@ describe('tailwind config', () => {
     expect(marketColors).toBeDefined()
     REQUIRED_MARKET_COLOR_KEYS.forEach((key) => {
       expect(marketColors).toHaveProperty(key)
+    })
+  })
+
+  test('market scope tokens are available', () => {
+    const tokens = new Set(themeTokens.map((token) => token.token))
+    REQUIRED_MARKET_SCOPE_TOKENS.forEach((token) => {
+      expect(tokens.has(token)).toBe(true)
+    })
+  })
+
+  test('market scope fallbacks use market tokens', () => {
+    marketScopeFallbacks.forEach((definition) => {
+      if (definition.scope === 'national') {
+        expect(definition.theme.token).toBe('market.national')
+        return
+      }
+
+      if (definition.scope.startsWith('city:')) {
+        expect(definition.theme.token).toBe('market.city')
+        return
+      }
+
+      expect(definition.theme.token.startsWith('market.')).toBe(true)
     })
   })
 
