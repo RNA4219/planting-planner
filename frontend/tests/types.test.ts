@@ -21,8 +21,11 @@ describe('type definitions', () => {
     expectTypeOf<Crop>().toMatchTypeOf<{ variety?: string }>()
   })
 
-  it('CropCategory は fruit を許容する', () => {
-    type _ = ExpectTrue<ExpectEqual<Extract<'fruit', CropCategory>, 'fruit'>>
+  it('CropCategory は leaf/root/flower のみ許容する', () => {
+    type _ = ExpectTrue<ExpectEqual<CropCategory, 'leaf' | 'root' | 'flower'>>
+    expectTypeOf<CropCategory>().toEqualTypeOf<'leaf' | 'root' | 'flower'>()
+
+    // @ts-expect-error fruit は許容されない
     expectTypeOf<'fruit'>().toMatchTypeOf<CropCategory>()
   })
 

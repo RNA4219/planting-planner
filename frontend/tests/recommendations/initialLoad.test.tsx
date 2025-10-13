@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, type MockInstance } from 'vitest'
 
 import {
@@ -190,52 +190,13 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       )
     })
 
-    await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
-      <div
-        aria-label="カテゴリ"
-        class="category-tabs"
-        role="tablist"
-      >
-        <button
-          aria-selected="true"
-          class="category-tabs__tab category-tabs__tab--active"
-          role="tab"
-          tabindex="0"
-          type="button"
-        >
-          葉菜
-        </button>
-        <button
-          aria-selected="false"
-          class="category-tabs__tab"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          根菜
-        </button>
-        <button
-          aria-selected="false"
-          class="category-tabs__tab"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          花き
-        </button>
-        <button
-          aria-selected="false"
-          class="category-tabs__tab"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          果菜
-        </button>
-      </div>
-    `)
+    const tablist = await screen.findByRole('tablist', { name: 'カテゴリ' })
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs).toHaveLength(3)
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜', '根菜', '花き'])
+    expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
 
-    const rootTab = await screen.findByRole('tab', { name: '根菜' })
+    const rootTab = tabs[1]!
     await user.click(rootTab)
 
     await waitFor(() => {
