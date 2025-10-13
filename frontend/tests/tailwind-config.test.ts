@@ -14,12 +14,10 @@ const themeTokensModule = (await import('../../data/theme_tokens.json', {
 })) as { default: readonly ThemeToken[] }
 const themeTokens = themeTokensModule.default
 
-const expectedMarketColors = themeTokens.reduce<Record<string, Record<string, string>>>((acc, token) => {
-  const [group, name] = token.token.split('.')
-  if (!acc[group]) {
-    acc[group] = {}
-  }
-  acc[group][name] = token.hex_color
+const expectedMarketColors = themeTokens.reduce<Record<string, string>>((acc, token) => {
+  const [, ...segments] = token.token.split('.')
+  const name = segments.join('.')
+  acc[name] = token.hex_color
   return acc
 }, {})
 
