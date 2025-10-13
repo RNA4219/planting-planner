@@ -12,9 +12,9 @@ type LoaderArgs = {
   category: CropCategory
 }
 
-const loaderMock = vi.fn<[LoaderArgs], UseRecommendationLoaderResult>()
-const saveMarketScopeMock = vi.fn<[MarketScope], void>()
-const saveSelectedCategoryMock = vi.fn<[CropCategory], void>()
+const loaderMock = vi.fn<(args: LoaderArgs) => UseRecommendationLoaderResult>()
+const saveMarketScopeMock = vi.fn<(scope: MarketScope) => void>()
+const saveSelectedCategoryMock = vi.fn<(category: CropCategory) => void>()
 
 vi.mock('../recommendations/loader', () => ({
   useRecommendationLoader: (args: LoaderArgs) => loaderMock(args),
