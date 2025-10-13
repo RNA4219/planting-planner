@@ -174,6 +174,15 @@ def test_recommend_city_scope_filters_crops_missing_prices() -> None:
     _assert_items(national_response.json(), region="temperate")
 
 
+def test_recommend_invalid_market_scope_returns_422() -> None:
+    response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "city:"},
+    )
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid market scope"}
+
+
 def test_recommend_blank_market_scope_treated_as_national() -> None:
     _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
     response = client.get(

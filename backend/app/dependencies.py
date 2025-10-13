@@ -68,7 +68,10 @@ def _market_scope_query(
         return None
     if candidate == "national":
         return schemas.DEFAULT_MARKET_SCOPE
-    return schemas.parse_market_scope(candidate)
+    try:
+        return schemas.parse_market_scope(candidate)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Invalid market scope") from exc
 
 
 def _category_query(

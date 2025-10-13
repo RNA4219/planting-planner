@@ -109,3 +109,17 @@ def test_price_series_all_market_scope_uses_national_without_fallback() -> None:
     assert body["prices"][0]["avg_price"] == 210.0
     assert response.headers.get("fallback") is None
     assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
+
+
+def test_price_series_invalid_market_scope_returns_422() -> None:
+    response = client.get(
+        "/api/price",
+        params={
+            "crop_id": 1,
+            "frm": "2025-W40",
+            "to": "2025-W40",
+            "marketScope": "city:",
+        },
+    )
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid market scope"}
