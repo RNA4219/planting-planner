@@ -37,7 +37,7 @@ const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
 )
 
 const FALLBACK_THEME_BY_GROUP: Record<'national' | 'city' | 'default', MarketScopeTheme> = {
-  national: { token: 'market-national', hex: '#22c55e', text: '#FFFFFF' },
+  national: { token: 'market-national', hex: '#22c55e', text: '#0f172a' },
   city: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
   default: { token: 'market-neutral', hex: '#64748b', text: '#f8fafc' },
 }
