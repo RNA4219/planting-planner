@@ -13,4 +13,6 @@ MODULES = [
 def test_etl_modules_are_importable() -> None:
     for module_path in MODULES:
         module = import_module(module_path, package=__package__)
-        assert module.__package__.endswith("tests.etl")
+        package_name = module.__package__
+        assert package_name is not None
+        assert package_name.endswith("tests.etl")
