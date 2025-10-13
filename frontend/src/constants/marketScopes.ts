@@ -6,7 +6,14 @@ export interface MarketScopeTheme {
   readonly text: string
 }
 
-export interface MarketScopeDefinition {
+interface MarketScopeMetadata {
+  readonly timezone?: string
+  readonly priority?: number
+  readonly effective_from?: string | null
+  readonly categories?: readonly string[]
+}
+
+export interface MarketScopeDefinition extends MarketScopeMetadata {
   readonly scope: MarketScope
   readonly displayName: string
   readonly theme: MarketScopeTheme
@@ -18,7 +25,7 @@ export interface MarketScopeApiTheme {
   readonly text_color: string
 }
 
-export interface MarketScopeApiDefinition {
+export interface MarketScopeApiDefinition extends MarketScopeMetadata {
   readonly scope: MarketScope
   readonly display_name: string
   readonly theme: MarketScopeApiTheme
@@ -41,15 +48,20 @@ export const toMarketScopeOption = (
 
 export const fromMarketScopeApiDefinition = (
   definition: MarketScopeApiDefinition,
-): MarketScopeDefinition => ({
-  scope: definition.scope,
-  displayName: definition.display_name,
-  theme: {
-    token: definition.theme.token,
-    hex: definition.theme.hex_color,
-    text: definition.theme.text_color,
-  },
-})
+): MarketScopeDefinition => {
+  const { scope, display_name, theme, ...metadata } = definition
+
+  return {
+    scope,
+    displayName: display_name,
+    theme: {
+      token: theme.token,
+      hex: theme.hex_color,
+      text: theme.text_color,
+    },
+    ...metadata,
+  }
+}
 
 export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
   {
@@ -60,6 +72,9 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
       hex: '#2E7D32',
       text: '#0f172a',
     },
+    timezone: 'Asia/Tokyo',
+    priority: 10,
+    categories: [],
   },
   {
     scope: 'city:tokyo',
@@ -69,6 +84,9 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
       hex: '#1565C0',
       text: '#FFFFFF',
     },
+    timezone: 'Asia/Tokyo',
+    priority: 20,
+    categories: [],
   },
   {
     scope: 'city:osaka',
@@ -78,6 +96,9 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
       hex: '#EF6C00',
       text: '#FFFFFF',
     },
+    timezone: 'Asia/Tokyo',
+    priority: 30,
+    categories: [],
   },
   {
     scope: 'city:nagoya',
@@ -87,6 +108,9 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
       hex: '#6A1B9A',
       text: '#FFFFFF',
     },
+    timezone: 'Asia/Tokyo',
+    priority: 40,
+    categories: [],
   },
 ]
 
