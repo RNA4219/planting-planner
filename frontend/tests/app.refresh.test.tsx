@@ -76,6 +76,22 @@ describe('App refresh workflow', () => {
 
     const startToast = screen.getByText('更新を開始しました。進行状況を確認しています…')
     expect(startToast).toBeInTheDocument()
+    const startToastContainer = startToast.closest('[data-testid="toast"]')
+    expect(startToastContainer).not.toBeNull()
+    if (startToastContainer) {
+      expect(
+        Array.from(startToastContainer.classList).some(
+          (className) => className === 'toast' || className.startsWith('toast--'),
+        ),
+      ).toBe(false)
+      const stack = startToastContainer.closest('[data-testid="toast-stack"]')
+      expect(stack).not.toBeNull()
+      if (stack) {
+        expect(
+          Array.from(stack.classList).some((className) => className.startsWith('toast')),
+        ).toBe(false)
+      }
+    }
 
     expect(fetchRefreshStatus).toHaveBeenCalledTimes(1)
 
@@ -92,7 +108,16 @@ describe('App refresh workflow', () => {
     const successDetail = screen.getByText('7件のデータを更新しました。')
     expect(successMessage).toBeInTheDocument()
     expect(successDetail).toBeInTheDocument()
-    expect(successDetail.closest('.toast')).toBe(successMessage.closest('.toast'))
+    const successToast = successMessage.closest('[data-testid="toast"]')
+    expect(successToast).not.toBeNull()
+    if (successToast) {
+      expect(successDetail.closest('[data-testid="toast"]')).toBe(successToast)
+      expect(
+        Array.from(successToast.classList).some(
+          (className) => className === 'toast' || className.startsWith('toast--'),
+        ),
+      ).toBe(false)
+    }
 
     for (let i = 0; i < 5; i += 1) {
       if (reloadCurrentWeekSpy.mock.calls.length > 0) {
