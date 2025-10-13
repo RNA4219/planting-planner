@@ -8,7 +8,7 @@ import type { RecommendResponseWithFallback } from '../lib/api'
 import { renderHookWithQueryClient } from '../../tests/utils/renderHookWithQueryClient'
 
 import { useRecommendationLoader } from './useRecommendationLoader'
-import { useRecommendations } from './useRecommendations'
+import { useRecommendations } from './recommendations/controller'
 
 type FetchRecommendationsMock = (
   region: Region,

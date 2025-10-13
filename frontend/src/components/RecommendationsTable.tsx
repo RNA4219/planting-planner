@@ -1,7 +1,7 @@
 import { type KeyboardEvent, type ReactNode } from 'react'
 
 import { FavStar } from './FavStar'
-import type { RecommendationRow } from '../hooks/useRecommendations'
+import type { RecommendationRow } from '../hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from '../types'
 
 const REGION_LABEL: Record<Region, string> = {

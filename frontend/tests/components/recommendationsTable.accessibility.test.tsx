@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test } from 'vitest'
 
 import { RecommendationsTable } from '../../src/components/RecommendationsTable'
-import type { RecommendationRow } from '../../src/hooks/useRecommendations'
+import type { RecommendationRow } from '../../src/hooks/recommendations/controller'
 
 const createRows = (): RecommendationRow[] => [
   {

@@ -32,7 +32,7 @@ describe('App refresh workflow', () => {
     })
     fetchCrops.mockResolvedValue([])
 
-    const useRecommendationsModule = await import('../src/hooks/useRecommendations')
+    const useRecommendationsModule = await import('../src/hooks/recommendations/controller')
     const originalUseRecommendations = useRecommendationsModule.useRecommendations
     const reloadCurrentWeekSpy = vi.fn()
     const useRecommendationsMock = vi
