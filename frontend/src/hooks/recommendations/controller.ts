@@ -53,7 +53,7 @@ export const useRecommendations = ({
   const cropIndex = useMemo(() => {
     const map = new Map<string, { id: number; category?: string }>()
     cropCatalog.forEach((entry, cropName) => {
-      map.set(cropName, { id: entry.id, category: entry.category })
+      map.set(cropName, { id: entry.id, category: entry.displayCategory })
     })
     return map
   }, [cropCatalog])
