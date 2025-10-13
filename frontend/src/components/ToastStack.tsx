@@ -17,11 +17,11 @@ export interface ToastStackProps {
   readonly autoCloseDurationMs?: number
 }
 
-const VARIANT_CLASS_NAMES: Record<ToastVariant, string> = {
-  success: 'toast--success bg-market-success text-white',
-  error: 'toast--error bg-market-error text-white',
-  warning: 'toast--warning bg-market-warning text-white',
-  info: 'toast--info bg-market-info text-white',
+const VARIANT_STYLES: Record<ToastVariant, string> = {
+  success: 'bg-market-success text-white',
+  error: 'bg-market-error text-white',
+  warning: 'bg-market-warning text-white',
+  info: 'bg-market-info text-white',
 }
 
 export const ToastStack = ({
@@ -95,7 +95,8 @@ export const ToastStack = ({
 
   return (
     <div
-      className="toast-stack fixed inset-x-4 top-4 z-50 flex flex-col gap-3 sm:left-auto sm:right-6 sm:top-6"
+      data-testid="toast-stack"
+      className="fixed inset-x-4 top-4 z-50 flex flex-col gap-3 sm:left-auto sm:right-6 sm:top-6"
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -103,7 +104,9 @@ export const ToastStack = ({
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`toast ${VARIANT_CLASS_NAMES[toast.variant]} flex w-full items-start gap-3 rounded-xl px-4 py-3 font-semibold shadow-2xl sm:w-auto sm:min-w-[260px] sm:max-w-[360px]`}
+          data-testid="toast"
+          data-variant={toast.variant}
+          className={`${VARIANT_STYLES[toast.variant]} flex w-full items-start gap-3 rounded-xl px-4 py-3 font-semibold shadow-2xl sm:w-auto sm:min-w-[260px] sm:max-w-[360px]`}
           role="alert"
         >
           <div className="flex-1 space-y-1">

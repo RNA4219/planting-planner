@@ -6,7 +6,7 @@ import { ToastStack } from '../../src/components/ToastStack'
 
 describe('ToastStack', () => {
   test('単一トースト表示時は aria-live="polite"', () => {
-    const { container } = render(
+    const { getByTestId } = render(
       <ToastStack
         toasts={[
           {
@@ -18,9 +18,11 @@ describe('ToastStack', () => {
       />,
     )
 
-    const stack = container.querySelector('.toast-stack')
-    expect(stack).not.toBeNull()
+    const stack = getByTestId('toast-stack')
     expect(stack).toHaveAttribute('role', 'status')
     expect(stack).toHaveAttribute('aria-live', 'polite')
+    expect(
+      Array.from(stack.classList).some((className) => className.startsWith('toast')),
+    ).toBe(false)
   })
 })
