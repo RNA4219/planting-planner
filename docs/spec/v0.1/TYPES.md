@@ -14,7 +14,7 @@ export type Region = "cold" | "temperate" | "warm"
 export interface Crop {
   id: number
   name: string
-  category: "leaf" | "root" | "fruit" | "flower" | string
+  category: "leaf" | "root" | "flower" | string
 }
 
 export interface GrowthDays {
