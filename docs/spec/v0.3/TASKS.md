@@ -10,6 +10,7 @@
   - [x] CategoryTabs のモバイル縦積みレイアウト対応: `frontend/tests/category-tabs.test.tsx` に `flex-col` / `sm:flex-row` の期待を追加してテストを先に赤くし、`frontend/src/components/CategoryTabs.tsx` をモバイル縦積み＋`sm` 以上横並びの Tailwind クラスへ調整した上でテストを緑化する。
     - 完了理由: `frontend/src/components/CategoryTabs.tsx` で `flex-col` / `sm:flex-row` と `w-full` / `sm:w-auto` の Tailwind クラスを適用済みで、`frontend/tests/category-tabs.test.tsx` でも同クラスを検証している。
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
+   - [x] ドキュメント整備: PRD スコープ/非スコープに `GET /api/markets` を正式追加し、成功指標へ可用性 KPI を追記済み。
 5. DevOps:
    - [x] CI に `npm run test:e2e` と Lighthouse スモークを追加。
      - 完了理由: `.github/workflows/ci.yml` の `frontend-e2e` ジョブが `npm run test:e2e` を実行し、`frontend-lighthouse` ジョブが Lighthouse スモーク (`lhci autorun`) を走らせている。
