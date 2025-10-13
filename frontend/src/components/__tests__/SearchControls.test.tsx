@@ -106,4 +106,44 @@ describe('SearchControls', () => {
 
     queryClient.clear()
   })
+
+  it('市場のテーマに合わせてセレクトのクラスを切り替える', async () => {
+    const markets = [toMarketScopeOption({
+      scope: 'city:fukuoka',
+      displayName: '福岡市中央卸売（API）',
+      theme: { token: 'market-fukuoka', hex: '#654321', text: '#FFFFFF' },
+    })]
+    fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
+
+    const { queryClient } = renderSearchControls({ ...createProps(), marketScope: 'city:fukuoka' as const })
+    const marketSelect = screen.getAllByLabelText('市場').at(-1)!
+    await waitFor(() => {
+      expect(fetchMarketsMock).toHaveBeenCalledTimes(1)
+      expect(marketSelect).toHaveClass('bg-market-fukuoka')
+      expect(marketSelect).toHaveClass('text-market-fukuoka')
+    })
+    queryClient.clear()
+  })
+
+  it('テーマ情報がない場合はスコープに応じたフォールバックを適用する', async () => {
+    fetchMarketsMock.mockResolvedValue({
+      markets: [{
+        scope: 'city:fukuoka',
+        displayName: '福岡市中央卸売（API）',
+        theme: undefined,
+        value: 'city:fukuoka' as const,
+        label: '福岡市中央卸売（API）',
+      }],
+      generated_at: '2024-05-01T00:00:00Z',
+    })
+
+    const { queryClient } = renderSearchControls({ ...createProps(), marketScope: 'city:fukuoka' as const })
+    const marketSelect = screen.getAllByLabelText('市場').at(-1)!
+    await waitFor(() => {
+      expect(fetchMarketsMock).toHaveBeenCalledTimes(1)
+      expect(marketSelect).toHaveClass('bg-market-city')
+      expect(marketSelect).toHaveClass('text-market-city')
+    })
+    queryClient.clear()
+  })
 })
