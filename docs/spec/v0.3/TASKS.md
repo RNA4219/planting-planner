@@ -28,3 +28,7 @@
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
+
+7. ログ/監視:
+   - [x] ETL 警告ログを市場メタデータ検証失敗を示す文言へ更新。
+     - 完了理由: `backend/app/etl/transform.py` の警告を「市場メタデータ検証の失敗」へ統一し、Great Expectations 固有表現を除去済み。
