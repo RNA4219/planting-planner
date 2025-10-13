@@ -6,6 +6,8 @@
   - `cd frontend && npm run lint`
   - `cd frontend && npm run test`
   - `cd frontend && npm run test:e2e`
+  - `cd backend && ruff check .`
+  - `cd backend && black --check .`
   - `cd backend && pytest`
   - `cd backend && mypy`
 - Tailwind クラス追加時は `tailwind.config.ts` の `market` カラートークンを利用し、独自色は禁止。
