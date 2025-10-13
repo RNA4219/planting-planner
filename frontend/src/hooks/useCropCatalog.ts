@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import * as apiModule from '../lib/api'
-import type { Crop } from '../types'
+import type { Crop, CropCategory } from '../types'
+import { isCropCategory } from '../utils/recommendations'
 
 const api = apiModule as typeof import('../lib/api') & {
   fetchCrops?: () => Promise<Crop[]>
@@ -21,6 +22,36 @@ export interface UseCropCatalogResult {
 }
 
 const fetchCrops = api.fetchCrops
+
+const JAPANESE_CATEGORY_MAP: Record<string, CropCategory> = {
+  葉菜: 'leaf',
+  葉菜類: 'leaf',
+  根菜: 'root',
+  根菜類: 'root',
+  花菜: 'flower',
+  花菜類: 'flower',
+}
+
+const normalizeCropCategory = (category: string): string => {
+  const trimmed = category.trim()
+  if (trimmed === '') {
+    return trimmed
+  }
+
+  const normalized = trimmed.normalize('NFKC')
+  const lower = normalized.toLowerCase()
+
+  if (isCropCategory(lower)) {
+    return lower
+  }
+
+  const mapped = JAPANESE_CATEGORY_MAP[lower] ?? JAPANESE_CATEGORY_MAP[normalized]
+  if (mapped !== undefined) {
+    return mapped
+  }
+
+  return normalized
+}
 
 export const useCropCatalog = (): UseCropCatalogResult => {
   const [crops, setCrops] = useState<Crop[]>([])
@@ -64,7 +95,7 @@ export const useCropCatalog = (): UseCropCatalogResult => {
       map.set(crop.name, {
         id: crop.id,
         name: crop.name,
-        category: crop.category,
+        category: normalizeCropCategory(crop.category),
       })
     })
     return map
