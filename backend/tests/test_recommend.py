@@ -143,6 +143,37 @@ def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
     assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
+def test_recommend_city_scope_filters_crops_missing_prices() -> None:
+    _write_market_prices(
+        [
+            ("national", 1, REFERENCE_WEEK, 120.0),
+            ("national", 2, REFERENCE_WEEK, 140.0),
+            ("national", 3, REFERENCE_WEEK, 200.0),
+            ("national", 4, REFERENCE_WEEK, 180.0),
+            ("city:13", 1, REFERENCE_WEEK, 150.0),
+            ("city:13", 2, REFERENCE_WEEK, 190.0),
+        ]
+    )
+
+    city_response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
+    )
+    assert city_response.status_code == 200
+    assert city_response.headers.get("fallback") is None
+
+    city_items = city_response.json()["items"]
+    assert {item["crop"] for item in city_items} == {"ほうれん草", "にんじん"}
+
+    national_response = client.get(
+        "/api/recommend",
+        params={"week": REFERENCE_WEEK, "marketScope": "national"},
+    )
+    assert national_response.status_code == 200
+
+    _assert_items(national_response.json(), region="temperate")
+
+
 def test_recommend_blank_market_scope_treated_as_national() -> None:
     _write_market_prices([("national", 1, REFERENCE_WEEK, 120.0)])
     response = client.get(
