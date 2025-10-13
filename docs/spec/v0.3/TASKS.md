@@ -28,3 +28,5 @@
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
+   - [x] UI 仕様のトースト記述を `ToastStack` と市場フォールバック警告の現仕様へ更新。
+     - 検証観点: フォールバック検出時に `warning` variant を enqueue → ToastStack の `role="status"` / auto dismiss と手動 dismiss が両立すること。
