@@ -196,18 +196,12 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜', '根菜', '花き'])
     expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
 
-    await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
-      <div
-        aria-label="カテゴリ"
-        class="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
-        role="tablist"
-      >
-        <button
-          aria-selected="true"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
-          role="tab"
-          tabindex="0"
-          type="button"
+    const rootTabButton = tabs[1]!
+    expect(tablist).toMatchInlineSnapshot(`
+        <div
+          aria-label="カテゴリ"
+          class="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
+          role="tablist"
         >
           葉菜
         </button>
@@ -232,7 +226,6 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       </div>
     `)
 
-    const rootTab = await screen.findByRole('tab', { name: '根菜' })
     await user.click(rootTab)
 
     await waitFor(() => {

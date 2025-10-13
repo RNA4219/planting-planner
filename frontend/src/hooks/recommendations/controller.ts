@@ -1,11 +1,11 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo } from 'react'
 
 import type { CropCategory, MarketScope, Region } from '../../types'
 import { RecommendationRow, buildRecommendationRows, formatWeekLabel } from '../../utils/recommendations'
 
 import { useRecommendationLoader } from './loader'
 import { useCropCatalog } from '../useCropCatalog'
-import { saveMarketScope, saveSelectedCategory } from '../../lib/storage'
+import { useRecommendationsControllerStore } from './controllerStore'
 
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
@@ -39,16 +39,35 @@ export const useRecommendations = ({
   initialMarketScope,
   initialCategory,
 }: UseRecommendationsOptions): UseRecommendationsResult => {
-  const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
-  const [region, setRegion] = useState<Region>(initialRegionRef.current)
-  const initialMarketScopeRef = useRef<MarketScope>(initialMarketScope ?? 'national')
-  const initialCategoryRef = useRef<CropCategory>(initialCategory ?? 'leaf')
-  const [marketScope, setMarketScopeState] = useState<MarketScope>(initialMarketScopeRef.current)
-  const [category, setCategoryState] = useState<CropCategory>(initialCategoryRef.current)
-  const regionSyncRef = useRef<Region>(initialRegionRef.current)
-  const regionFetchSkipRef = useRef<Region | null>(null)
-  const marketScopeSyncRef = useRef<MarketScope>(initialMarketScopeRef.current)
-  const categorySyncRef = useRef<CropCategory>(initialCategoryRef.current)
+  const normalizedInitialRegion = initialRegion ?? 'temperate'
+  const normalizedInitialMarketScope = initialMarketScope ?? 'national'
+  const normalizedInitialCategory = initialCategory ?? 'leaf'
+  const {
+    store: controllerStore,
+    state: { region, marketScope, category },
+  } = useRecommendationsControllerStore({
+    initialRegion: normalizedInitialRegion,
+    initialMarketScope: normalizedInitialMarketScope,
+    initialCategory: normalizedInitialCategory,
+  })
+  const {
+    setRegion: setRegionState,
+    setMarketScope: setMarketScopeState,
+    setCategory: setCategoryState,
+    syncInitialRegion,
+    syncInitialMarketScope,
+    syncInitialCategory,
+    updateLatestRegion,
+    updateLatestMarketScope,
+    updateLatestCategory,
+    updateLatestWeek,
+    updateRequest,
+    markRegionFetchSkip,
+    handleRegionEffect,
+    handleMarketScopeEffect,
+    handleCategoryEffect,
+    reloadCurrentWeek,
+  } = controllerStore.actions
   const { catalog: cropCatalog } = useCropCatalog()
   const cropIndex = useMemo(() => {
     const map = new Map<string, { id: number; category?: string }>()
@@ -68,47 +87,57 @@ export const useRecommendations = ({
     requestRecommendations,
     isMarketFallback,
   } = useRecommendationLoader({ region, marketScope, category })
-  const latestRegionRef = useRef(region)
-  const latestWeekRef = useRef(currentWeek)
-  const latestMarketScopeRef = useRef(marketScope)
-  const latestCategoryRef = useRef(category)
-  const requestRef = useRef(requestRecommendations)
+  useEffect(() => {
+    syncInitialRegion(initialRegion)
+  }, [initialRegion, syncInitialRegion])
 
   useEffect(() => {
-    latestRegionRef.current = region
-  }, [region])
+    syncInitialMarketScope(initialMarketScope)
+  }, [initialMarketScope, syncInitialMarketScope])
 
   useEffect(() => {
-    latestMarketScopeRef.current = marketScope
-  }, [marketScope])
+    syncInitialCategory(initialCategory)
+  }, [initialCategory, syncInitialCategory])
 
   useEffect(() => {
-    latestCategoryRef.current = category
-  }, [category])
+    updateLatestRegion(region)
+  }, [region, updateLatestRegion])
 
   useEffect(() => {
-    latestMarketScopeRef.current = selectedMarket
-  }, [selectedMarket])
+    updateLatestMarketScope(marketScope)
+  }, [marketScope, updateLatestMarketScope])
 
   useEffect(() => {
-    latestCategoryRef.current = selectedCategory
-  }, [selectedCategory])
+    updateLatestCategory(category)
+  }, [category, updateLatestCategory])
 
   useEffect(() => {
-    latestWeekRef.current = currentWeek
-  }, [currentWeek])
+    updateLatestMarketScope(selectedMarket)
+  }, [selectedMarket, updateLatestMarketScope])
 
   useEffect(() => {
-    requestRef.current = requestRecommendations
-  }, [requestRecommendations])
+    updateLatestCategory(selectedCategory)
+  }, [selectedCategory, updateLatestCategory])
 
-  const reloadCurrentWeek = useCallback(() => {
-    return requestRef.current(latestWeekRef.current, {
-      regionOverride: latestRegionRef.current,
-      marketScopeOverride: latestMarketScopeRef.current,
-      categoryOverride: latestCategoryRef.current,
-    })
-  }, [])
+  useEffect(() => {
+    updateLatestWeek(currentWeek)
+  }, [currentWeek, updateLatestWeek])
+
+  useEffect(() => {
+    updateRequest(requestRecommendations)
+  }, [requestRecommendations, updateRequest])
+
+  useEffect(() => {
+    void handleRegionEffect(currentWeek)
+  }, [category, currentWeek, handleRegionEffect, marketScope, region])
+
+  useEffect(() => {
+    void handleMarketScopeEffect(currentWeek)
+  }, [category, currentWeek, handleMarketScopeEffect, marketScope, region])
+
+  useEffect(() => {
+    void handleCategoryEffect(currentWeek)
+  }, [category, currentWeek, handleCategoryEffect, marketScope, region])
 
   const setQueryWeek = useCallback(
     (nextWeek: string) => {
@@ -119,90 +148,17 @@ export const useRecommendations = ({
 
   const setMarketScope = useCallback(
     (next: MarketScope) => {
-      setMarketScopeState((prev) => {
-        if (prev === next) {
-          return prev
-        }
-        saveMarketScope(next)
-        return next
-      })
+      setMarketScopeState(next)
     },
-    [],
+    [setMarketScopeState],
   )
 
   const setCategory = useCallback(
     (next: CropCategory) => {
-      setCategoryState((prev) => {
-        if (prev === next) {
-          return prev
-        }
-        saveSelectedCategory(next)
-        return next
-      })
+      setCategoryState(next)
     },
-    [],
+    [setCategoryState],
   )
-
-  useEffect(() => {
-    if (initialRegion !== undefined && initialRegion !== initialRegionRef.current) {
-      initialRegionRef.current = initialRegion
-      setRegion(initialRegion)
-    }
-  }, [initialRegion, setRegion])
-
-  useEffect(() => {
-    if (initialMarketScope !== undefined && initialMarketScope !== initialMarketScopeRef.current) {
-      initialMarketScopeRef.current = initialMarketScope
-      setMarketScope(initialMarketScope)
-    }
-  }, [initialMarketScope, setMarketScope])
-
-  useEffect(() => {
-    if (initialCategory !== undefined && initialCategory !== initialCategoryRef.current) {
-      initialCategoryRef.current = initialCategory
-      setCategory(initialCategory)
-    }
-  }, [initialCategory, setCategory])
-
-  useEffect(() => {
-    if (regionSyncRef.current === region) {
-      return
-    }
-    regionSyncRef.current = region
-    if (regionFetchSkipRef.current === region) {
-      regionFetchSkipRef.current = null
-      return
-    }
-    void requestRecommendations(currentWeek, {
-      regionOverride: region,
-      marketScopeOverride: marketScope,
-      categoryOverride: category,
-    })
-  }, [category, currentWeek, marketScope, region, requestRecommendations])
-
-  useEffect(() => {
-    if (marketScopeSyncRef.current === marketScope) {
-      return
-    }
-    marketScopeSyncRef.current = marketScope
-    void requestRecommendations(currentWeek, {
-      regionOverride: region,
-      marketScopeOverride: marketScope,
-      categoryOverride: category,
-    })
-  }, [category, currentWeek, marketScope, region, requestRecommendations])
-
-  useEffect(() => {
-    if (categorySyncRef.current === category) {
-      return
-    }
-    categorySyncRef.current = category
-    void requestRecommendations(currentWeek, {
-      regionOverride: region,
-      marketScopeOverride: marketScope,
-      categoryOverride: category,
-    })
-  }, [category, currentWeek, marketScope, region, requestRecommendations])
 
   const sortedRows = useMemo<RecommendationRow[]>(() => {
     return buildRecommendationRows({ items, favorites, cropIndex })
@@ -217,13 +173,13 @@ export const useRecommendations = ({
       const submittedWeek = weekField?.value ?? queryWeek
       const submittedRegion = (regionField?.value as Region | undefined) ?? region
       if (submittedRegion && submittedRegion !== region) {
-        setRegion(submittedRegion)
+        setRegionState(submittedRegion)
       }
       const regionChanged = submittedRegion !== undefined && submittedRegion !== region
       const targetRegion = submittedRegion ?? region
       const shouldRequest = !regionChanged || submittedWeek !== currentWeek
-      if (regionChanged && shouldRequest) {
-        regionFetchSkipRef.current = submittedRegion
+      if (regionChanged && shouldRequest && submittedRegion) {
+        markRegionFetchSkip(submittedRegion)
       }
       if (shouldRequest) {
         void requestRecommendations(submittedWeek, {
@@ -233,14 +189,23 @@ export const useRecommendations = ({
         })
       }
     },
-    [category, currentWeek, marketScope, queryWeek, region, requestRecommendations, setRegion],
+    [
+      category,
+      currentWeek,
+      markRegionFetchSkip,
+      marketScope,
+      queryWeek,
+      region,
+      requestRecommendations,
+      setRegionState,
+    ],
   )
 
   const displayWeek = useMemo(() => formatWeekLabel(activeWeek), [activeWeek])
 
   return {
     region,
-    setRegion,
+    setRegion: setRegionState,
     marketScope,
     setMarketScope,
     selectedMarket,
