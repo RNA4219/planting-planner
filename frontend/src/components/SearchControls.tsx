@@ -55,6 +55,23 @@ const normalizeBackgroundToken = (scope: MarketScope, token: string): string => 
   return 'market-neutral'
 }
 
+const getMarketSelectTheme = (
+  scope: MarketScope,
+  optionTheme: MarketScopeOption['theme'] | undefined,
+  fallbackTheme: MarketScopeTheme,
+): { readonly backgroundClass: string; readonly dataTheme: string; readonly textColor: string } => {
+  const backgroundToken = optionTheme?.token
+    ? normalizeBackgroundToken(scope, optionTheme.token)
+    : normalizeBackgroundToken(scope, fallbackTheme.token)
+
+  const backgroundClass =
+    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
+  const textColor = optionTheme?.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
+  const dataTheme = optionTheme?.token ?? fallbackTheme.token
+
+  return { backgroundClass, dataTheme, textColor }
+}
+
 const resolveMarketTheme = (
   scope: MarketScope,
   options: readonly MarketScopeOption[],
@@ -68,18 +85,8 @@ const resolveMarketTheme = (
   const fallbackTheme = fallbackByScope ?? fallbackByGroup
 
   const activeOption = options.find((option) => option.value === scope)
-  const activeTheme = activeOption?.theme ?? fallbackTheme
 
-  const backgroundToken = activeTheme.token.startsWith('market-')
-    ? normalizeBackgroundToken(scope, activeTheme.token)
-    : normalizeBackgroundToken(scope, fallbackTheme.token)
-
-  const backgroundClass =
-    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
-  const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
-  const dataTheme = activeTheme.token ?? fallbackTheme.token
-
-  return { backgroundClass, dataTheme, textColor }
+  return getMarketSelectTheme(scope, activeOption?.theme, fallbackTheme)
 }
 
 export const SearchControls = ({
