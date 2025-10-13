@@ -56,7 +56,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     scope: 'national',
     displayName: '全国平均',
     theme: {
-      token: 'market-national',
+      token: 'market.national',
       hex: '#2E7D32',
       text: '#FFFFFF',
     },
@@ -65,7 +65,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     scope: 'city:tokyo',
     displayName: '東京都中央卸売',
     theme: {
-      token: 'market-tokyo',
+      token: 'market.city_tokyo',
       hex: '#1565C0',
       text: '#FFFFFF',
     },
@@ -74,7 +74,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     scope: 'city:osaka',
     displayName: '大阪市中央卸売',
     theme: {
-      token: 'market-osaka',
+      token: 'market.city_osaka',
       hex: '#EF6C00',
       text: '#FFFFFF',
     },
@@ -83,7 +83,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     scope: 'city:nagoya',
     displayName: '名古屋市中央卸売',
     theme: {
-      token: 'market-nagoya',
+      token: 'market.city_nagoya',
       hex: '#6A1B9A',
       text: '#FFFFFF',
     },

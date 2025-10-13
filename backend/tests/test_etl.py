@@ -35,8 +35,8 @@ def test_run_etl_populates_market_prices_and_cache(tmp_path: Path) -> None:
             VALUES (?, ?, ?)
             """,
             [
-                ("accent.national", "#22c55e", "#000000"),
-                ("accent.tokyo", "#2563eb", "#ffffff"),
+                ("market.national", "#22c55e", "#000000"),
+                ("market.city_tokyo", "#2563eb", "#ffffff"),
             ],
         )
         conn.executemany(
@@ -46,8 +46,8 @@ def test_run_etl_populates_market_prices_and_cache(tmp_path: Path) -> None:
             ) VALUES (?, ?, ?, ?, ?)
             """,
             [
-                ("national", "全国平均", "Asia/Tokyo", 10, "accent.national"),
-                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo"),
+                ("national", "全国平均", "Asia/Tokyo", 10, "market.national"),
+                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "market.city_tokyo"),
             ],
         )
         conn.executemany(
@@ -130,7 +130,7 @@ def test_run_etl_populates_market_prices_and_cache(tmp_path: Path) -> None:
         ]
         tokyo = next(item for item in payload["markets"] if item["scope"] == "city:tokyo")
         assert tokyo["effective_from"] == "2024-W02"
-        assert tokyo["theme"]["token"] == "accent.tokyo"
+        assert tokyo["theme"]["token"] == "market.city_tokyo"
         assert tokyo["categories"] == [
             {
                 "category": "leaf",
@@ -166,7 +166,7 @@ def test_run_etl_invokes_great_expectations_validation(
             INSERT OR REPLACE INTO theme_tokens (token, hex_color, text_color)
             VALUES (?, ?, ?)
             """,
-            [("accent.national", "#22c55e", "#000000")],
+            [("market.national", "#22c55e", "#000000")],
         )
         conn.executemany(
             """
@@ -174,7 +174,7 @@ def test_run_etl_invokes_great_expectations_validation(
                 scope, display_name, timezone, priority, theme_token
             ) VALUES (?, ?, ?, ?, ?)
             """,
-            [("national", "全国平均", "Asia/Tokyo", 10, "accent.national")],
+            [("national", "全国平均", "Asia/Tokyo", 10, "market.national")],
         )
         conn.commit()
 
@@ -232,7 +232,7 @@ def test_run_etl_logs_and_continues_when_validation_fails(
             INSERT OR REPLACE INTO theme_tokens (token, hex_color, text_color)
             VALUES (?, ?, ?)
             """,
-            [("accent.national", "#22c55e", "#000000")],
+            [("market.national", "#22c55e", "#000000")],
         )
         conn.executemany(
             """
@@ -240,7 +240,7 @@ def test_run_etl_logs_and_continues_when_validation_fails(
                 scope, display_name, timezone, priority, theme_token
             ) VALUES (?, ?, ?, ?, ?)
             """,
-            [("national", "全国平均", "Asia/Tokyo", 10, "accent.national")],
+            [("national", "全国平均", "Asia/Tokyo", 10, "market.national")],
         )
         conn.commit()
 
@@ -285,8 +285,8 @@ def test_run_etl_filters_city_scopes_when_validation_rejects(
             VALUES (?, ?, ?)
             """,
             [
-                ("accent.national", "#22c55e", "#000000"),
-                ("accent.tokyo", "#2563eb", "#ffffff"),
+                ("market.national", "#22c55e", "#000000"),
+                ("market.city_tokyo", "#2563eb", "#ffffff"),
             ],
         )
         conn.executemany(
@@ -296,8 +296,8 @@ def test_run_etl_filters_city_scopes_when_validation_rejects(
             ) VALUES (?, ?, ?, ?, ?)
             """,
             [
-                ("national", "全国平均", "Asia/Tokyo", 10, "accent.national"),
-                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo"),
+                ("national", "全国平均", "Asia/Tokyo", 10, "market.national"),
+                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "market.city_tokyo"),
             ],
         )
         conn.commit()
