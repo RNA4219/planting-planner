@@ -1,18 +1,43 @@
 from __future__ import annotations
 
 import sqlite3
+import sys
 from pathlib import Path
+from types import ModuleType
+from typing import Any
 
 from .. import db as db_legacy
 from .data_loader import DEFAULT_DATA_DIR, SeedPayload, load_seed_payload
+from . import writers as _writers
 from .writers import (
     write_crops,
     write_growth_days,
+    write_market_scope_categories,
     write_market_scopes,
     write_price_samples,
     write_seed_payload,
     write_theme_tokens,
 )
+
+def _module_from(functions: dict[str, Any], *, name: str) -> ModuleType:
+    module = ModuleType(name)
+    for attr, value in functions.items():
+        setattr(module, attr, value)
+    module.__all__ = tuple(functions.keys())  # type: ignore[attr-defined]
+    return module
+
+
+crops_writer = _module_from({"write_crops": _writers._write_crops_impl}, name="app.seed.crops_writer")
+markets_writer = _module_from(
+    {
+        "write_market_scopes": _writers._write_market_scopes_impl,
+        "write_market_scope_categories": _writers._write_market_scope_categories_impl,
+    },
+    name="app.seed.markets_writer",
+)
+
+sys.modules.setdefault("app.seed.crops_writer", crops_writer)
+sys.modules.setdefault("app.seed.markets_writer", markets_writer)
 
 __all__ = [
     "DEFAULT_DATA_DIR",
@@ -23,9 +48,12 @@ __all__ = [
     "write_crops",
     "write_growth_days",
     "write_market_scopes",
+    "write_market_scope_categories",
     "write_price_samples",
     "write_theme_tokens",
     "write_seed_payload",
+    "crops_writer",
+    "markets_writer",
 ]
 
 
