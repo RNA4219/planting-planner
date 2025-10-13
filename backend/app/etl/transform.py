@@ -243,11 +243,13 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
         try:
             valid = expectations.validate_market_prices(conn, dataset)
         except Exception as exc:  # pragma: no cover - exercised via tests
-            _LOGGER.warning("Great Expectations validation failed: %s", exc, exc_info=True)
+            _LOGGER.warning("市場メタデータ検証の失敗: %s", exc, exc_info=True)
             fallback_required = True
         else:
             if not valid:
-                _LOGGER.warning("Great Expectations validation failed: dataset rejected")
+                _LOGGER.warning(
+                    "市場メタデータ検証の失敗: バリデーション基準を満たしませんでした"
+                )
                 fallback_required = True
         if fallback_required:
             inserted_market = [item for item in transformed_market if item[1] == "national"]
