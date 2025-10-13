@@ -56,11 +56,15 @@ export const normalizeRecommendationResponse = (
   source: RecommendationSource = 'modern',
 ): NormalizeRecommendationResult => {
   const weekValue = normalizeIsoWeek(response.week, fallbackWeek)
-  const normalizedItems = response.items.map<RecommendationItem>((item) => ({
-    ...item,
-    sowing_week: normalizeIsoWeek(item.sowing_week),
-    harvest_week: normalizeIsoWeek(item.harvest_week),
-  }))
+  const normalizedItems = response.items.map<RecommendationItem>((item) => {
+    const normalizedSowingWeek = normalizeIsoWeek(item.sowing_week, weekValue)
+    const normalizedHarvestWeek = normalizeIsoWeek(item.harvest_week, weekValue)
+    return {
+      ...item,
+      sowing_week: normalizedSowingWeek,
+      harvest_week: normalizedHarvestWeek,
+    }
+  })
   return {
     week: weekValue,
     items: normalizedItems,
