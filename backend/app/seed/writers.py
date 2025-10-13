@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 import sqlite3
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -114,7 +115,7 @@ def _iter_market_price_records(
             yield crop_id, price
 
 
-def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) -> None:
+def _write_crops_impl(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) -> None:
     crops_list = list(crops)
     for crop in crops_list:
         crop_id = int(crop["id"])
@@ -176,6 +177,11 @@ def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) ->
         )
 
 
+def write_crops(conn: sqlite3.Connection, crops: Iterable[Mapping[str, Any]]) -> None:
+    handler = getattr(sys.modules.get("app.seed.crops_writer"), "write_crops", _write_crops_impl)
+    handler(conn, crops)
+
+
 def write_theme_tokens(conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]) -> None:
     for token in theme_tokens:
         conn.execute(
@@ -194,7 +200,7 @@ def write_theme_tokens(conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[
         )
 
 
-def write_market_scopes(
+def _write_market_scopes_impl(
     conn: sqlite3.Connection, market_scopes: Iterable[Mapping[str, Any]]
 ) -> None:
     for scope in market_scopes:
@@ -214,7 +220,18 @@ def write_market_scopes(
         )
 
 
-def write_market_scope_categories(
+def write_market_scopes(
+    conn: sqlite3.Connection, market_scopes: Iterable[Mapping[str, Any]]
+) -> None:
+    handler = getattr(
+        sys.modules.get("app.seed.markets_writer"),
+        "write_market_scopes",
+        _write_market_scopes_impl,
+    )
+    handler(conn, market_scopes)
+
+
+def _write_market_scope_categories_impl(
     conn: sqlite3.Connection, categories: Iterable[Mapping[str, Any]]
 ) -> None:
     for category in categories:
@@ -232,6 +249,17 @@ def write_market_scope_categories(
                 category.get("source", "seed"),
             ),
         )
+
+
+def write_market_scope_categories(
+    conn: sqlite3.Connection, categories: Iterable[Mapping[str, Any]]
+) -> None:
+    handler = getattr(
+        sys.modules.get("app.seed.markets_writer"),
+        "write_market_scope_categories",
+        _write_market_scope_categories_impl,
+    )
+    handler(conn, categories)
 
 
 def write_price_samples(
