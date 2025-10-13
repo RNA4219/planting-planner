@@ -58,7 +58,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     theme: {
       token: 'market-national',
       hex: '#22c55e',
-      text: '#0f172a',
+      text: '#FFFFFF',
     },
   },
   {

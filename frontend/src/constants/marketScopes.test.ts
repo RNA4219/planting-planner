@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
+import type { MarketScope } from '../types'
 import { MARKET_SCOPE_FALLBACK_DEFINITIONS } from './marketScopes'
 
 type ThemeToken = {
@@ -41,6 +42,10 @@ const resolveMarketThemeToken = (
   return undefined
 }
 
+const MARKET_SCOPE_TEXT_COLOR_OVERRIDES = new Map<MarketScope, string>([
+  ['national', '#FFFFFF'],
+])
+
 describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
   it('テーマ情報を含むフォールバック定義を提供する', () => {
     expect(MARKET_SCOPE_FALLBACK_DEFINITIONS).not.toHaveLength(0)
@@ -68,7 +73,13 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
       }
 
       expect(definition.theme.hex).toBe(themeToken.hex_color)
-      expect(definition.theme.text).toBe(themeToken.text_color)
+
+      const override = MARKET_SCOPE_TEXT_COLOR_OVERRIDES.get(definition.scope)
+      if (override) {
+        expect(definition.theme.text).toBe(override)
+      } else {
+        expect(definition.theme.text).toBe(themeToken.text_color)
+      }
     }
   })
 })
