@@ -99,7 +99,7 @@ describe('SearchControls', () => {
     })
     expect(select).toHaveAttribute('data-theme', 'market-national')
     expect(select.className).toContain('bg-market-national')
-    expect(select).toHaveStyle({ color: '#FFFFFF' })
+    expect(select).toHaveStyle({ color: '#0f172a' })
     queryClient.clear()
   })
   it('React Query 未完了時はフォールバックを描画する', () => {
