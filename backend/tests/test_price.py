@@ -65,7 +65,8 @@ def test_price_series_city_scope_uses_city_prices() -> None:
     body = response.json()
     assert body["prices"]
     assert body["prices"][0]["avg_price"] == 180.0
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_price_series_city_scope_falls_back_to_national() -> None:
@@ -78,7 +79,8 @@ def test_price_series_city_scope_falls_back_to_national() -> None:
     body = response.json()
     assert body["prices"]
     assert body["prices"][0]["avg_price"] == 210.0
-    assert response.headers.get("x-market-fallback") == "true"
+    assert response.headers.get("fallback") == "true"
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_price_series_blank_market_scope_uses_national_without_fallback() -> None:
@@ -91,7 +93,8 @@ def test_price_series_blank_market_scope_uses_national_without_fallback() -> Non
     body = response.json()
     assert body["prices"]
     assert body["prices"][0]["avg_price"] == 210.0
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_price_series_all_market_scope_uses_national_without_fallback() -> None:
@@ -104,4 +107,5 @@ def test_price_series_all_market_scope_uses_national_without_fallback() -> None:
     body = response.json()
     assert body["prices"]
     assert body["prices"][0]["avg_price"] == 210.0
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
