@@ -16,6 +16,19 @@ from ..dependencies import (
 router = APIRouter(prefix="/api/price")
 
 
+def _expose_fallback_header(response: Response, *, enabled: bool) -> None:
+    expose = response.headers.get("access-control-expose-headers")
+    if expose:
+        headers = [value.strip() for value in expose.split(",") if value.strip()]
+        if "fallback" not in headers:
+            headers.append("fallback")
+            response.headers["access-control-expose-headers"] = ",".join(headers)
+    else:
+        response.headers["access-control-expose-headers"] = "fallback"
+    if enabled:
+        response.headers["fallback"] = "true"
+
+
 def _select_market_prices(
     conn: ConnDependency,
     *,
@@ -106,8 +119,7 @@ def price_series(
         )
     if not rows:
         rows = _select_price_weekly(conn, crop_id=crop_id, frm=frm, to=to)
-    if fallback:
-        response.headers["x-market-fallback"] = "true"
+    _expose_fallback_header(response, enabled=fallback)
 
     unit = rows[0]["unit"] if rows else "円/kg"
     source = rows[0]["source"] if rows else "seed"

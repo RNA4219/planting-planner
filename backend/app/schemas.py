@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal, NotRequired
+from typing import Annotated, Literal, NotRequired, cast, get_args
 
 from pydantic import AfterValidator, BaseModel
 from typing_extensions import TypedDict
@@ -8,6 +8,24 @@ from typing_extensions import TypedDict
 Region = Literal["cold", "temperate", "warm"]
 RefreshState = Literal["success", "failure", "running", "stale"]
 DEFAULT_REGION: Region = "temperate"
+
+CropCategory = Literal["leaf", "root", "flower", "fruit"]
+
+
+def _validate_crop_category(value: str) -> CropCategory:
+    if not isinstance(value, str):  # pragma: no cover - defensive for validation
+        raise TypeError("category must be a string")
+    candidate = value.strip().casefold()
+    allowed = get_args(CropCategory)
+    if candidate not in allowed:
+        raise ValueError("invalid crop category")
+    return cast(CropCategory, candidate)
+
+
+def parse_crop_category(value: str) -> CropCategory:
+    """Parse and normalize crop categories."""
+
+    return _validate_crop_category(value)
 
 
 def _validate_market_scope(value: str) -> str:
@@ -38,7 +56,7 @@ DEFAULT_MARKET_SCOPE: MarketScope = "national"
 class Crop(BaseModel):
     id: int
     name: str
-    category: str
+    category: CropCategory
 
 
 class RecommendationItem(BaseModel):

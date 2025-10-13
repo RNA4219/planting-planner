@@ -90,6 +90,8 @@ const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> =>
   return parseResponse<T>(response)
 }
 
+const MARKET_FALLBACK_HEADER = 'fallback'
+
 export const fetchCrops = async (): Promise<Crop[]> => {
   const url = buildUrl('/crops')
   return request<Crop[]>(url)
@@ -145,7 +147,7 @@ export const fetchRecommendations = async (
     },
   })
   const payload = await parseResponse<RecommendResponse>(response)
-  const fallbackHeader = response.headers.get('x-market-fallback')
+  const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
   const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
   return { ...payload, isMarketFallback }
 }

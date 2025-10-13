@@ -18,16 +18,14 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         novalidate=""
       >
         <label
-          class="region-select"
+          class="flex flex-col gap-2 text-sm font-medium text-slate-700"
         >
-          <span
-            class="region-select__label"
-          >
+          <span>
             地域
           </span>
           <select
             aria-label="地域"
-            class="region-select__select"
+            class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
             name="region"
           >
             <option
@@ -120,13 +118,14 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
       class="app__main"
     >
       <section
-        class="recommend"
+        aria-label="温暖地向けの推奨一覧（基準週: 2024-W30）"
+        class="recommend space-y-4"
       >
         <div
-          class="recommend__header"
+          class="recommend__header flex flex-wrap items-center justify-between gap-3"
         >
           <div
-            class="recommend__meta"
+            class="recommend__meta flex flex-wrap items-center gap-6 text-sm text-slate-600"
           >
             <span>
               対象地域: 
@@ -139,12 +138,12 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
           </div>
           <div
             aria-label="カテゴリ"
-            class="category-tabs"
+            class="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
             role="tablist"
           >
             <button
               aria-selected="true"
-              class="category-tabs__tab category-tabs__tab--active"
+              class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
               role="tab"
               tabindex="0"
               type="button"
@@ -153,7 +152,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </button>
             <button
               aria-selected="false"
-              class="category-tabs__tab"
+              class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
               role="tab"
               tabindex="-1"
               type="button"
@@ -162,20 +161,31 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </button>
             <button
               aria-selected="false"
-              class="category-tabs__tab"
+              class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
               role="tab"
               tabindex="-1"
               type="button"
             >
               花き
             </button>
+            <button
+              aria-selected="false"
+              class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              果菜
+            </button>
           </div>
         </div>
         <table
           aria-label="温暖地向けの推奨一覧（基準週: 2024-W30）"
-          class="recommend__table"
+          class="recommend__table w-full border-separate border-spacing-4"
         >
-          <thead>
+          <thead
+            class="sr-only"
+          >
             <tr>
               <th
                 scope="col"
@@ -185,12 +195,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
               <th
                 scope="col"
               >
-                播種週
-              </th>
-              <th
-                scope="col"
-              >
-                収穫週
+                期間
               </th>
               <th
                 scope="col"
@@ -199,71 +204,159 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody
+            class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
             <tr
               aria-selected="false"
-              class="recommend__row"
-              role="row"
+              class="recommend__row flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 bg-market-neutral/10 border-market-neutral/40 ring-0"
+              data-testid="recommendation-card"
               tabindex="0"
             >
-              <td>
+              <td
+                class="flex items-start justify-between gap-3 align-top"
+              >
                 <div
-                  class="recommend__crop"
+                  class="flex items-start gap-2"
                 >
                   <button
                     aria-label="トマトをお気に入りに追加"
                     aria-pressed="false"
-                    class="fav-star"
+                    class="inline-flex items-center justify-center text-xl leading-none transition-colors duration-200 bg-transparent border-0 cursor-pointer p-0 hover:text-amber-400 focus-visible:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 text-slate-300"
                     type="button"
                   >
                     ☆
                   </button>
-                  <span>
+                  <span
+                    class="text-sm font-semibold text-slate-700"
+                  >
                     トマト
                   </span>
                 </div>
+                <span
+                  class="text-xs text-slate-500"
+                >
+                  カテゴリ: 
+                  果菜類
+                </span>
               </td>
-              <td>
-                2024-W28
+              <td
+                class="grid grid-cols-2 gap-2 text-xs text-slate-600 align-top"
+              >
+                <div>
+                  <p
+                    class="font-medium text-slate-500"
+                  >
+                    播種週
+                  </p>
+                  <p
+                    class="text-sm text-slate-700"
+                  >
+                    2024-W28
+                  </p>
+                </div>
+                <div>
+                  <p
+                    class="font-medium text-slate-500"
+                  >
+                    収穫週
+                  </p>
+                  <p
+                    class="text-sm text-slate-700"
+                  >
+                    2024-W35
+                  </p>
+                </div>
               </td>
-              <td>
-                2024-W35
-              </td>
-              <td>
-                テストデータ
+              <td
+                class="text-xs text-slate-600 align-top"
+              >
+                <p
+                  class="font-medium text-slate-500"
+                >
+                  情報源
+                </p>
+                <p
+                  class="text-sm text-slate-700"
+                >
+                  テストデータ
+                </p>
               </td>
             </tr>
             <tr
               aria-selected="false"
-              class="recommend__row"
-              role="row"
+              class="recommend__row flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 bg-market-neutral/10 border-market-neutral/40 ring-0"
+              data-testid="recommendation-card"
               tabindex="0"
             >
-              <td>
+              <td
+                class="flex items-start justify-between gap-3 align-top"
+              >
                 <div
-                  class="recommend__crop"
+                  class="flex items-start gap-2"
                 >
                   <button
                     aria-label="レタスをお気に入りに追加"
                     aria-pressed="false"
-                    class="fav-star"
+                    class="inline-flex items-center justify-center text-xl leading-none transition-colors duration-200 bg-transparent border-0 cursor-pointer p-0 hover:text-amber-400 focus-visible:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 text-slate-300"
                     type="button"
                   >
                     ☆
                   </button>
-                  <span>
+                  <span
+                    class="text-sm font-semibold text-slate-700"
+                  >
                     レタス
                   </span>
                 </div>
+                <span
+                  class="text-xs text-slate-500"
+                >
+                  カテゴリ: 
+                  葉菜類
+                </span>
               </td>
-              <td>
-                2024-W29
+              <td
+                class="grid grid-cols-2 gap-2 text-xs text-slate-600 align-top"
+              >
+                <div>
+                  <p
+                    class="font-medium text-slate-500"
+                  >
+                    播種週
+                  </p>
+                  <p
+                    class="text-sm text-slate-700"
+                  >
+                    2024-W29
+                  </p>
+                </div>
+                <div>
+                  <p
+                    class="font-medium text-slate-500"
+                  >
+                    収穫週
+                  </p>
+                  <p
+                    class="text-sm text-slate-700"
+                  >
+                    2024-W32
+                  </p>
+                </div>
               </td>
-              <td>
-                2024-W32
-              </td>
-              <td>
-                テストデータ
+              <td
+                class="text-xs text-slate-600 align-top"
+              >
+                <p
+                  class="font-medium text-slate-500"
+                >
+                  情報源
+                </p>
+                <p
+                  class="text-sm text-slate-700"
+                >
+                  テストデータ
+                </p>
               </td>
             </tr>
           </tbody>

@@ -55,3 +55,9 @@ def test_list_crops_category_all_returns_full_dataset(seeded_client: TestClient)
     assert default_response.status_code == 200
     assert all_response.status_code == 200
     assert all_response.json() == default_response.json()
+
+
+def test_list_crops_invalid_category_returns_422(seeded_client: TestClient) -> None:
+    response = seeded_client.get("/api/crops", params={"category": "invalid"})
+
+    assert response.status_code == 422

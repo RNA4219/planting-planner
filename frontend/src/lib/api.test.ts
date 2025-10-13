@@ -192,7 +192,7 @@ describe('fetchRecommendations', () => {
     expect(result).toEqual({ ...payload, isMarketFallback: false })
   })
 
-  it('x-market-fallback ヘッダーが true の場合に isMarketFallback を true として返す', async () => {
+  it('fallback ヘッダーが true の場合に isMarketFallback を true として返す', async () => {
     const payload: RecommendResponse = {
       week: '2024-W30',
       region: 'temperate',
@@ -203,7 +203,7 @@ describe('fetchRecommendations', () => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'x-market-fallback': 'true',
+          fallback: 'true',
         },
       }),
     )

@@ -225,6 +225,7 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
             transformed_legacy,
         )
 
+    inserted_market = transformed_market
     if transformed_market:
         dataset = [
             {
@@ -238,27 +239,35 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
             }
             for crop_id, scope, week_iso, avg_price, stddev, unit, source in transformed_market
         ]
+        fallback_required = False
         try:
             valid = expectations.validate_market_prices(conn, dataset)
         except Exception as exc:  # pragma: no cover - exercised via tests
             _LOGGER.warning("Great Expectations validation failed: %s", exc, exc_info=True)
+            fallback_required = True
         else:
             if not valid:
                 _LOGGER.warning("Great Expectations validation failed: dataset rejected")
-        conn.executemany(
-            """
-            INSERT INTO market_prices (
-                crop_id, scope, week, avg_price, stddev, unit, source
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(crop_id, scope, week) DO UPDATE SET
-                avg_price = excluded.avg_price,
-                stddev = excluded.stddev,
-                unit = excluded.unit,
-                source = excluded.source
-            """,
-            transformed_market,
-        )
+                fallback_required = True
+        if fallback_required:
+            inserted_market = [
+                item for item in transformed_market if item[1] == "national"
+            ]
+        if inserted_market:
+            conn.executemany(
+                """
+                INSERT INTO market_prices (
+                    crop_id, scope, week, avg_price, stddev, unit, source
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(crop_id, scope, week) DO UPDATE SET
+                    avg_price = excluded.avg_price,
+                    stddev = excluded.stddev,
+                    unit = excluded.unit,
+                    source = excluded.source
+                """,
+                inserted_market,
+            )
 
     _refresh_market_metadata_cache(conn)
     conn.commit()
-    return len(transformed_legacy) + len(transformed_market)
+    return len(transformed_legacy) + len(inserted_market)

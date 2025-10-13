@@ -270,3 +270,99 @@ def test_run_etl_logs_and_continues_when_validation_fails(
         assert [(row["scope"], row["week"]) for row in rows] == [("national", "2024-W05")]
     finally:
         conn.close()
+
+
+def test_run_etl_filters_city_scopes_when_validation_rejects(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    conn = make_conn(tmp_path / "market-validation-reject.db")
+    try:
+        db.init_db(conn)
+        prepare_crops(conn)
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO theme_tokens (token, hex_color, text_color)
+            VALUES (?, ?, ?)
+            """,
+            [
+                ("accent.national", "#22c55e", "#000000"),
+                ("accent.tokyo", "#2563eb", "#ffffff"),
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO market_scopes (
+                scope, display_name, timezone, priority, theme_token
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                ("national", "全国平均", "Asia/Tokyo", 10, "accent.national"),
+                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo"),
+            ],
+        )
+        conn.commit()
+
+        captured: dict[str, object] = {}
+
+        def fake_validate(
+            conn_param: sqlite3.Connection,
+            dataset: list[dict[str, object]],
+        ) -> bool:
+            captured["conn"] = conn_param
+            captured["dataset"] = dataset
+            return False
+
+        monkeypatch.setattr(etl.expectations, "validate_market_prices", fake_validate)
+
+        records = [
+            {
+                "crop_id": 1,
+                "scope": "national",
+                "week": "2024-W05",
+                "avg_price": 220,
+                "stddev": 10,
+                "unit": "円/kg",
+                "source": "test",
+            },
+            {
+                "crop_id": 1,
+                "scope": "city:tokyo",
+                "week": "2024-W05",
+                "avg_price": 330,
+                "stddev": 12,
+                "unit": "円/kg",
+                "source": "test",
+            },
+        ]
+
+        updated = etl.run_etl(conn, data_loader=lambda: records)
+        assert updated == 1
+        assert captured["conn"] is conn
+        dataset = captured["dataset"]
+        assert isinstance(dataset, list)
+        assert sorted(item["scope"] for item in dataset) == ["city:tokyo", "national"]
+
+        rows = conn.execute(
+            "SELECT scope, week, avg_price FROM market_prices ORDER BY scope"
+        ).fetchall()
+        assert [(row["scope"], row["week"], row["avg_price"]) for row in rows] == [
+            ("national", "2024-W05", pytest.approx(220.0)),
+        ]
+
+        cache_row = conn.execute(
+            "SELECT payload FROM metadata_cache WHERE cache_key = 'market_metadata'"
+        ).fetchone()
+        assert cache_row is not None
+        payload = json.loads(str(cache_row["payload"]))
+        assert sorted(item["scope"] for item in payload["markets"]) == [
+            "city:tokyo",
+            "national",
+        ]
+        tokyo = next(item for item in payload["markets"] if item["scope"] == "city:tokyo")
+        assert tokyo["effective_from"] is None
+        national = next(
+            item for item in payload["markets"] if item["scope"] == "national"
+        )
+        assert national["effective_from"] == "2024-W05"
+    finally:
+        conn.close()
