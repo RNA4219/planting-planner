@@ -4,7 +4,6 @@ import re
 from datetime import date, timedelta
 
 import pytest
-
 from fastapi.testclient import TestClient
 
 from app.db.connection import get_conn
