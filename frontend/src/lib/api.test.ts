@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PriceSeries, RecommendResponse } from '../types'
-import type { MarketScopeOption } from '../constants/marketScopes'
 import type { RecommendResponseWithFallback } from './api'
 
 type FetchRecommend = typeof import('./api')['fetchRecommend']
@@ -288,11 +287,27 @@ describe('fetchMarkets', () => {
     ;({ fetchMarkets } = await import('./api'))
   }
 
-  it('markets エンドポイントのレスポンスを返す', async () => {
-    const payload: { markets: MarketScopeOption[]; generated_at: string } = {
+  it('markets エンドポイントのレスポンスを MarketScopeOption へマッピングする', async () => {
+    const payload = {
       markets: [
-        { value: 'national', label: '全国平均（API）' },
-        { value: 'city:fukuoka', label: '福岡市中央卸売（API）' },
+        {
+          scope: 'national',
+          display_name: '全国平均（API）',
+          theme: {
+            token: 'accent.national',
+            hex_color: '#22c55e',
+            text_color: '#000000',
+          },
+        },
+        {
+          scope: 'city:fukuoka',
+          display_name: '福岡市中央卸売（API）',
+          theme: {
+            token: 'accent.fukuoka',
+            hex_color: '#15803d',
+            text_color: '#ffffff',
+          },
+        },
       ],
       generated_at: '2024-05-01T00:00:00Z',
     }
@@ -309,7 +324,60 @@ describe('fetchMarkets', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/markets', {
       headers: { 'Content-Type': 'application/json' },
     })
-    expect(result).toEqual(payload)
+    expect(result).toEqual({
+      markets: [
+        {
+          value: 'national',
+          label: '全国平均（API）',
+          theme: {
+            token: 'accent.national',
+            hexColor: '#22c55e',
+            textColor: '#000000',
+          },
+        },
+        {
+          value: 'city:fukuoka',
+          label: '福岡市中央卸売（API）',
+          theme: {
+            token: 'accent.fukuoka',
+            hexColor: '#15803d',
+            textColor: '#ffffff',
+          },
+        },
+      ],
+      generated_at: '2024-05-01T00:00:00Z',
+    })
+  })
+
+  it('theme 情報が欠落している場合でも value/label を返す', async () => {
+    const payload = {
+      markets: [
+        {
+          scope: 'national',
+          display_name: '全国平均（API）',
+        },
+      ],
+      generated_at: '2024-05-01T00:00:00Z',
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await loadFetchMarkets()
+    const result = await fetchMarkets()
+
+    expect(result).toEqual({
+      markets: [
+        {
+          value: 'national',
+          label: '全国平均（API）',
+        },
+      ],
+      generated_at: '2024-05-01T00:00:00Z',
+    })
   })
 
   it('503 の場合は利用不可メッセージで例外を投げる', async () => {

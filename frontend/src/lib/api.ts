@@ -90,15 +90,55 @@ export const fetchCrops = async (): Promise<Crop[]> => {
   return request<Crop[]>(url)
 }
 
+export type MarketScopeOptionWithTheme = MarketScopeOption & {
+  readonly theme?: {
+    readonly token?: string
+    readonly hexColor?: string
+    readonly textColor?: string
+  }
+}
+
 export interface MarketsResponse {
-  readonly markets: MarketScopeOption[]
+  readonly markets: MarketScopeOptionWithTheme[]
+  readonly generated_at: string
+}
+
+interface MarketMetadataEntry {
+  readonly scope: MarketScope
+  readonly display_name: string
+  readonly theme?: {
+    readonly token?: string
+    readonly hex_color?: string
+    readonly text_color?: string
+  }
+}
+
+interface MarketsApiResponse {
+  readonly markets: MarketMetadataEntry[]
   readonly generated_at: string
 }
 
 export const fetchMarkets = async (): Promise<MarketsResponse> => {
   const url = buildUrl('/markets')
   try {
-    return await request<MarketsResponse>(url)
+    const payload = await request<MarketsApiResponse>(url)
+    return {
+      markets: payload.markets.map((market) => {
+        const mapped: MarketScopeOptionWithTheme = {
+          value: market.scope,
+          label: market.display_name,
+        }
+        if (market.theme) {
+          mapped.theme = {
+            token: market.theme.token,
+            hexColor: market.theme.hex_color,
+            textColor: market.theme.text_color,
+          }
+        }
+        return mapped
+      }),
+      generated_at: payload.generated_at,
+    }
   } catch (error) {
     if (error instanceof HttpError && error.status === 503) {
       throw new HttpError('市場一覧 API は現在利用できません (503)', error.status, {
