@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { PriceSeries } from '../api'
+import type { PriceSeries } from '../../types'
 import { createApiTestContext } from './apiTestContext'
 
 type FetchPrice = typeof import('../api')['fetchPrice']
