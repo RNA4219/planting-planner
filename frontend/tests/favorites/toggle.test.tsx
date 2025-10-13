@@ -61,10 +61,14 @@ describe('Favorites interactions', () => {
     const tomatoRow = tomatoCell.closest('tr')
     expect(tomatoRow).not.toBeNull()
     const selectedRow = tomatoRow as HTMLTableRowElement
-    expect(selectedRow.classList.contains('recommend__row--selected')).toBe(false)
+    expect(selectedRow.getAttribute('aria-selected')).toBe('false')
+    expect(selectedRow.getAttribute('data-state')).not.toBe('selected')
+    expect(selectedRow.className).not.toMatch(/recommend__/)
     await user.click(selectedRow)
     await waitFor(() => {
-      expect(selectedRow.classList.contains('recommend__row--selected')).toBe(true)
+      expect(selectedRow.getAttribute('aria-selected')).toBe('true')
+      expect(selectedRow.getAttribute('data-state')).toBe('selected')
+      expect(selectedRow.className).not.toMatch(/recommend__/)
     })
 
     const favButton = within(selectedRow).getByRole('button', {

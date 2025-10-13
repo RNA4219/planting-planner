@@ -74,9 +74,9 @@ export const RecommendationsTable = ({
   }
 
   return (
-    <section className="recommend space-y-4" aria-label={listLabel}>
-      <div className="recommend__header flex flex-wrap items-center justify-between gap-3">
-        <div className="recommend__meta flex flex-wrap items-center gap-6 text-sm text-slate-600">
+    <section className="space-y-4" aria-label={listLabel}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
           <span>対象地域: {REGION_LABEL[region]}</span>
           <span>基準週: {displayWeek}</span>
         </div>
@@ -113,10 +113,7 @@ export const RecommendationsTable = ({
           <span>市場やカテゴリを変更して再度お試しください。</span>
         </div>
       ) : (
-        <table
-          className="recommend__table w-full border-separate border-spacing-4"
-          aria-label={listLabel}
-        >
+        <table className="w-full border-separate border-spacing-4" aria-label={listLabel}>
           <thead className="sr-only">
             <tr>
               <th scope="col">作物</th>
@@ -133,10 +130,9 @@ export const RecommendationsTable = ({
                   data-testid="recommendation-card"
                   tabIndex={0}
                   aria-selected={isSelected}
-                  className={`recommend__row flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 ${resolveMarketTheme(item.source)} ${
-                    isSelected
-                      ? 'recommend__row--selected ring-2 ring-market-accent'
-                      : 'ring-0'
+                  data-state={isSelected ? 'selected' : undefined}
+                  className={`flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 ${resolveMarketTheme(item.source)} ${
+                    isSelected ? 'ring-2 ring-market-accent' : 'ring-0'
                   }`}
                   onClick={() => onSelect(item.cropId ?? null)}
                   onKeyDown={(event) => handleInteractiveKeyDown(event, item.cropId)}
