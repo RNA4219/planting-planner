@@ -90,8 +90,8 @@ describe('SearchControls', () => {
   })
   it('市場セレクトのテーマがアクティブスコープに追従する', async () => {
     const definitions: MarketScopeDefinition[] = [
-      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#FFFFFF' } },
-      { scope: 'city:tokyo', displayName: '東京都中央卸売（API）', theme: { token: 'api-tokyo', hex: '#654321', text: '#EEEEEE' } },
+      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#111111' } },
+      { scope: 'city:tokyo', displayName: '東京都中央卸売（API）', theme: { token: 'api-tokyo', hex: '#654321', text: '#222222' } },
     ]
     const markets = definitions.map((definition) => toMarketScopeOption(definition))
     fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
@@ -102,6 +102,7 @@ describe('SearchControls', () => {
     await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(select).toHaveAttribute('data-theme', 'market-national'))
     expect(select.className).toContain('bg-market-national')
+    expect(select.style.color).toBe('rgb(17, 17, 17)')
 
     rerender(
       <QueryClientProvider client={queryClient}>
@@ -112,6 +113,7 @@ describe('SearchControls', () => {
     await waitFor(() => expect(select.value).toBe('city:tokyo'))
     await waitFor(() => expect(select).toHaveAttribute('data-theme', 'market-tokyo'))
     expect(select.className).toContain('bg-market-tokyo')
+    expect(select.style.color).toBe('rgb(34, 34, 34)')
 
     queryClient.clear()
   })

@@ -42,27 +42,26 @@ const isMarketTailwindToken = (token: string) => token.startsWith(MARKET_THEME_C
 
 const resolveMarketTheme = (scope: MarketScope, options: MarketScopeOption[]): MarketScopeTheme => {
   const option = options.find((candidate) => candidate.value === scope)
-  if (option) {
-    if (isMarketTailwindToken(option.theme.token)) {
-      return option.theme
-    }
-    const fallbackTheme = FALLBACK_THEME_BY_SCOPE.get(scope)
-    if (fallbackTheme) {
-      return fallbackTheme
-    }
-  }
   const fallbackTheme = FALLBACK_THEME_BY_SCOPE.get(scope)
-  if (fallbackTheme) {
-    return fallbackTheme
+
+  const token =
+    option && isMarketTailwindToken(option.theme.token)
+      ? option.theme.token
+      : fallbackTheme?.token ?? MARKET_THEME_DEFAULT.token
+
+  const text = option?.theme.text ?? fallbackTheme?.text ?? MARKET_THEME_DEFAULT.text
+  const hex = option?.theme.hex ?? fallbackTheme?.hex ?? MARKET_THEME_DEFAULT.hex
+
+  return {
+    token,
+    text,
+    hex,
   }
-  return MARKET_THEME_DEFAULT
 }
 
 const getMarketSelectTheme = (scope: MarketScope, options: MarketScopeOption[]) => {
   const theme = resolveMarketTheme(scope, options)
-  const className = isMarketTailwindToken(theme.token)
-    ? `bg-${theme.token}`
-    : `bg-${MARKET_THEME_DEFAULT.token}`
+  const className = `bg-${theme.token}`
   const style: Pick<CSSProperties, 'color'> = {
     color: theme.text,
   }
