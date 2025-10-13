@@ -9,7 +9,7 @@ Region = Literal["cold", "temperate", "warm"]
 RefreshState = Literal["success", "failure", "running", "stale"]
 DEFAULT_REGION: Region = "temperate"
 
-CropCategory = Literal["leaf", "root", "flower", "fruit"]
+CropCategory = Literal["leaf", "root", "flower"]
 
 
 def _validate_crop_category(value: str) -> CropCategory:

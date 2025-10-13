@@ -3,6 +3,7 @@ import pytest
 from app.schemas import (
     DEFAULT_MARKET_SCOPE,
     MarketScope,
+    parse_crop_category,
     parse_market_scope,
 )
 
@@ -43,3 +44,9 @@ def test_default_market_scope_constant() -> None:
         return scope
 
     assert _accept_scope(DEFAULT_MARKET_SCOPE) == "national"
+
+
+@pytest.mark.parametrize("raw", ["fruit", " Fruit ", "FRUIT"])
+def test_parse_crop_category_rejects_fruit(raw: str) -> None:
+    with pytest.raises(ValueError):
+        parse_crop_category(raw)

@@ -61,3 +61,9 @@ def test_list_crops_invalid_category_returns_422(seeded_client: TestClient) -> N
     response = seeded_client.get("/api/crops", params={"category": "invalid"})
 
     assert response.status_code == 422
+
+
+def test_list_crops_fruit_category_returns_422(seeded_client: TestClient) -> None:
+    response = seeded_client.get("/api/crops", params={"category": "fruit"})
+
+    assert response.status_code == 422
