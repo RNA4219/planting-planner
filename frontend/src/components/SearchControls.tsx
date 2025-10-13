@@ -66,14 +66,15 @@ const getMarketSelectTheme = (
   readonly fallbackTheme: MarketScopeTheme
   readonly optionTheme: MarketScopeTheme | undefined
 } => {
+  const fallbackBackgroundToken = normalizeBackgroundToken(scope, fallbackTheme.token)
   const backgroundToken = optionTheme?.token
     ? normalizeBackgroundToken(scope, optionTheme.token)
-    : normalizeBackgroundToken(scope, fallbackTheme.token)
+    : fallbackBackgroundToken
 
   const backgroundClass =
     MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
   const textColor = optionTheme?.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
-  const dataTheme = optionTheme?.token ?? fallbackTheme.token
+  const dataTheme = backgroundToken ?? fallbackBackgroundToken
 
   return { backgroundClass, dataTheme, textColor, fallbackTheme, optionTheme }
 }

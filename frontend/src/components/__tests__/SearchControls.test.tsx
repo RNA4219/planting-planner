@@ -60,7 +60,7 @@ describe('SearchControls', () => {
     await waitFor(() => {
       expect(within(select).getAllByRole('option')).toHaveLength(markets.length)
     })
-    expect(select).toHaveAttribute('data-theme', 'api-national')
+    expect(select).toHaveAttribute('data-theme', 'market-national')
     expect(select.className).toContain('bg-market-national')
     expect(select).toHaveStyle({ color: '#222222' })
     const optionElements = within(select).getAllByRole('option')
@@ -72,12 +72,12 @@ describe('SearchControls', () => {
       </QueryClientProvider>,
     )
     await waitFor(() => expect(select.value).toBe('city:osaka'))
-    expect(select).toHaveAttribute('data-theme', 'api-osaka')
+    expect(select).toHaveAttribute('data-theme', 'market-city')
     expect(select.className).toContain('bg-market-city')
     expect(select).toHaveStyle({ color: '#111111' })
     queryClient.clear()
   })
-  it('市場テーマは API レスポンス後に data-theme を更新する', async () => {
+  it('市場テーマは API レスポンス後もフォールバック data-theme を維持する', async () => {
     const definitions: MarketScopeDefinition[] = [
       { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#222222' } },
     ]
@@ -87,12 +87,10 @@ describe('SearchControls', () => {
     const { queryClient } = renderSearchControls(props)
     const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
     expect(select).toHaveAttribute('data-theme', 'market-national')
-    await waitFor(() => {
-      expect(select).toHaveAttribute('data-theme', 'api-national')
-    })
-    expect(select).toHaveAttribute('data-theme', 'market-national')
+    await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(select).toHaveAttribute('data-theme', 'market-national'))
     expect(select.className).toContain('bg-market-national')
-    expect(select).toHaveStyle({ color: '#0f172a' })
+    expect(select).toHaveStyle({ color: '#222222' })
     queryClient.clear()
   })
   it('React Query 未完了時はフォールバックを描画する', () => {
