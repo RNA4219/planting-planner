@@ -75,7 +75,7 @@ describe('useRecommendations store integration', () => {
   it('shares market scope and category across multiple hook instances', () => {
     const first = renderHook(() => useRecommendations({ favorites: [] }))
 
-    const fruitCategory: CropCategory = 'fruit'
+    const fruitCategory = 'fruit' as const satisfies CropCategory
 
     act(() => {
       first.result.current.setMarketScope('city:kyoto')
