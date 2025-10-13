@@ -1,6 +1,26 @@
 [
-  { "token": "accent.national", "hex_color": "#22c55e", "text_color": "#0f172a" },
-  { "token": "accent.tokyo", "hex_color": "#2563eb", "text_color": "#f8fafc" },
-  { "token": "accent.osaka", "hex_color": "#f97316", "text_color": "#0f172a" },
-  { "token": "accent.nagoya", "hex_color": "#a855f7", "text_color": "#f8fafc" }
+  {
+    "token": "market.national",
+    "legacy_token": "accent.national",
+    "hex_color": "#22c55e",
+    "text_color": "#0f172a"
+  },
+  {
+    "token": "market.city_tokyo",
+    "legacy_token": "accent.tokyo",
+    "hex_color": "#2563eb",
+    "text_color": "#f8fafc"
+  },
+  {
+    "token": "market.city_osaka",
+    "legacy_token": "accent.osaka",
+    "hex_color": "#f97316",
+    "text_color": "#0f172a"
+  },
+  {
+    "token": "market.city_nagoya",
+    "legacy_token": "accent.nagoya",
+    "hex_color": "#a855f7",
+    "text_color": "#f8fafc"
+  }
 ]
