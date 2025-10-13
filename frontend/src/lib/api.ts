@@ -181,16 +181,29 @@ export const fetchRefreshStatus = async (): Promise<RefreshStatusResponse> => {
   return request<RefreshStatusResponse>(url)
 }
 
+export interface PriceSeriesResponse {
+  readonly series: PriceSeries
+  readonly isMarketFallback: boolean
+}
+
 export const fetchPrice = async (
   cropId: number,
   frm?: string,
   to?: string,
   marketScope?: MarketScope,
-): Promise<PriceSeries> => {
+): Promise<PriceSeriesResponse> => {
   const params = new URLSearchParams({ crop_id: String(cropId) })
   if (frm) params.set('frm', frm)
   if (to) params.set('to', to)
   if (marketScope) params.set('marketScope', marketScope)
   const url = buildUrl('/price', params)
-  return request<PriceSeries>(url)
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  const series = await parseResponse<PriceSeries>(response)
+  const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
+  const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
+  return { series, isMarketFallback }
 }

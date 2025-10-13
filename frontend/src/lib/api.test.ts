@@ -268,7 +268,28 @@ describe('fetchPrice', () => {
     const requestUrl = new URL(call[0] as string, 'https://dummy')
     expect(requestUrl.pathname).toBe('/api/price')
     expect(requestUrl.searchParams.get('marketScope')).toBe('national')
-    expect(result).toEqual(payload)
+    expect(result).toEqual({ series: payload, isMarketFallback: false })
+  })
+
+  it('fallback ヘッダーが true の場合に isMarketFallback を true として返す', async () => {
+    const payload: PriceSeries = {
+      crop_id: 1,
+      crop: 'Spinach',
+      unit: 'kg',
+      source: 'test',
+      prices: [],
+    }
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', fallback: 'true' },
+      }),
+    )
+
+    await loadFetchPrice()
+    const result = await fetchPrice(1, undefined, undefined, 'national')
+
+    expect(result).toEqual({ series: payload, isMarketFallback: true })
   })
 })
 

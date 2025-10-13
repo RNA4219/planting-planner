@@ -4,10 +4,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PriceChart } from '../PriceChart'
 import type { MarketScope, PriceSeries } from '../../types'
+import type { PriceSeriesResponse } from '../../lib/api'
 
 const { fetchPriceMock } = vi.hoisted(() => ({
   fetchPriceMock: vi.fn<
-    (cropId: number, from?: string, to?: string, marketScope?: MarketScope) => Promise<PriceSeries>
+    (
+      cropId: number,
+      from?: string,
+      to?: string,
+      marketScope?: MarketScope,
+    ) => Promise<PriceSeriesResponse>
   >(),
 }))
 
@@ -35,7 +41,7 @@ describe('PriceChart (tailwind)', () => {
       name: 'データなし',
       setup: () => {
         const series: PriceSeries = { crop_id: 1, crop: 'トマト', unit: 'kg', source: 'JA', prices: [] }
-        fetchPriceMock.mockResolvedValue(series)
+        fetchPriceMock.mockResolvedValue({ series, isMarketFallback: false })
         render(<PriceChart cropId={1} marketScope="national" />)
       },
       resolve: () => screen.findByText('価格データがありません。'),
@@ -60,7 +66,7 @@ describe('PriceChart (tailwind)', () => {
       ],
     }
 
-    fetchPriceMock.mockResolvedValue(series)
+    fetchPriceMock.mockResolvedValue({ series, isMarketFallback: false })
     render(<PriceChart cropId={1} marketScope="national" />)
     await waitFor(() => expect(fetchPriceMock).toHaveBeenCalled())
 

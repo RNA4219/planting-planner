@@ -24,8 +24,13 @@ const marketColors = themeTokens.reduce<Record<string, string>>((acc, token) => 
   return acc
 }, {})
 
+const marketBackgroundSafelist = Object.keys(marketColors).map(
+  (name) => `bg-market-${name}`,
+)
+
 const config: Config = {
   content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
+  safelist: marketBackgroundSafelist,
   theme: {
     aria: defaultTheme.aria,
     extend: {

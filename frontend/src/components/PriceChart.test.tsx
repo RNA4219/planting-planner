@@ -46,14 +46,17 @@ describe('PriceChart', () => {
 
   it('cropId=0 の場合でも価格データを取得しチャート用ラベルを設定する', async () => {
     fetchPrice.mockResolvedValue({
-      crop_id: 0,
-      crop: 'テスト作物',
-      unit: 'kg',
-      source: 'テスト',
-      prices: [
-        { week: '2024-W01', avg_price: 100, stddev: null },
-        { week: '2024-W02', avg_price: 200, stddev: null },
-      ],
+      series: {
+        crop_id: 0,
+        crop: 'テスト作物',
+        unit: 'kg',
+        source: 'テスト',
+        prices: [
+          { week: '2024-W01', avg_price: 100, stddev: null },
+          { week: '2024-W02', avg_price: 200, stddev: null },
+        ],
+      },
+      isMarketFallback: false,
     })
 
     render(<PriceChart cropId={0} />)
@@ -73,11 +76,14 @@ describe('PriceChart', () => {
 
   it('marketScope が指定されると fetchPrice の第4引数に渡し、変更時に再取得する', async () => {
     fetchPrice.mockResolvedValue({
-      crop_id: 1,
-      crop: 'テスト作物',
-      unit: 'kg',
-      source: 'テスト',
-      prices: [],
+      series: {
+        crop_id: 1,
+        crop: 'テスト作物',
+        unit: 'kg',
+        source: 'テスト',
+        prices: [],
+      },
+      isMarketFallback: false,
     })
 
     const { rerender } = render(<PriceChart cropId={1} marketScope="national" />)
@@ -89,11 +95,44 @@ describe('PriceChart', () => {
 
     fetchPrice.mockClear()
 
+    fetchPrice.mockResolvedValue({
+      series: {
+        crop_id: 1,
+        crop: 'テスト作物',
+        unit: 'kg',
+        source: 'テスト',
+        prices: [],
+      },
+      isMarketFallback: false,
+    })
+
     rerender(<PriceChart cropId={1} marketScope="city:tokyo" />)
 
     await waitFor(() => {
       expect(fetchPrice).toHaveBeenCalledTimes(1)
       expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'city:tokyo')
     })
+  })
+
+  it('fallback データを受け取った場合に警告メッセージを表示する', async () => {
+    fetchPrice.mockResolvedValue({
+      series: {
+        crop_id: 1,
+        crop: 'テスト作物',
+        unit: 'kg',
+        source: 'テスト',
+        prices: [],
+      },
+      isMarketFallback: true,
+    })
+
+    render(<PriceChart cropId={1} />)
+
+    const warning = await screen.findByText(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
+
+    expect(warning).toBeVisible()
+    expect(warning).toHaveAttribute('role', 'alert')
   })
 })

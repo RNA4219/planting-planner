@@ -69,11 +69,14 @@ describe('App behavior', () => {
       isMarketFallback: false,
     })
     fetchPrice.mockResolvedValue({
-      crop_id: 1,
-      crop: 'トマト',
-      unit: 'kg',
-      source: 'テストデータ',
-      prices: [],
+      series: {
+        crop_id: 1,
+        crop: 'トマト',
+        unit: 'kg',
+        source: 'テストデータ',
+        prices: [],
+      },
+      isMarketFallback: false,
     })
 
     const { user } = await renderApp()
