@@ -58,4 +58,17 @@ describe('tailwind config', () => {
   test('aria variants are enabled', () => {
     expect(tailwindConfig.theme.aria).toEqual(defaultConfig.theme?.aria)
   })
+
+  test('safelist includes market background classes', () => {
+    expect.hasAssertions()
+    const safelist = tailwindConfig.safelist
+    expect(Array.isArray(safelist)).toBe(true)
+    const expectedClasses = Object.keys(expectedMarketColors).map(
+      (name) => `bg-market-${name}`,
+    )
+
+    expectedClasses.forEach((className) => {
+      expect(safelist).toContain(className)
+    })
+  })
 })
