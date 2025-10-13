@@ -41,6 +41,24 @@ export const SearchControls = ({
 
   const marketOptions = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
 
+  const selectedMarket =
+    marketOptions.find((option) => option.value === marketScope) ??
+    MARKET_SCOPE_OPTIONS.find((option) => option.value === marketScope) ??
+    MARKET_SCOPE_OPTIONS[0]
+
+  const selectedThemeToken = selectedMarket?.theme.token ?? 'market.national'
+  const selectedThemeKey = selectedThemeToken
+    .split('.')
+    .slice(1)
+    .filter((segment) => segment.length > 0)
+    .join('-')
+  const marketSelectClassName = [
+    'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100',
+    selectedThemeKey ? `bg-market-${selectedThemeKey}` : '',
+  ]
+    .filter((value) => value.length > 0)
+    .join(' ')
+
   const refreshButtonClassName = refreshing
     ? 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-market-accent/10 px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
     : 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-transparent px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition hover:bg-market-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
@@ -56,8 +74,10 @@ export const SearchControls = ({
         <span>市場</span>
         <select
           aria-label="市場"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className={marketSelectClassName}
+          data-theme={selectedThemeToken}
           name="marketScope"
+          style={{ color: selectedMarket?.theme.text }}
           value={marketScope}
           onChange={(event) => {
             onMarketScopeChange(event.target.value as MarketScope)
