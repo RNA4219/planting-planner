@@ -1,8 +1,12 @@
 import pytest
 
+from fastapi import HTTPException
+
+from app.dependencies import _category_query
 from app.schemas import (
     DEFAULT_MARKET_SCOPE,
     MarketScope,
+    parse_crop_category,
     parse_market_scope,
 )
 
@@ -43,3 +47,46 @@ def test_default_market_scope_constant() -> None:
         return scope
 
     assert _accept_scope(DEFAULT_MARKET_SCOPE) == "national"
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("leaf", "leaf"),
+        ("ROOT", "root"),
+        ("  flower  ", "flower"),
+    ],
+)
+def test_parse_crop_category_valid(raw: str, expected: str) -> None:
+    assert parse_crop_category(raw) == expected
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "",
+        "  ",
+        "fruit",
+        "Fruit",
+        "stem",
+        123,
+    ],
+)
+def test_parse_crop_category_invalid(raw: object) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        parse_crop_category(raw)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "fruit",
+        "Fruit",
+        "  fruit  ",
+    ],
+)
+def test_category_query_rejects_fruit(raw: str) -> None:
+    with pytest.raises(HTTPException) as excinfo:
+        _category_query(raw)
+
+    assert excinfo.value.status_code == 422
