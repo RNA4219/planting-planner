@@ -7,7 +7,7 @@ export type CropCategory = 'leaf' | 'root' | 'flower'
 export interface Crop {
   id: number
   name: string
-  category: string
+  category: CropCategory
   variety?: string
 }
 

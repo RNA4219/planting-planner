@@ -20,12 +20,12 @@ describe('useCropCatalog category normalization', () => {
   })
 
   it('正規化後も大文字カテゴリがカタログへ保持される', async () => {
-    const crops: Crop[] = [
+    const crops = [
       { id: 1, name: 'Upper Leaf', category: 'LEAF' },
       { id: 2, name: 'Japanese Leaf', category: '葉菜類' },
       { id: 3, name: 'Trimmed Root', category: ' root ' },
-    ]
-    fetchCropsMock.mockResolvedValueOnce(crops)
+    ] satisfies Array<Omit<Crop, 'category'> & { category: string }>
+    fetchCropsMock.mockResolvedValueOnce(crops as unknown as Crop[])
 
     const { result } = renderHookWithQueryClient(() => useCropCatalog())
 
