@@ -2,13 +2,16 @@ import type { KeyboardEvent } from 'react'
 
 import type { CropCategory } from '../types'
 
-const CATEGORY_LABELS = {
-  leaf: '葉菜',
-  root: '根菜',
-  flower: '花き',
-} as const satisfies Record<CropCategory, string>
+interface CategoryTabDefinition {
+  key: CropCategory
+  label: string
+}
 
-const CATEGORY_ORDER = ['leaf', 'root', 'flower'] as const satisfies readonly CropCategory[]
+const CATEGORY_TABS = [
+  { key: 'leaf', label: '葉菜' },
+  { key: 'root', label: '根菜' },
+  { key: 'flower', label: '花き' },
+] as const satisfies readonly CategoryTabDefinition[]
 
 interface CategoryTabsProps {
   category: CropCategory
@@ -34,11 +37,11 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
     event.preventDefault()
 
     const delta = event.key === 'ArrowRight' ? 1 : -1
-    const nextIndex = wrapIndex(currentIndex + delta, CATEGORY_ORDER.length)
-    const nextCategory = CATEGORY_ORDER[nextIndex]!
+    const nextIndex = wrapIndex(currentIndex + delta, CATEGORY_TABS.length)
+    const nextTab = CATEGORY_TABS[nextIndex]
 
-    if (nextCategory !== category) {
-      onChange(nextCategory)
+    if (nextTab && nextTab.key !== category) {
+      onChange(nextTab.key)
     }
 
     const tablist = event.currentTarget.closest('[role="tablist"]')
@@ -52,11 +55,11 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
       role="tablist"
       aria-label="カテゴリ"
     >
-      {CATEGORY_ORDER.map((key, index) => {
-        const isActive = key === category
+      {CATEGORY_TABS.map((tab: CategoryTabDefinition, index: number) => {
+        const isActive = tab.key === category
         return (
           <button
-            key={key}
+            key={tab.key}
             type="button"
             role="tab"
             aria-selected={isActive}
@@ -64,14 +67,14 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
             className={TAB_CLASS}
             onClick={() => {
               if (!isActive) {
-                onChange(key)
+                onChange(tab.key)
               }
             }}
             onKeyDown={(event) => {
               handleKeyDown(event, index)
             }}
           >
-            {CATEGORY_LABELS[key]}
+            {tab.label}
           </button>
         )
       })}
