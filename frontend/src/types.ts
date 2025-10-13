@@ -2,7 +2,14 @@ export type Region = 'cold' | 'temperate' | 'warm'
 
 export type MarketScope = 'national' | `city:${string}`
 
-export type CropCategory = 'leaf' | 'root' | 'flower'
+export const CROP_CATEGORIES = ['leaf', 'root', 'flower'] as const
+
+export type CropCategory = (typeof CROP_CATEGORIES)[number]
+
+const cropCategorySet = new Set<string>(CROP_CATEGORIES)
+
+export const isCropCategory = (value: unknown): value is CropCategory =>
+  typeof value === 'string' && cropCategorySet.has(value)
 
 export interface Crop {
   id: number
