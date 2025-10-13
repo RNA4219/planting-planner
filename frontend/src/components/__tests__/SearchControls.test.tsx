@@ -81,7 +81,9 @@ describe('SearchControls', () => {
     expect(firstOption.value).toBe(MARKET_SCOPE_OPTIONS[0]!.value)
     const forms = container.querySelectorAll('form')
     expect(forms.length).toBeGreaterThan(0)
-    expect(forms[forms.length - 1]).toHaveClass('app__controls')
+    const form = forms[forms.length - 1]!
+    expect(form).toHaveClass('flex', 'flex-col', 'gap-4')
+    expect(form.className).toMatch(/bg-market-|border-market-|text-market-/)
     queryClient.clear()
   })
 })
