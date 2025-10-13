@@ -76,6 +76,29 @@ describe('SearchControls', () => {
     expect(select).toHaveStyle({ color: '#111111' })
     queryClient.clear()
   })
+  it('React Query 未完了時でもフォールバックテーマを維持する', () => {
+    fetchMarketsMock.mockReturnValue(new Promise(() => {}))
+    const props = createProps()
+    const { queryClient, rerender } = renderSearchControls(props)
+    const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+
+    expect(select).toHaveAttribute('data-theme', 'market.national')
+    expect(select.className).toContain('bg-market-national')
+    expect(select.style.color).toBe('rgb(255, 255, 255)')
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <SearchControls {...props} marketScope="city:fukuoka" />
+      </QueryClientProvider>,
+    )
+
+    const updatedSelect = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+    expect(updatedSelect).toHaveAttribute('data-theme', 'market.city')
+    expect(updatedSelect.className).toContain('bg-market-city')
+    expect(updatedSelect.style.color).toBe('rgb(248, 250, 252)')
+
+    queryClient.clear()
+  })
   it('React Query 未完了時はフォールバックを描画する', () => {
     fetchMarketsMock.mockReturnValue(new Promise(() => {}))
     const { container, queryClient } = renderSearchControls()
