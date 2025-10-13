@@ -55,6 +55,7 @@ describe('SearchControls', () => {
     const props = createProps()
     const { queryClient, rerender } = renderSearchControls(props)
     const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+    expect(select).toHaveAttribute('data-theme', 'market-national')
     await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
     await waitFor(() => {
       expect(within(select).getAllByRole('option')).toHaveLength(markets.length)
@@ -74,6 +75,27 @@ describe('SearchControls', () => {
     expect(select).toHaveAttribute('data-theme', 'api-osaka')
     expect(select.className).toContain('bg-market-city')
     expect(select).toHaveStyle({ color: '#111111' })
+    queryClient.clear()
+  })
+  it('API テーマが欠落している場合のみフォールバックテーマを適用する', async () => {
+    const definitions: MarketScopeDefinition[] = [
+      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#222222' } },
+    ]
+    const marketsWithoutTheme = definitions
+      .map((definition) => toMarketScopeOption(definition))
+      .map(({ theme: _theme, ...rest }) => rest) as unknown as ReturnType<typeof toMarketScopeOption>[]
+    fetchMarketsMock.mockResolvedValue({ markets: marketsWithoutTheme, generated_at: '2024-05-01T00:00:00Z' })
+    const props = createProps()
+    const { queryClient } = renderSearchControls(props)
+    const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+    expect(select).toHaveAttribute('data-theme', 'market-national')
+    await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => {
+      expect(within(select).getAllByRole('option')).toHaveLength(marketsWithoutTheme.length)
+    })
+    expect(select).toHaveAttribute('data-theme', 'market-national')
+    expect(select.className).toContain('bg-market-national')
+    expect(select).toHaveStyle({ color: '#FFFFFF' })
     queryClient.clear()
   })
   it('React Query 未完了時はフォールバックを描画する', () => {
