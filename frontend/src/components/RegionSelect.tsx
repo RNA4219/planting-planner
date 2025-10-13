@@ -29,11 +29,11 @@ export const RegionSelect = ({ onChange, options = DEFAULT_OPTIONS, disabled }: 
   }
 
   return (
-    <label className="region-select">
-      <span className="region-select__label">地域</span>
+    <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+      <span>地域</span>
       <select
         aria-label="地域"
-        className="region-select__select"
+        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
         name="region"
         value={selected}
         onChange={handleChange}
