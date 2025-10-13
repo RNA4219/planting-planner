@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { RegionSelect } from '../RegionSelect'
 
 describe('RegionSelect (Tailwind classes)', () => {
+  // NOTE: この変更に伴い frontend/tests/app.snapshot.test.tsx のスナップショット更新が必要になる場合がある
   it('ラベルとセレクトに Tailwind クラスが適用される', () => {
     render(<RegionSelect onChange={() => {}} />)
 
@@ -23,6 +24,7 @@ describe('RegionSelect (Tailwind classes)', () => {
     expect(select).toHaveClass('py-2')
     expect(select).toHaveClass('focus:outline-none')
     expect(select).toHaveClass('focus:ring-2')
-    expect(select).toHaveClass('focus:ring-green-500')
+    expect(select).toHaveClass('focus:ring-market-accent')
+    expect(select).toHaveClass('focus:border-market-accent')
   })
 })
