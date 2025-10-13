@@ -27,9 +27,9 @@ interface SearchControlsProps {
 }
 
 const MARKET_THEME_BACKGROUND_CLASSES: Record<string, string> = {
-  'market-national': 'bg-market-national',
-  'market-city': 'bg-market-city',
-  'market-neutral': 'bg-market-neutral',
+  'market.national': 'bg-market-national',
+  'market.city': 'bg-market-city',
+  'market.neutral': 'bg-market-neutral',
 }
 
 const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
@@ -37,22 +37,34 @@ const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
 )
 
 const FALLBACK_THEME_BY_GROUP: Record<'national' | 'city' | 'default', MarketScopeTheme> = {
-  national: { token: 'market-national', hex: '#22c55e', text: '#FFFFFF' },
-  city: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
-  default: { token: 'market-neutral', hex: '#64748b', text: '#f8fafc' },
+  national: { token: 'market.national', hex: '#22c55e', text: '#FFFFFF' },
+  city: { token: 'market.city', hex: '#2563eb', text: '#f8fafc' },
+  default: { token: 'market.neutral', hex: '#64748b', text: '#f8fafc' },
+}
+
+const toBackgroundClass = (token: string): string | undefined => {
+  const override = MARKET_THEME_BACKGROUND_CLASSES[token]
+  if (override) {
+    return override
+  }
+  if (token.startsWith('market.')) {
+    return `bg-${token.split('.').join('-')}`
+  }
+  return undefined
 }
 
 const normalizeBackgroundToken = (scope: MarketScope, token: string): string => {
-  if (token in MARKET_THEME_BACKGROUND_CLASSES) {
-    return token
+  const resolved = toBackgroundClass(token)
+  if (resolved) {
+    return resolved
   }
   if (scope === 'national') {
-    return 'market-national'
+    return toBackgroundClass('market.national') ?? 'bg-market-neutral'
   }
   if (scope.startsWith('city:')) {
-    return 'market-city'
+    return toBackgroundClass('market.city') ?? 'bg-market-neutral'
   }
-  return 'market-neutral'
+  return toBackgroundClass('market.neutral') ?? 'bg-market-neutral'
 }
 
 const resolveMarketTheme = (
@@ -70,12 +82,7 @@ const resolveMarketTheme = (
   const activeOption = options.find((option) => option.value === scope)
   const activeTheme = activeOption?.theme ?? fallbackTheme
 
-  const backgroundToken = activeTheme.token.startsWith('market-')
-    ? normalizeBackgroundToken(scope, activeTheme.token)
-    : normalizeBackgroundToken(scope, fallbackTheme.token)
-
-  const backgroundClass =
-    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
+  const backgroundClass = normalizeBackgroundToken(scope, activeTheme.token)
   const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
   const dataTheme = activeTheme.token ?? fallbackTheme.token
 
