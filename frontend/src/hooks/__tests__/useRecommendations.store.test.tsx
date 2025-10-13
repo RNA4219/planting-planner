@@ -63,7 +63,7 @@ describe('useRecommendations store behaviour', () => {
 
     const second = renderHook(() => useRecommendations({ favorites: [] }))
 
-    expect(second.result.current.marketScope).toBe('city:tokyo')
-    expect(second.result.current.category).toBe('root')
+    expect(second.result.current.marketScope).toBe('national')
+    expect(second.result.current.category).toBe('leaf')
   })
 })
