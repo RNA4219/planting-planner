@@ -74,7 +74,7 @@ const normalizeDataThemeToken = (scope: MarketScope, token: string): string => {
 const resolveMarketTheme = (
   scope: MarketScope,
   options: readonly MarketScopeOption[],
-): { readonly backgroundClass: string; readonly dataTheme: string; readonly textColor: string } => {
+): { readonly fallbackTheme: MarketScopeTheme; readonly optionTheme: MarketScopeTheme | undefined } => {
   const fallbackByScope = FALLBACK_THEME_BY_SCOPE.get(scope)
   const fallbackByGroup = scope === 'national'
     ? FALLBACK_THEME_BY_GROUP.national
@@ -84,10 +84,18 @@ const resolveMarketTheme = (
   const fallbackTheme = fallbackByScope ?? fallbackByGroup
 
   const activeOption = options.find((option) => option.value === scope)
-  const activeTheme = activeOption?.theme ?? fallbackTheme
 
-  const backgroundToken = activeTheme.token.startsWith('market-')
-    ? normalizeBackgroundToken(scope, activeTheme.token)
+  return { fallbackTheme, optionTheme: activeOption?.theme }
+}
+
+const getMarketSelectTheme = (
+  scope: MarketScope,
+  optionTheme: MarketScopeTheme | undefined,
+  fallbackTheme: MarketScopeTheme,
+): { readonly backgroundClass: string; readonly dataTheme: string; readonly textColor: string } => {
+  const backgroundSourceToken = optionTheme?.token ?? fallbackTheme.token
+  const backgroundToken = backgroundSourceToken.startsWith('market-')
+    ? normalizeBackgroundToken(scope, backgroundSourceToken)
     : normalizeBackgroundToken(scope, fallbackTheme.token)
 
   const backgroundClass =
@@ -117,7 +125,8 @@ export const SearchControls = ({
   })
 
   const marketOptions: readonly MarketScopeOption[] = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
-  const marketTheme = resolveMarketTheme(marketScope, marketOptions)
+  const { fallbackTheme, optionTheme } = resolveMarketTheme(marketScope, marketOptions)
+  const marketTheme = getMarketSelectTheme(marketScope, optionTheme, fallbackTheme)
 
   const refreshButtonClassName = refreshing
     ? 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-market-accent/10 px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'

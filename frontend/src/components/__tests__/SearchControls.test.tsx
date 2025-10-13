@@ -55,6 +55,7 @@ describe('SearchControls', () => {
     const props = createProps()
     const { queryClient, rerender } = renderSearchControls(props)
     const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+    expect(select).toHaveAttribute('data-theme', 'market-national')
     await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
     await waitFor(() => {
       expect(within(select).getAllByRole('option')).toHaveLength(markets.length)
