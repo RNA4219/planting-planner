@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-from .etl import test_connection as _test_connection
-from .etl import test_retry as _test_retry
-from .etl import test_run_etl_market_cache as _test_run_etl_market_cache
-from .etl import test_run_etl_validation as _test_run_etl_validation
-from .etl import test_runner as _test_runner
-from .etl import test_schema as _test_schema
+import pytest
 
-__all__ = [
-    "_test_connection",
-    "_test_schema",
-    "_test_runner",
-    "_test_retry",
-    "_test_run_etl_market_cache",
-    "_test_run_etl_validation",
-]
+from .etl.test_connection import *  # noqa: F401,F403
+from .etl.test_retry import *  # noqa: F401,F403
+from .etl.test_run_etl_market_cache import *  # noqa: F401,F403
+from .etl.test_run_etl_validation import (  # noqa: F401,F403
+    _validation_market_setup as _validation_market_setup_impl,
+)
+from .etl.test_run_etl_validation import *  # noqa: F401,F403
+from .etl.test_runner import *  # noqa: F401,F403
+from .etl.test_schema import *  # noqa: F401,F403
+
+
+@pytest.fixture(name="validation_market_setup")
+def _validation_market_setup_proxy() -> dict[str, object]:
+    wrapped = getattr(_validation_market_setup_impl, "__wrapped__", None)
+    if wrapped is None:
+        return _validation_market_setup_impl()  # type: ignore[misc]
+    return wrapped()
