@@ -51,7 +51,7 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
 
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-full bg-market-neutral-container p-1"
+      className="flex w-full flex-col items-stretch gap-1 rounded-full bg-market-neutral-container p-1 sm:inline-flex sm:flex-row sm:items-center"
       role="tablist"
       aria-label="カテゴリ"
     >
@@ -64,7 +64,7 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
             role="tab"
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
-            className={TAB_CLASS}
+            className={`${TAB_CLASS} w-full sm:w-auto`}
             onClick={() => {
               if (!isActive) {
                 onChange(tab.key)

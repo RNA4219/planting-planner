@@ -25,8 +25,17 @@ describe('CategoryTabs', () => {
 
     expect(screen.queryByRole('tab', { name: FRUIT_LABEL })).not.toBeInTheDocument()
 
+    const tablist = screen.getByRole('tablist')
+    expect(tablist).toHaveClass('flex-col')
+    expect(tablist).toHaveClass('sm:flex-row')
+
     const tabButtons = screen.getAllByRole('tab')
     expect(tabButtons).toHaveLength(3)
+
+    tabButtons.forEach((tab) => {
+      expect(tab).toHaveClass('w-full')
+      expect(tab).toHaveClass('sm:w-auto')
+    })
 
     const [, rootTab] = tabButtons
     await userEvent.click(rootTab)
