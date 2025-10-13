@@ -22,7 +22,11 @@ type PriceChartProps = {
 }
 
 const StatusMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p role="status" aria-live="polite">
+  <p
+    role="status"
+    aria-live="polite"
+    className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+  >
     {children}
   </p>
 )
@@ -95,21 +99,23 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const summary = `${title} の週平均価格。期間: ${periodText}。データ点数: ${labels.length}件。`
 
   return (
-    <figure>
-      <h4 style={{ margin: '8px 0' }}>{title}</h4>
-      <Line
-        aria-label={`${title} の価格推移`}
-        data={{
-          labels,
-          datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
-        }}
-        options={{
-          responsive: true,
-          plugins: { legend: { display: true } },
-          scales: { y: { beginAtZero: false } },
-        }}
-      />
-      <figcaption>{summary}</figcaption>
+    <figure className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h4 className="text-base font-semibold text-slate-900">{title}</h4>
+      <div className="mt-6">
+        <Line
+          aria-label={`${title} の価格推移`}
+          data={{
+            labels,
+            datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
+          }}
+          options={{
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: false } },
+          }}
+        />
+      </div>
+      <figcaption className="mt-4 text-sm text-slate-600">{summary}</figcaption>
     </figure>
   )
 }
