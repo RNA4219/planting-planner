@@ -25,3 +25,5 @@
      - 完了理由: `docs/spec/v0.3/TESTING.md` の E2E セクションを push/pull_request 実行前提の内容へ改訂済み。
    - [x] データスキーマのテーマトークン共有記述を `data/theme_tokens.json` と Tailwind 参照方式に合わせて修正。
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
+   - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
+     - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
