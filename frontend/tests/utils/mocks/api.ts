@@ -4,13 +4,16 @@ import type {
   Crop,
   CropCategory,
   MarketScope,
-  PriceSeries,
   RecommendResponse,
   RefreshResponse,
   RefreshStatusResponse,
   Region,
 } from '../../../src/types'
-import type { MarketsResponse, RecommendResponseWithFallback } from '../../../src/lib/api'
+import type {
+  MarketsResponse,
+  PriceSeriesResponse,
+  RecommendResponseWithFallback,
+} from '../../../src/lib/api'
 import { MARKET_SCOPE_OPTIONS } from '../../../src/constants/marketScopes'
 
 export const fetchRecommendations = vi.fn<
@@ -42,7 +45,7 @@ export const fetchPrice = vi.fn<
     frm?: string,
     to?: string,
     marketScope?: MarketScope,
-  ) => Promise<PriceSeries>
+  ) => Promise<PriceSeriesResponse>
 >()
 
 vi.mock('../../../src/lib/api', () => ({

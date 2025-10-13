@@ -28,11 +28,14 @@ describe('Price chart interactions', () => {
       isMarketFallback: false,
     })
     fetchPrice.mockResolvedValue({
-      crop_id: 1,
-      crop: 'トマト',
-      unit: 'kg',
-      source: 'テストデータ',
-      prices: [],
+      series: {
+        crop_id: 1,
+        crop: 'トマト',
+        unit: 'kg',
+        source: 'テストデータ',
+        prices: [],
+      },
+      isMarketFallback: true,
     })
 
     const { user } = await renderApp()
@@ -48,5 +51,11 @@ describe('Price chart interactions', () => {
       expect(fetchPrice).toHaveBeenCalledTimes(1)
     })
     expect(fetchPrice).toHaveBeenLastCalledWith(1, undefined, undefined, 'national')
+
+    const warnings = await screen.findAllByText(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
+    const chartWarning = warnings.find((element) => element.getAttribute('role') === 'alert')
+    expect(chartWarning).toBeDefined()
   })
 })
