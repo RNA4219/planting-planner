@@ -14,7 +14,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         Planting Planner
       </h1>
       <form
-        class="app__controls"
+        class="flex flex-col gap-4 rounded-2xl border border-market-neutral/40 bg-market-neutral/10 p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-end sm:gap-4 md:flex-nowrap md:items-center"
         novalidate=""
       >
         <label
@@ -45,48 +45,66 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </option>
           </select>
         </label>
-        <select
-          aria-label="市場"
-          name="marketScope"
+        <label
+          class="flex w-full flex-col gap-2 text-sm font-medium text-slate-700 sm:w-auto"
         >
-          <option
-            value="national"
+          <span>
+            市場
+          </span>
+          <select
+            aria-label="市場"
+            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+            name="marketScope"
           >
-            全国平均
-          </option>
-          <option
-            value="city:tokyo"
-          >
-            東京都中央卸売
-          </option>
-          <option
-            value="city:osaka"
-          >
-            大阪市中央卸売
-          </option>
-          <option
-            value="city:nagoya"
-          >
-            名古屋市中央卸売
-          </option>
-        </select>
+            <option
+              value="national"
+            >
+              全国平均
+            </option>
+            <option
+              value="city:tokyo"
+            >
+              東京都中央卸売
+            </option>
+            <option
+              value="city:osaka"
+            >
+              大阪市中央卸売
+            </option>
+            <option
+              value="city:nagoya"
+            >
+              名古屋市中央卸売
+            </option>
+          </select>
+        </label>
         <div
-          class="app__controls-group"
+          class="flex w-full flex-col gap-4 sm:flex-1 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4 md:flex-nowrap md:items-center"
         >
-          <input
-            aria-label="作物検索"
-            id="search-input"
-            name="search"
-            placeholder="作物名・カテゴリで検索"
-            type="search"
-            value=""
-          />
           <label
-            class="app__week"
-            for="week-input"
+            class="flex w-full flex-col gap-2 text-sm font-medium text-slate-700 sm:flex-1"
+          >
+            <span
+              class="sr-only"
+            >
+              作物検索
+            </span>
+            <input
+              aria-label="作物検索"
+              class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2"
+              id="search-input"
+              name="search"
+              placeholder="作物名・カテゴリで検索"
+              type="search"
+              value=""
+            />
+          </label>
+          <label
+            class="flex flex-col gap-2 text-sm font-medium text-slate-700 sm:w-40"
           >
             週
             <input
+              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2"
               id="week-input"
               inputmode="text"
               name="week"
@@ -97,15 +115,16 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             />
           </label>
           <div
-            class="app__controls-actions"
+            class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end"
           >
             <button
+              class="inline-flex items-center justify-center rounded-lg bg-market-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-market-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70"
               type="submit"
             >
               この条件で見る
             </button>
             <button
-              class="app__refresh"
+              class="inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-transparent px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition hover:bg-market-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70"
               type="button"
             >
               更新
