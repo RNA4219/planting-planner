@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import * as apiModule from '../lib/api'
-import type { Crop } from '../types'
+import type { Crop, CropCategory } from '../types'
 
 const api = apiModule as typeof import('../lib/api') & {
   fetchCrops?: () => Promise<Crop[]>
@@ -20,9 +20,7 @@ export interface UseCropCatalogResult {
   isLoading: boolean
 }
 
-export type CropCategory = 'leaf' | 'root' | 'flower'
-
-const isCropCategory = (value: string): value is CropCategory =>
+const isCropCategory = (value: unknown): value is CropCategory =>
   value === 'leaf' || value === 'root' || value === 'flower'
 
 const fetchCrops = api.fetchCrops
