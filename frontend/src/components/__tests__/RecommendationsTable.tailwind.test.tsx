@@ -71,8 +71,11 @@ describe('RecommendationsTable (tailwind layout)', () => {
     )
 
     const cards = screen.getAllByTestId('recommendation-card')
-    expect(cards[0].className).toContain('bg-market-national')
-    expect(cards[1].className).toContain('bg-market-city')
+    expect(cards).toHaveLength(2)
+    const firstCard = cards.at(0)!
+    const secondCard = cards.at(1)!
+    expect(firstCard.className).toContain('bg-market-national')
+    expect(secondCard.className).toContain('bg-market-city')
   })
 
   it('アクセシビリティ属性を維持する', async () => {
@@ -92,7 +95,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
       name: '温暖地向けの推奨一覧（基準週: 2024-W10）',
     })
     expect(tables).toHaveLength(1)
-    const table = tables[0]
+    const table = tables[0]!
     expect(table).toHaveAttribute(
       'aria-label',
       '温暖地向けの推奨一覧（基準週: 2024-W10）',
