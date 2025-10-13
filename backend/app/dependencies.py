@@ -4,7 +4,7 @@ import sqlite3
 from collections.abc import Generator
 from typing import Annotated
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query
 
 from . import schemas, seed
 from .db.connection import get_conn as get_db_conn
@@ -76,7 +76,7 @@ def _category_query(
         str | None,
         Query(alias="category", description="Crop category filter"),
     ] = None,
-) -> str | None:
+) -> schemas.CropCategory | None:
     if value is None:
         return None
     candidate = value.strip()
@@ -84,8 +84,11 @@ def _category_query(
         return None
     if candidate.casefold() == "all":
         return None
-    return candidate
+    try:
+        return schemas.parse_crop_category(candidate)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Invalid crop category") from exc
 
 
 MarketScopeQuery = Annotated[schemas.MarketScope | None, Depends(_market_scope_query)]
-CategoryQuery = Annotated[str | None, Depends(_category_query)]
+CategoryQuery = Annotated[schemas.CropCategory | None, Depends(_category_query)]

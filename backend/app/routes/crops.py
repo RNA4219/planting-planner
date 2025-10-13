@@ -15,7 +15,7 @@ def list_crops(
     conn: ConnDependency,
 ) -> list[schemas.Crop]:
     clauses: list[str] = []
-    params: list[object] = []
+    params: list[schemas.CropCategory] = []
     if category is not None:
         clauses.append("category = ?")
         params.append(category)
