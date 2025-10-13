@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, type MockInstance } from 'vitest'
 
 import {
@@ -190,6 +190,13 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       )
     })
 
+    const tablist = await screen.findByRole('tablist', { name: 'カテゴリ' })
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs).toHaveLength(3)
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜', '根菜', '花き'])
+    expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
+
+    const rootTab = tabs[1]!
     await expect(screen.findByRole('tablist', { name: 'カテゴリ' })).resolves.toMatchInlineSnapshot(`
       <div
         aria-label="カテゴリ"

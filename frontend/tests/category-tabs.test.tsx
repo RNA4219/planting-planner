@@ -12,23 +12,30 @@ const LABELS: Record<CropCategory, string> = {
   leaf: '葉菜',
   root: '根菜',
   flower: '花き',
-  fruit: '果菜',
 }
 
+// @ts-expect-error fruit は選択肢から除外済み
+const FRUIT_LABEL = LABELS.fruit ?? '果菜'
+
 describe('CategoryTabs', () => {
-  it("renders the fruit tab and calls onChange('fruit') when clicked", async () => {
+  it('renders three tabs without fruit and emits選択変更', async () => {
     const onChange = vi.fn()
 
     render(<CategoryTabs category="leaf" onChange={onChange} />)
 
-    const fruitTab = screen.getByRole('tab', { name: LABELS.fruit })
-    expect(fruitTab).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: FRUIT_LABEL })).not.toBeInTheDocument()
 
-    await userEvent.click(fruitTab)
+    const tabButtons = screen.getAllByRole('tab')
+    expect(tabButtons).toHaveLength(3)
 
-    expect(onChange).toHaveBeenCalledWith('fruit')
+    const [, rootTab] = tabButtons
+    await userEvent.click(rootTab)
 
-    ;(Object.entries(LABELS) as Array<[CropCategory, string]>).forEach(([, label]) => {
+    if (onChange.mock.calls.length !== 1 || onChange.mock.calls[0]?.[0] !== 'root') {
+      throw new Error('onChange should be called once with root')
+    }
+
+    (Object.values(LABELS) as string[]).forEach((label) => {
       expect(screen.getByRole('tab', { name: label })).toBeInTheDocument()
     })
   })
