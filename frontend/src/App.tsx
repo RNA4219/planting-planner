@@ -1,6 +1,5 @@
 
 import {
-  type CSSProperties,
   ChangeEvent,
   useCallback,
   useEffect,
@@ -22,17 +21,7 @@ import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
-import './App.css'
-
-const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
-  marginBottom: '1rem',
-  padding: '0.75rem 1rem',
-  borderRadius: '0.75rem',
-  border: '1px solid #fed7aa',
-  backgroundColor: '#fff7ed',
-  color: '#9a3412',
-  fontWeight: 600,
-}
+import './index.css'
 
 const createQueryClient = () =>
   new QueryClient({
@@ -186,9 +175,12 @@ export const AppContent = () => {
   )
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1 className="app__title">{APP_TEXT.title}</h1>
+    <div
+      className="flex min-h-screen flex-col bg-gradient-to-b from-[#f3f8ee] to-white p-6"
+      data-testid="app-layout"
+    >
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="m-0 text-3xl font-bold text-[#2e7d32]">{APP_TEXT.title}</h1>
         <SearchControls
           queryWeek={queryWeek}
           currentWeek={currentWeek}
@@ -203,14 +195,14 @@ export const AppContent = () => {
           refreshing={isRefreshing}
         />
       </header>
-      <main className="app__main">
+      <main className="flex flex-col gap-6">
         <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
         {isMarketFallback ? (
           <div
             data-testid="market-fallback-notice"
             role="status"
             aria-live="polite"
-            style={MARKET_FALLBACK_NOTICE_STYLE}
+            className="mb-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 font-semibold text-orange-800"
           >
             {TOAST_MESSAGES.recommendationFallbackWarning}
           </div>

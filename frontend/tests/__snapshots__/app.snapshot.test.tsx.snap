@@ -3,13 +3,14 @@
 exports[`App snapshot > 初期表示をスナップショット保存する 1`] = `
 <div>
   <div
-    class="app"
+    class="flex min-h-screen flex-col bg-gradient-to-b from-[#f3f8ee] to-white p-6"
+    data-testid="app-layout"
   >
     <header
-      class="app__header"
+      class="mb-6 flex flex-wrap items-center justify-between gap-4"
     >
       <h1
-        class="app__title"
+        class="m-0 text-3xl font-bold text-[#2e7d32]"
       >
         Planting Planner
       </h1>
@@ -117,7 +118,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
       </form>
     </header>
     <main
-      class="app__main"
+      class="flex flex-col gap-6"
     >
       <section
         class="recommend"

@@ -103,10 +103,31 @@ describe('App behavior', () => {
 
     await renderApp()
 
+    const layout = screen.getByTestId('app-layout')
+    expect(layout).toHaveClass(
+      'flex',
+      'min-h-screen',
+      'flex-col',
+      'bg-gradient-to-b',
+      'from-[#f3f8ee]',
+      'to-white',
+      'p-6',
+    )
     const notice = await screen.findByTestId('market-fallback-notice')
     expect(notice).toBeVisible()
     expect(notice).toHaveTextContent(
       '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
+    expect(notice).toHaveClass(
+      'mb-4',
+      'rounded-xl',
+      'border',
+      'border-orange-200',
+      'bg-orange-50',
+      'px-4',
+      'py-3',
+      'font-semibold',
+      'text-orange-800',
     )
   })
 })
