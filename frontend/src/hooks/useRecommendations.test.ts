@@ -272,7 +272,7 @@ describe('useRecommendations', () => {
   it('favorites を優先した並びと既存 API を維持する', async () => {
     fetchCropsMock.mockResolvedValueOnce([
       { id: 1, name: 'Carrot', category: 'root' },
-      { id: 2, name: 'Tomato', category: 'fruit' },
+      { id: 2, name: 'Tomato', category: 'flower' },
     ])
     fetchRecommendationsMock.mockResolvedValueOnce({
       week: '2024-W05',
