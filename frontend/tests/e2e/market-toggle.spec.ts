@@ -56,8 +56,8 @@ test.describe('市場トグルとカテゴリ遷移', () => {
           status: 200,
           contentType: 'application/json',
           headers: {
-            'x-market-fallback': 'true',
-            'access-control-expose-headers': 'x-market-fallback',
+            fallback: 'true',
+            'access-control-expose-headers': 'fallback',
           },
           body: JSON.stringify({ week: '2024-W30', region: 'temperate', items: fallbackItems }),
         })

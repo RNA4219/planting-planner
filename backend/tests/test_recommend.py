@@ -128,7 +128,8 @@ def test_recommend_city_scope_uses_city_prices_when_available() -> None:
         params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
     )
     assert response.status_code == 200
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
@@ -138,7 +139,8 @@ def test_recommend_city_scope_missing_prices_sets_fallback_header() -> None:
         params={"week": REFERENCE_WEEK, "marketScope": "city:13"},
     )
     assert response.status_code == 200
-    assert response.headers.get("x-market-fallback") == "true"
+    assert response.headers.get("fallback") == "true"
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_recommend_blank_market_scope_treated_as_national() -> None:
@@ -148,7 +150,8 @@ def test_recommend_blank_market_scope_treated_as_national() -> None:
         params={"week": REFERENCE_WEEK, "marketScope": ""},
     )
     assert response.status_code == 200
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_recommend_all_market_scope_treated_as_national() -> None:
@@ -158,7 +161,8 @@ def test_recommend_all_market_scope_treated_as_national() -> None:
         params={"week": REFERENCE_WEEK, "marketScope": "all"},
     )
     assert response.status_code == 200
-    assert response.headers.get("x-market-fallback") is None
+    assert response.headers.get("fallback") is None
+    assert "fallback" in (response.headers.get("access-control-expose-headers") or "").split(",")
 
 
 def test_recommend_category_all_returns_full_schedule() -> None:

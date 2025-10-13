@@ -14,6 +14,19 @@ from ..dependencies import (
 router = APIRouter()
 
 
+def _expose_fallback_header(response: Response, *, enabled: bool) -> None:
+    expose = response.headers.get("access-control-expose-headers")
+    if expose:
+        headers = [value.strip() for value in expose.split(",") if value.strip()]
+        if "fallback" not in headers:
+            headers.append("fallback")
+            response.headers["access-control-expose-headers"] = ",".join(headers)
+    else:
+        response.headers["access-control-expose-headers"] = "fallback"
+    if enabled:
+        response.headers["fallback"] = "true"
+
+
 def _resolve_market_scope(
     conn: ConnDependency, scope: schemas.MarketScope | None, week: str
 ) -> tuple[schemas.MarketScope, bool]:
@@ -47,8 +60,7 @@ def recommend(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     _, fallback = _resolve_market_scope(conn, market_scope, reference_week)
-    if fallback:
-        response.headers["x-market-fallback"] = "true"
+    _expose_fallback_header(response, enabled=fallback)
 
     query = [
         "SELECT",

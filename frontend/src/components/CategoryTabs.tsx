@@ -22,6 +22,9 @@ const wrapIndex = (index: number, length: number) => {
   return (index + length) % length
 }
 
+const TAB_CLASS =
+  'rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white'
+
 export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
@@ -44,7 +47,11 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
   }
 
   return (
-    <div className="category-tabs" role="tablist" aria-label="カテゴリ">
+    <div
+      className="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
+      role="tablist"
+      aria-label="カテゴリ"
+    >
       {CATEGORY_ORDER.map((key, index) => {
         const isActive = key === category
         return (
@@ -54,7 +61,7 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
             role="tab"
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
-            className={`category-tabs__tab${isActive ? ' category-tabs__tab--active' : ''}`}
+            className={TAB_CLASS}
             onClick={() => {
               if (!isActive) {
                 onChange(key)
