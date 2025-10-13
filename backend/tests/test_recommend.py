@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from datetime import date, timedelta
 
+import pytest
+
 from fastapi.testclient import TestClient
 
 from app.db.connection import get_conn
@@ -174,10 +176,11 @@ def test_recommend_city_scope_filters_crops_missing_prices() -> None:
     _assert_items(national_response.json(), region="temperate")
 
 
-def test_recommend_invalid_market_scope_returns_422() -> None:
+@pytest.mark.parametrize("market_scope", ["city:", " city:", "city:   "])
+def test_recommend_invalid_market_scope_returns_422(market_scope: str) -> None:
     response = client.get(
         "/api/recommend",
-        params={"week": REFERENCE_WEEK, "marketScope": "city:"},
+        params={"week": REFERENCE_WEEK, "marketScope": market_scope},
     )
     assert response.status_code == 422
     assert response.json() == {"detail": "Invalid market scope"}
