@@ -83,7 +83,11 @@ describe('SearchControls', () => {
     ]
     const marketsWithoutTheme = definitions
       .map((definition) => toMarketScopeOption(definition))
-      .map(({ theme: _theme, ...rest }) => rest) as unknown as ReturnType<typeof toMarketScopeOption>[]
+      .map((option) => {
+        const { theme, ...rest } = option
+        expect(theme).toBeDefined()
+        return rest as unknown as ReturnType<typeof toMarketScopeOption>
+      })
     fetchMarketsMock.mockResolvedValue({ markets: marketsWithoutTheme, generated_at: '2024-05-01T00:00:00Z' })
     const props = createProps()
     const { queryClient } = renderSearchControls(props)
