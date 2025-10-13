@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   fromMarketScopeApiDefinition,
   toMarketScopeOption,
+  type MarketScopeApiCategory,
   type MarketScopeApiDefinition,
 } from '../../constants/marketScopes'
 import { createApiTestContext } from './apiTestContext'
@@ -59,7 +60,7 @@ describe('fetchMarkets', () => {
       readonly timezone: string
       readonly priority: number
       readonly effective_from: string
-      readonly categories: readonly string[]
+      readonly categories: readonly MarketScopeApiCategory[]
     }
 
     const payload: {
@@ -74,7 +75,20 @@ describe('fetchMarkets', () => {
           timezone: 'Asia/Tokyo',
           priority: 10,
           effective_from: '2024-01-01',
-          categories: ['vegetable', 'fruit'],
+          categories: [
+            {
+              category: 'vegetable',
+              display_name: '野菜',
+              priority: 1,
+              source: 'api',
+            },
+            {
+              category: 'fruit',
+              display_name: '果物',
+              priority: 2,
+              source: 'api',
+            },
+          ],
         },
         {
           scope: 'city:fukuoka',
@@ -83,7 +97,14 @@ describe('fetchMarkets', () => {
           timezone: 'Asia/Tokyo',
           priority: 20,
           effective_from: '2024-02-01',
-          categories: ['vegetable'],
+          categories: [
+            {
+              category: 'vegetable',
+              display_name: '野菜',
+              priority: 1,
+              source: 'api',
+            },
+          ],
         },
       ],
       generated_at: '2024-05-01T00:00:00Z',
@@ -108,7 +129,20 @@ describe('fetchMarkets', () => {
         timezone: 'Asia/Tokyo',
         priority: 10,
         effective_from: '2024-01-01',
-        categories: ['vegetable', 'fruit'],
+        categories: [
+          {
+            category: 'vegetable',
+            displayName: '野菜',
+            priority: 1,
+            source: 'api',
+          },
+          {
+            category: 'fruit',
+            displayName: '果物',
+            priority: 2,
+            source: 'api',
+          },
+        ],
       }),
     )
     expect(result.markets).toContainEqual(
@@ -120,7 +154,14 @@ describe('fetchMarkets', () => {
         timezone: 'Asia/Tokyo',
         priority: 20,
         effective_from: '2024-02-01',
-        categories: ['vegetable'],
+        categories: [
+          {
+            category: 'vegetable',
+            displayName: '野菜',
+            priority: 1,
+            source: 'api',
+          },
+        ],
       }),
     )
   })
