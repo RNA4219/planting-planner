@@ -4,7 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { RegionSelect } from './RegionSelect'
 import type { MarketScope, Region } from '../types'
 import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
-import { MARKET_SCOPE_OPTIONS } from '../constants/marketScopes'
+import {
+  MARKET_SCOPE_FALLBACK_DEFINITIONS,
+  MARKET_SCOPE_OPTIONS,
+  type MarketScopeOption,
+  type MarketScopeTheme,
+} from '../constants/marketScopes'
 import { fetchMarkets } from '../lib/api'
 
 interface SearchControlsProps {
@@ -19,6 +24,62 @@ interface SearchControlsProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
+}
+
+const MARKET_THEME_BACKGROUND_CLASSES: Record<string, string> = {
+  'market-national': 'bg-market-national',
+  'market-city': 'bg-market-city',
+  'market-neutral': 'bg-market-neutral',
+}
+
+const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
+  MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => [definition.scope, definition.theme]),
+)
+
+const FALLBACK_THEME_BY_GROUP: Record<'national' | 'city' | 'default', MarketScopeTheme> = {
+  national: { token: 'market-national', hex: '#22c55e', text: '#FFFFFF' },
+  city: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
+  default: { token: 'market-neutral', hex: '#64748b', text: '#f8fafc' },
+}
+
+const normalizeBackgroundToken = (scope: MarketScope, token: string): string => {
+  if (token in MARKET_THEME_BACKGROUND_CLASSES) {
+    return token
+  }
+  if (scope === 'national') {
+    return 'market-national'
+  }
+  if (scope.startsWith('city:')) {
+    return 'market-city'
+  }
+  return 'market-neutral'
+}
+
+const resolveMarketTheme = (
+  scope: MarketScope,
+  options: readonly MarketScopeOption[],
+): { readonly backgroundClass: string; readonly dataTheme: string; readonly textColor: string } => {
+  const fallbackByScope = FALLBACK_THEME_BY_SCOPE.get(scope)
+  const fallbackByGroup = scope === 'national'
+    ? FALLBACK_THEME_BY_GROUP.national
+    : scope.startsWith('city:')
+      ? FALLBACK_THEME_BY_GROUP.city
+      : FALLBACK_THEME_BY_GROUP.default
+  const fallbackTheme = fallbackByScope ?? fallbackByGroup
+
+  const activeOption = options.find((option) => option.value === scope)
+  const activeTheme = activeOption?.theme ?? fallbackTheme
+
+  const backgroundToken = activeTheme.token.startsWith('market-')
+    ? normalizeBackgroundToken(scope, activeTheme.token)
+    : normalizeBackgroundToken(scope, fallbackTheme.token)
+
+  const backgroundClass =
+    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
+  const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
+  const dataTheme = activeTheme.token ?? fallbackTheme.token
+
+  return { backgroundClass, dataTheme, textColor }
 }
 
 export const SearchControls = ({
@@ -39,7 +100,8 @@ export const SearchControls = ({
     queryFn: fetchMarkets,
   })
 
-  const marketOptions = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const marketOptions: readonly MarketScopeOption[] = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const marketTheme = resolveMarketTheme(marketScope, marketOptions)
 
   const selectedMarket =
     marketOptions.find((option) => option.value === marketScope) ??

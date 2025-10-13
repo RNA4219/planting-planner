@@ -34,6 +34,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
         onToggleFavorite={() => {}}
         isFavorite={() => false}
         isLoading
+        marketScope="national"
       />,
     )
 
@@ -67,15 +68,16 @@ describe('RecommendationsTable (tailwind layout)', () => {
         onSelect={() => {}}
         onToggleFavorite={() => {}}
         isFavorite={() => false}
+        marketScope="city:tokyo"
       />,
     )
 
     const cards = screen.getAllByTestId('recommendation-card')
     expect(cards).toHaveLength(2)
-    const firstCard = cards.at(0)!
-    const secondCard = cards.at(1)!
-    expect(firstCard.className).toContain('bg-market-national')
-    expect(secondCard.className).toContain('bg-market-city')
+    for (const card of cards) {
+      expect(card.className).toContain('card-market')
+      expect(card.className).toContain('bg-market-city')
+    }
   })
 
   it('アクセシビリティ属性を維持する', async () => {
@@ -88,6 +90,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
         onSelect={() => {}}
         onToggleFavorite={() => {}}
         isFavorite={() => false}
+        marketScope="national"
       />,
     )
 
