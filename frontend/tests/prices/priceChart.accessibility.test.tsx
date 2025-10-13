@@ -16,14 +16,17 @@ vi.mock('../../src/lib/api', () => ({
 describe('PriceChart のアクセシビリティ', () => {
   test('価格チャートの概要説明を figcaption で提供する', async () => {
     fetchPriceMock.mockResolvedValue({
-      crop_id: 1,
-      crop: 'トマト',
-      unit: 'kg',
-      source: 'テスト',
-      prices: [
-        { week: '2024-W01', avg_price: 100 },
-        { week: '2024-W02', avg_price: 120 },
-      ],
+      series: {
+        crop_id: 1,
+        crop: 'トマト',
+        unit: 'kg',
+        source: 'テスト',
+        prices: [
+          { week: '2024-W01', avg_price: 100 },
+          { week: '2024-W02', avg_price: 120 },
+        ],
+      },
+      isMarketFallback: false,
     })
 
     render(<PriceChart cropId={1} />)

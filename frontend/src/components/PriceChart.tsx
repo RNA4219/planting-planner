@@ -12,6 +12,7 @@ import { Line } from 'react-chartjs-2'
 
 import { fetchPrice } from '../lib/api'
 import type { MarketScope } from '../types'
+import { TOAST_MESSAGES } from '../constants/messages'
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend)
 
@@ -40,6 +41,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
   const [isLoading, setIsLoading] = React.useState(false)
+  const [isFallback, setIsFallback] = React.useState(false)
 
   React.useEffect(() => {
     if (cropId == null) {
@@ -47,6 +49,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       setValues([])
       setTitle('')
       setIsLoading(false)
+      setIsFallback(false)
       return
     }
 
@@ -55,19 +58,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setLabels([])
     setValues([])
     setTitle('')
+    setIsFallback(false)
     ;(async () => {
       try {
         const res = await fetchPrice(cropId, range?.from, range?.to, marketScope)
         if (!active) return
-        setTitle(`${res.crop} (${res.unit})`)
-        const points = res.prices ?? []
+        setTitle(`${res.series.crop} (${res.series.unit})`)
+        const points = res.series.prices ?? []
         setLabels(points.map((p) => p.week))
         setValues(points.map((p) => (p.avg_price ?? NaN)))
+        setIsFallback(res.isMarketFallback)
       } catch {
         if (active) {
           setLabels([])
           setValues([])
           setTitle('')
+          setIsFallback(false)
         }
       } finally {
         if (active) {
@@ -81,16 +87,42 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     }
   }, [cropId, range?.from, range?.to, marketScope])
 
+  const fallbackNotice =
+    isFallback ? (
+      <p
+        role="alert"
+        aria-live="assertive"
+        className="rounded-lg border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning"
+      >
+        {TOAST_MESSAGES.recommendationFallbackWarning}
+      </p>
+    ) : null
+
   if (cropId == null) {
-    return <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>
+    return (
+      <>
+        {fallbackNotice}
+        <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>
+      </>
+    )
   }
 
   if (isLoading) {
-    return <StatusMessage>価格データを読み込み中です…</StatusMessage>
+    return (
+      <>
+        {fallbackNotice}
+        <StatusMessage>価格データを読み込み中です…</StatusMessage>
+      </>
+    )
   }
 
   if (labels.length === 0) {
-    return <StatusMessage>価格データがありません。</StatusMessage>
+    return (
+      <>
+        {fallbackNotice}
+        <StatusMessage>価格データがありません。</StatusMessage>
+      </>
+    )
   }
 
   const firstWeek = labels[0]
@@ -99,23 +131,26 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const summary = `${title} の週平均価格。期間: ${periodText}。データ点数: ${labels.length}件。`
 
   return (
-    <figure className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h4 className="text-base font-semibold text-slate-900">{title}</h4>
-      <div className="mt-6">
-        <Line
-          aria-label={`${title} の価格推移`}
-          data={{
-            labels,
-            datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
-          }}
-          options={{
-            responsive: true,
-            plugins: { legend: { display: true } },
-            scales: { y: { beginAtZero: false } },
-          }}
-        />
-      </div>
-      <figcaption className="mt-4 text-sm text-slate-600">{summary}</figcaption>
-    </figure>
+    <>
+      {fallbackNotice}
+      <figure className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h4 className="text-base font-semibold text-slate-900">{title}</h4>
+        <div className="mt-6">
+          <Line
+            aria-label={`${title} の価格推移`}
+            data={{
+              labels,
+              datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
+            }}
+            options={{
+              responsive: true,
+              plugins: { legend: { display: true } },
+              scales: { y: { beginAtZero: false } },
+            }}
+          />
+        </div>
+        <figcaption className="mt-4 text-sm text-slate-600">{summary}</figcaption>
+      </figure>
+    </>
   )
 }
