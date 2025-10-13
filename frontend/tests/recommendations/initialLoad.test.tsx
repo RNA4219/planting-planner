@@ -200,12 +200,12 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     expect(tablist).toMatchInlineSnapshot(`
       <div
         aria-label="カテゴリ"
-        class="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
+        class="inline-flex items-center gap-1 rounded-full bg-market-neutral-container p-1"
         role="tablist"
       >
         <button
           aria-selected="true"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
           role="tab"
           tabindex="0"
           type="button"
@@ -214,7 +214,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         </button>
         <button
           aria-selected="false"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
           role="tab"
           tabindex="-1"
           type="button"
@@ -223,7 +223,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         </button>
         <button
           aria-selected="false"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
           role="tab"
           tabindex="-1"
           type="button"

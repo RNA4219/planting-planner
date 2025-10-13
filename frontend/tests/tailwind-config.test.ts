@@ -15,18 +15,44 @@ const themeTokensModule = (await import('../../data/theme_tokens.json', {
 const themeTokens = themeTokensModule.default
 
 const expectedMarketColors = themeTokens.reduce<Record<string, string>>((acc, token) => {
-  const [, ...segments] = token.token.split('.')
-  const name = segments.join('.')
+  const [prefix, ...segments] = token.token.split('.')
+  if (prefix !== 'market' || segments.length === 0) {
+    return acc
+  }
+  const name = segments.join('-')
   acc[name] = token.hex_color
   return acc
 }, {})
 
 const tailwindConfigModule = (await import('../tailwind.config')) as { default: Config }
 const tailwindConfig = resolveConfig(tailwindConfigModule.default)
+const marketColors = tailwindConfig.theme.colors?.market
+
+const REQUIRED_MARKET_COLOR_KEYS = [
+  'success',
+  'error',
+  'warning',
+  'info',
+  'neutral',
+  'neutral-container',
+  'neutral-hover',
+  'neutral-strong',
+  'accent',
+  'national',
+  'city',
+] as const
 
 describe('tailwind config', () => {
   test('market colors match theme tokens', () => {
     expect(tailwindConfig.theme.colors?.market).toEqual(expectedMarketColors)
+  })
+
+  test('market colors cover UI keys', () => {
+    expect.hasAssertions()
+    expect(marketColors).toBeDefined()
+    REQUIRED_MARKET_COLOR_KEYS.forEach((key) => {
+      expect(marketColors).toHaveProperty(key)
+    })
   })
 
   test('aria variants are enabled', () => {

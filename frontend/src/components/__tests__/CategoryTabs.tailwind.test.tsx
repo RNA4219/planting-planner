@@ -10,13 +10,13 @@ describe('CategoryTabs (tailwind)', () => {
 
     const tabs = screen.getAllByRole('tab')
     tabs.forEach((tab) => {
-      expect(tab).toHaveClass('aria-selected:bg-market-600')
+      expect(tab).toHaveClass('aria-selected:bg-market-accent')
       expect(tab).toHaveClass('aria-selected:text-white')
     })
 
     const activeTab = screen.getByRole('tab', { selected: true })
     expect(activeTab).toHaveAttribute('aria-selected', 'true')
-    expect(activeTab).toHaveClass('aria-selected:bg-market-600')
+    expect(activeTab).toHaveClass('aria-selected:bg-market-accent')
     expect(activeTab).toHaveClass('aria-selected:text-white')
   })
 })

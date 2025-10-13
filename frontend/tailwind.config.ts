@@ -15,8 +15,11 @@ const tokensPath = resolve(dirname(fileURLToPath(import.meta.url)), '../data/the
 const themeTokens = JSON.parse(readFileSync(tokensPath, 'utf8')) as readonly ThemeToken[]
 
 const marketColors = themeTokens.reduce<Record<string, string>>((acc, token) => {
-  const [, ...segments] = token.token.split('.')
-  const name = segments.join('.')
+  const [prefix, ...segments] = token.token.split('.')
+  if (prefix !== 'market' || segments.length === 0) {
+    return acc
+  }
+  const name = segments.join('-')
   acc[name] = token.hex_color
   return acc
 }, {})
