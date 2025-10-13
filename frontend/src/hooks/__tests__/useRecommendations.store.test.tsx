@@ -75,15 +75,17 @@ describe('useRecommendations store integration', () => {
   it('shares market scope and category across multiple hook instances', () => {
     const first = renderHook(() => useRecommendations({ favorites: [] }))
 
+    const fruitCategory: CropCategory = 'fruit'
+
     act(() => {
       first.result.current.setMarketScope('city:kyoto')
-      first.result.current.setCategory('fruit')
+      first.result.current.setCategory(fruitCategory)
     })
 
     const second = renderHook(() => useRecommendations({ favorites: [] }))
 
     expect(second.result.current.marketScope).toBe('city:kyoto')
-    expect(second.result.current.category).toBe('fruit')
+    expect(second.result.current.category).toBe(fruitCategory)
 
     first.unmount()
     second.unmount()
@@ -91,6 +93,6 @@ describe('useRecommendations store integration', () => {
     const third = renderHook(() => useRecommendations({ favorites: [] }))
 
     expect(third.result.current.marketScope).toBe('city:kyoto')
-    expect(third.result.current.category).toBe('fruit')
+    expect(third.result.current.category).toBe(fruitCategory)
   })
 })
