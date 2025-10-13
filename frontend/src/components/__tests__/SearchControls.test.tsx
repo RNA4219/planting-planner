@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SearchControls } from '../SearchControls'
+import { SEARCH_CONTROLS_TEXT } from '../../constants/messages'
 import { MARKET_SCOPE_OPTIONS, toMarketScopeOption, type MarketScopeDefinition } from '../../constants/marketScopes'
 const { fetchMarketsMock } = vi.hoisted(() => ({
   fetchMarketsMock: vi.fn<() => Promise<{ markets: ReturnType<typeof toMarketScopeOption>[]; generated_at: string }>>(),
@@ -43,6 +44,21 @@ describe('SearchControls', () => {
     expect(weekInput).toHaveAttribute('pattern', '\\d{4}-W\\d{2}')
     const inputMode = weekInput.getAttribute('inputmode')
     expect(inputMode === null || inputMode === 'text').toBe(true)
+    queryClient.clear()
+  })
+  it('検索入力に aria 属性が付与され、視覚的ラベルと連携する', () => {
+    const { queryClient } = renderSearchControls()
+    const searchInputs = screen.getAllByRole('searchbox', {
+      name: SEARCH_CONTROLS_TEXT.searchAriaLabel,
+    })
+    const searchInput = searchInputs.at(-1) as HTMLInputElement
+    expect(searchInput).toHaveAttribute('aria-label', SEARCH_CONTROLS_TEXT.searchAriaLabel)
+    const labelElement = searchInput.closest('label')?.querySelector('.sr-only')
+    expect(labelElement).not.toBeNull()
+    expect(labelElement).toHaveTextContent(SEARCH_CONTROLS_TEXT.searchAriaLabel)
+    const labelId = labelElement?.getAttribute('id')
+    expect(labelId).not.toBeNull()
+    expect(searchInput).toHaveAttribute('aria-labelledby', labelId)
     queryClient.clear()
   })
   it('市場リストを React Query のレスポンスに合わせる', async () => {

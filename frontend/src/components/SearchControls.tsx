@@ -115,6 +115,7 @@ export const SearchControls = ({
   onRefresh,
   refreshing,
 }: SearchControlsProps) => {
+  const searchLabelId = 'search-input-label'
   const { data: marketsResponse, isSuccess } = useQuery({
     queryKey: ['markets'],
     queryFn: fetchMarkets,
@@ -157,7 +158,9 @@ export const SearchControls = ({
       </label>
       <div className="flex w-full flex-col gap-4 sm:flex-1 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4 md:flex-nowrap md:items-center">
         <label className="flex w-full flex-col gap-2 text-sm font-medium text-slate-700 sm:flex-1">
-          <span className="sr-only">{SEARCH_CONTROLS_TEXT.searchAriaLabel}</span>
+          <span id={searchLabelId} className="sr-only">
+            {SEARCH_CONTROLS_TEXT.searchAriaLabel}
+          </span>
           <input
             id="search-input"
             name="search"
@@ -166,6 +169,7 @@ export const SearchControls = ({
             onChange={onSearchChange}
             placeholder={SEARCH_CONTROLS_TEXT.searchPlaceholder}
             aria-label={SEARCH_CONTROLS_TEXT.searchAriaLabel}
+            aria-labelledby={searchLabelId}
             className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2"
           />
         </label>
