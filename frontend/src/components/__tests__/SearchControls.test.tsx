@@ -47,8 +47,8 @@ describe('SearchControls', () => {
   })
   it('市場リストを React Query のレスポンスに合わせる', async () => {
     const definitions: MarketScopeDefinition[] = [
-      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#FFFFFF' } },
-      { scope: 'city:fukuoka', displayName: '福岡市中央卸売（API）', theme: { token: 'api-fukuoka', hex: '#654321', text: '#FFFFFF' } },
+      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#222222' } },
+      { scope: 'city:osaka', displayName: '大阪市中央卸売（API）', theme: { token: 'api-osaka', hex: '#654321', text: '#111111' } },
     ]
     const markets = definitions.map((definition) => toMarketScopeOption(definition))
     fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
@@ -59,15 +59,21 @@ describe('SearchControls', () => {
     await waitFor(() => {
       expect(within(select).getAllByRole('option')).toHaveLength(markets.length)
     })
+    expect(select).toHaveAttribute('data-theme', 'api-national')
+    expect(select.className).toContain('bg-market-national')
+    expect(select).toHaveStyle({ color: '#222222' })
     const optionElements = within(select).getAllByRole('option')
     expect(optionElements.map((element) => element.textContent)).toEqual(markets.map(({ label }) => label))
     expect(optionElements.map((element) => (element as HTMLOptionElement).value)).toEqual(markets.map(({ value }) => value))
     rerender(
       <QueryClientProvider client={queryClient}>
-        <SearchControls {...props} marketScope="city:fukuoka" />
+        <SearchControls {...props} marketScope="city:osaka" />
       </QueryClientProvider>,
     )
-    await waitFor(() => expect(select.value).toBe('city:fukuoka'))
+    await waitFor(() => expect(select.value).toBe('city:osaka'))
+    expect(select).toHaveAttribute('data-theme', 'api-osaka')
+    expect(select.className).toContain('bg-market-city')
+    expect(select).toHaveStyle({ color: '#111111' })
     queryClient.clear()
   })
   it('React Query 未完了時はフォールバックを描画する', () => {

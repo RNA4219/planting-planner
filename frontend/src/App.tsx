@@ -207,6 +207,7 @@ export const AppContent = () => {
             onSelect={setSelectedCropId}
             onToggleFavorite={toggleFavorite}
             isFavorite={isFavorite}
+            marketScope={selectedMarket}
             headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
           />
           <PriceChartSection
