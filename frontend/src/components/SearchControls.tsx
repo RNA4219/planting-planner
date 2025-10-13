@@ -67,6 +67,9 @@ const normalizeBackgroundToken = (scope: MarketScope, token: string): string => 
   return toBackgroundClass('market.neutral') ?? 'bg-market-neutral'
 }
 
+const toDataThemeAttribute = (token: string): string =>
+  token.includes('.') ? token.split('.').join('-') : token
+
 const resolveMarketTheme = (
   scope: MarketScope,
   options: readonly MarketScopeOption[],
@@ -84,7 +87,8 @@ const resolveMarketTheme = (
 
   const backgroundClass = normalizeBackgroundToken(scope, activeTheme.token)
   const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
-  const dataTheme = activeTheme.token ?? fallbackTheme.token
+  const dataThemeToken = activeTheme.token ?? fallbackTheme.token
+  const dataTheme = toDataThemeAttribute(dataThemeToken)
 
   return { backgroundClass, dataTheme, textColor }
 }
