@@ -15,3 +15,5 @@
 5. DevOps:
    - [x] CI に `npm run test:e2e` と Lighthouse スモークを追加。
      - 完了理由: `.github/workflows/ci.yml` の `frontend-e2e` ジョブが `npm run test:e2e` を実行し、`frontend-lighthouse` ジョブが Lighthouse スモーク (`lhci autorun`) を走らせている。
+6. ドキュメント:
+   - [x] アーキテクチャ概要の品質・テーマ項目を現行 CI / Playwright モック方針と Tailwind 移行状況に更新。
