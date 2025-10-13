@@ -2,7 +2,7 @@ import { type KeyboardEvent, type ReactNode } from 'react'
 
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/useRecommendations'
-import type { CropCategory, Region } from '../types'
+import type { CropCategory, MarketScope, Region } from '../types'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -16,20 +16,14 @@ const CATEGORY_LABELS: Record<CropCategory, string> = {
   flower: '花き',
 }
 
-const MARKET_THEME_CLASS = {
-  national: 'bg-market-national/10 border-market-national/40',
-  city: 'bg-market-city/10 border-market-city/40',
-  neutral: 'bg-market-neutral/10 border-market-neutral/40',
-}
-
-const resolveMarketTheme = (source: string): string => {
-  if (source.includes('全国')) {
-    return MARKET_THEME_CLASS.national
+const resolveMarketScopeTheme = (marketScope: MarketScope): string => {
+  if (marketScope === 'national') {
+    return 'bg-market-national border-market-national'
   }
-  if (source.includes('中央卸売') || source.includes('市場')) {
-    return MARKET_THEME_CLASS.city
+  if (marketScope.startsWith('city:')) {
+    return 'bg-market-city border-market-city'
   }
-  return MARKET_THEME_CLASS.neutral
+  return 'bg-market-neutral border-market-neutral'
 }
 
 interface RecommendationsTableProps {
@@ -40,6 +34,7 @@ interface RecommendationsTableProps {
   onSelect: (cropId: number | null) => void
   onToggleFavorite: (cropId?: number) => void
   isFavorite: (cropId?: number) => boolean
+  marketScope: MarketScope
   headerSlot?: ReactNode
   isLoading?: boolean
 }
@@ -52,6 +47,7 @@ export const RecommendationsTable = ({
   onSelect,
   onToggleFavorite,
   isFavorite,
+  marketScope,
   headerSlot,
   isLoading = false,
 }: RecommendationsTableProps) => {
@@ -131,7 +127,7 @@ export const RecommendationsTable = ({
                   tabIndex={0}
                   aria-selected={isSelected}
                   data-state={isSelected ? 'selected' : undefined}
-                  className={`flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 ${resolveMarketTheme(item.source)} ${
+                  className={`card-market ${resolveMarketScopeTheme(marketScope)} ${
                     isSelected ? 'ring-2 ring-market-accent' : 'ring-0'
                   }`}
                   onClick={() => onSelect(item.cropId ?? null)}

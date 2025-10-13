@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, test } from 'vitest'
 
 import { RecommendationsTable } from '../../src/components/RecommendationsTable'
 import type { RecommendationRow } from '../../src/hooks/useRecommendations'
@@ -21,6 +21,10 @@ const createRows = (): RecommendationRow[] => [
 ]
 
 describe('RecommendationsTable', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   test('テーブルには地域と基準週の説明が付与される', () => {
     render(
       <RecommendationsTable
@@ -31,6 +35,7 @@ describe('RecommendationsTable', () => {
         onSelect={() => {}}
         onToggleFavorite={() => {}}
         isFavorite={() => false}
+        marketScope="national"
       />,
     )
 
@@ -39,5 +44,27 @@ describe('RecommendationsTable', () => {
         name: '温暖地向けの推奨一覧（基準週: 2024-W30）',
       }),
     ).toBeInTheDocument()
+  })
+
+  test('市場スコープに応じたテーマクラスが付与される', () => {
+    render(
+      <RecommendationsTable
+        region="temperate"
+        displayWeek="2024-W30"
+        rows={createRows()}
+        selectedCropId={null}
+        onSelect={() => {}}
+        onToggleFavorite={() => {}}
+        isFavorite={() => false}
+        marketScope="city:tokyo"
+      />,
+    )
+
+    const cards = screen.getAllByTestId('recommendation-card')
+    expect(cards).not.toHaveLength(0)
+    for (const card of cards) {
+      expect(card).toHaveClass('card-market')
+      expect(card).toHaveClass('bg-market-city')
+    }
   })
 })

@@ -222,7 +222,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             >
               <tr
                 aria-selected="false"
-                class="flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 bg-market-neutral/10 border-market-neutral/40 ring-0"
+                class="card-market bg-market-national border-market-national ring-0"
                 data-testid="recommendation-card"
                 tabindex="0"
               >
@@ -298,7 +298,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
               </tr>
               <tr
                 aria-selected="false"
-                class="flex h-full flex-col gap-4 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-market-accent focus-visible:ring-offset-2 bg-market-neutral/10 border-market-neutral/40 ring-0"
+                class="card-market bg-market-national border-market-national ring-0"
                 data-testid="recommendation-card"
                 tabindex="0"
               >
