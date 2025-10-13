@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
@@ -113,7 +113,19 @@ describe('App snapshot', () => {
     const container = document.body.firstElementChild
     expect(container).not.toBeNull()
     expect(container?.querySelector('[class*="app__"]')).toBeNull()
-    expect(container).toMatchSnapshot()
+
+    const tablist = screen.getByRole('tablist', { name: 'カテゴリ' })
+    expect(tablist).toHaveClass('bg-market-neutral-container')
+    expect(tablist).toHaveClass('rounded-full')
+
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs).toHaveLength(3)
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
+    tabs.forEach((tab) => {
+      expect(tab).toHaveClass('rounded-full')
+      expect(tab).toHaveClass('aria-selected:bg-market-accent')
+      expect(tab).toHaveClass('aria-selected:text-white')
+    })
     expect(useRecommendationsSpy).toHaveBeenCalled()
   })
 })

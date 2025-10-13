@@ -360,9 +360,7 @@ def test_run_etl_filters_city_scopes_when_validation_rejects(
         ]
         tokyo = next(item for item in payload["markets"] if item["scope"] == "city:tokyo")
         assert tokyo["effective_from"] is None
-        national = next(
-            item for item in payload["markets"] if item["scope"] == "national"
-        )
+        national = next(item for item in payload["markets"] if item["scope"] == "national")
         assert national["effective_from"] == "2024-W05"
     finally:
         conn.close()

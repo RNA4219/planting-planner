@@ -250,9 +250,7 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
                 _LOGGER.warning("Great Expectations validation failed: dataset rejected")
                 fallback_required = True
         if fallback_required:
-            inserted_market = [
-                item for item in transformed_market if item[1] == "national"
-            ]
+            inserted_market = [item for item in transformed_market if item[1] == "national"]
         if inserted_market:
             conn.executemany(
                 """
