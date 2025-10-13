@@ -203,37 +203,30 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
           class="inline-flex items-center gap-1 rounded-full bg-market-50 p-1"
           role="tablist"
         >
-          <button
-            aria-selected="true"
-            class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
-            role="tab"
-            tabindex="0"
-            type="button"
-          >
-            葉菜
-          </button>
-          <button
-            aria-selected="false"
-            class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
-            role="tab"
-            tabindex="-1"
-            type="button"
-          >
-            根菜
-          </button>
-          <button
-            aria-selected="false"
-            class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
-            role="tab"
-            tabindex="-1"
-            type="button"
-          >
-            花き
-          </button>
-        </div>
-      `)
+          葉菜
+        </button>
+        <button
+          aria-selected="false"
+          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+          role="tab"
+          tabindex="-1"
+          type="button"
+        >
+          根菜
+        </button>
+        <button
+          aria-selected="false"
+          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-700 transition-colors duration-200 hover:bg-market-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-400 aria-selected:bg-market-600 aria-selected:text-white"
+          role="tab"
+          tabindex="-1"
+          type="button"
+        >
+          花き
+        </button>
+      </div>
+    `)
 
-    await user.click(rootTabButton)
+    await user.click(rootTab)
 
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenLastCalledWith(
