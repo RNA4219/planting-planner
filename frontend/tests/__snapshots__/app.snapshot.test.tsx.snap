@@ -28,7 +28,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             </span>
             <select
               aria-label="地域"
-              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
               name="region"
             >
               <option
