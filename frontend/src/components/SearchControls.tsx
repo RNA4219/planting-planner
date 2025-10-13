@@ -1,10 +1,15 @@
-import type { ChangeEvent, FormEvent } from 'react'
+import type { ChangeEvent, CSSProperties, FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { RegionSelect } from './RegionSelect'
 import type { MarketScope, Region } from '../types'
 import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
-import { MARKET_SCOPE_OPTIONS } from '../constants/marketScopes'
+import {
+  MARKET_SCOPE_FALLBACK_DEFINITIONS,
+  MARKET_SCOPE_OPTIONS,
+  type MarketScopeOption,
+  type MarketScopeTheme,
+} from '../constants/marketScopes'
 import { fetchMarkets } from '../lib/api'
 
 interface SearchControlsProps {
@@ -19,6 +24,53 @@ interface SearchControlsProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
+}
+
+const MARKET_THEME_DEFAULT: MarketScopeTheme = {
+  token: 'market-neutral',
+  hex: '#F1F5F9',
+  text: '#1F2937',
+}
+
+const FALLBACK_THEME_BY_SCOPE = new Map(
+  MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => [definition.scope, definition.theme]),
+)
+
+const MARKET_THEME_CLASS_PREFIX = 'market-'
+
+const isMarketTailwindToken = (token: string) => token.startsWith(MARKET_THEME_CLASS_PREFIX)
+
+const resolveMarketTheme = (scope: MarketScope, options: MarketScopeOption[]): MarketScopeTheme => {
+  const option = options.find((candidate) => candidate.value === scope)
+  if (option) {
+    if (isMarketTailwindToken(option.theme.token)) {
+      return option.theme
+    }
+    const fallbackTheme = FALLBACK_THEME_BY_SCOPE.get(scope)
+    if (fallbackTheme) {
+      return fallbackTheme
+    }
+  }
+  const fallbackTheme = FALLBACK_THEME_BY_SCOPE.get(scope)
+  if (fallbackTheme) {
+    return fallbackTheme
+  }
+  return MARKET_THEME_DEFAULT
+}
+
+const getMarketSelectTheme = (scope: MarketScope, options: MarketScopeOption[]) => {
+  const theme = resolveMarketTheme(scope, options)
+  const className = isMarketTailwindToken(theme.token)
+    ? `bg-${theme.token}`
+    : `bg-${MARKET_THEME_DEFAULT.token}`
+  const style: Pick<CSSProperties, 'color'> = {
+    color: theme.text,
+  }
+  return {
+    className,
+    dataTheme: theme.token,
+    style,
+  }
 }
 
 export const SearchControls = ({
@@ -40,6 +92,7 @@ export const SearchControls = ({
   })
 
   const marketOptions = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const selectTheme = getMarketSelectTheme(marketScope, marketOptions)
 
   const refreshButtonClassName = refreshing
     ? 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-market-accent/10 px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
@@ -56,8 +109,10 @@ export const SearchControls = ({
         <span>市場</span>
         <select
           aria-label="市場"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100 ${selectTheme.className}`}
           name="marketScope"
+          data-theme={selectTheme.dataTheme}
+          style={selectTheme.style}
           value={marketScope}
           onChange={(event) => {
             onMarketScopeChange(event.target.value as MarketScope)

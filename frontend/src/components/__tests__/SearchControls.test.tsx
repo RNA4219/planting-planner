@@ -79,11 +79,40 @@ describe('SearchControls', () => {
     const firstOption = optionElements[0] as HTMLOptionElement
     expect(firstOption.textContent).toBe(MARKET_SCOPE_OPTIONS[0]!.label)
     expect(firstOption.value).toBe(MARKET_SCOPE_OPTIONS[0]!.value)
+    expect(select.className).toContain('bg-market-national')
+    expect(select).toHaveAttribute('data-theme', 'market-national')
     const forms = container.querySelectorAll('form')
     expect(forms.length).toBeGreaterThan(0)
     const form = forms[forms.length - 1]!
     expect(form).toHaveClass('flex', 'flex-col', 'gap-4')
     expect(form.className).toMatch(/bg-market-|border-market-|text-market-/)
+    queryClient.clear()
+  })
+  it('市場セレクトのテーマがアクティブスコープに追従する', async () => {
+    const definitions: MarketScopeDefinition[] = [
+      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#FFFFFF' } },
+      { scope: 'city:tokyo', displayName: '東京都中央卸売（API）', theme: { token: 'api-tokyo', hex: '#654321', text: '#EEEEEE' } },
+    ]
+    const markets = definitions.map((definition) => toMarketScopeOption(definition))
+    fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
+    const props = createProps()
+    const { queryClient, rerender } = renderSearchControls(props)
+    const select = screen.getAllByRole('combobox', { name: '市場' }).at(-1) as HTMLSelectElement
+
+    await waitFor(() => expect(fetchMarketsMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(select).toHaveAttribute('data-theme', 'market-national'))
+    expect(select.className).toContain('bg-market-national')
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <SearchControls {...props} marketScope="city:tokyo" />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => expect(select.value).toBe('city:tokyo'))
+    await waitFor(() => expect(select).toHaveAttribute('data-theme', 'market-tokyo'))
+    expect(select.className).toContain('bg-market-tokyo')
+
     queryClient.clear()
   })
 })

@@ -69,6 +69,10 @@ describe('App snapshot', () => {
       expect(screen.getByRole('row', { name: /トマト/ })).toBeInTheDocument()
     })
 
+    const marketSelect = screen.getByRole('combobox', { name: '市場' })
+    expect(marketSelect).toHaveAttribute('data-theme', 'market-national')
+    expect(marketSelect.className).toContain('bg-market-national')
+
     const container = document.body.firstElementChild
     expect(container).not.toBeNull()
     expect(container?.querySelector('[class*="app__"]')).toBeNull()
