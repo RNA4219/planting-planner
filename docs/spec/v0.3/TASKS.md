@@ -28,3 +28,5 @@
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
+   - [x] 型仕様との差分解消: `docs/spec/v0.3/TYPES.md` から `SelectedCategory` 追加記述を削除し、カテゴリ選択が `CropCategory` を共有する方針を明文化。
+     - 完了理由: `docs/spec/v0.3/TYPES.md` で `SelectedCategory` 型追加の記述を除去し、`CropCategory` の横断利用を明記した。
