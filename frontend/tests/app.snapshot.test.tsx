@@ -71,6 +71,7 @@ describe('App snapshot', () => {
 
     const container = document.body.firstElementChild
     expect(container).not.toBeNull()
+    expect(container?.querySelector('[class*="app__"]')).toBeNull()
     expect(container).toMatchSnapshot()
     expect(useRecommendationsSpy).toHaveBeenCalled()
   })

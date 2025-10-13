@@ -1,13 +1,5 @@
 
-import {
-  type CSSProperties,
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { CategoryTabs } from './components/CategoryTabs'
@@ -21,16 +13,6 @@ import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
-
-const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
-  marginBottom: '1rem',
-  padding: '0.75rem 1rem',
-  borderRadius: '0.75rem',
-  border: '1px solid #fed7aa',
-  backgroundColor: '#fff7ed',
-  color: '#9a3412',
-  fontWeight: 600,
-}
 
 const createQueryClient = () =>
   new QueryClient({
@@ -185,50 +167,54 @@ export const AppContent = () => {
   )
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1 className="app__title">{APP_TEXT.title}</h1>
-        <SearchControls
-          queryWeek={queryWeek}
-          currentWeek={currentWeek}
-          onWeekChange={handleWeekChange}
-          onRegionChange={handleRegionChange}
-          marketScope={marketScope}
-          onMarketScopeChange={handleMarketScopeChange}
-          searchKeyword={searchKeyword}
-          onSearchChange={handleSearchChange}
-          onSubmit={handleSubmit}
-          onRefresh={startRefresh}
-          refreshing={isRefreshing}
-        />
-      </header>
-      <main className="app__main">
-        <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
-        {isMarketFallback ? (
-          <div
-            data-testid="market-fallback-notice"
-            role="status"
-            aria-live="polite"
-            style={MARKET_FALLBACK_NOTICE_STYLE}
-          >
-            {TOAST_MESSAGES.recommendationFallbackWarning}
-          </div>
-        ) : null}
-        <RecommendationsTable
-          region={region}
-          displayWeek={displayWeek}
-          rows={filteredRows}
-          selectedCropId={selectedCropId}
-          onSelect={setSelectedCropId}
-          onToggleFavorite={toggleFavorite}
-          isFavorite={isFavorite}
-          headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
-        />
-        <PriceChartSection
-          selectedCropId={selectedCropId}
-          marketScope={selectedMarket}
-        />
-      </main>
+    <div className="min-h-screen bg-market-neutral-container">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
+        <header className="space-y-6 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-lg backdrop-blur">
+          <h1 className="text-3xl font-bold tracking-tight text-market-neutral-strong sm:text-4xl">
+            {APP_TEXT.title}
+          </h1>
+          <SearchControls
+            queryWeek={queryWeek}
+            currentWeek={currentWeek}
+            onWeekChange={handleWeekChange}
+            onRegionChange={handleRegionChange}
+            marketScope={marketScope}
+            onMarketScopeChange={handleMarketScopeChange}
+            searchKeyword={searchKeyword}
+            onSearchChange={handleSearchChange}
+            onSubmit={handleSubmit}
+            onRefresh={startRefresh}
+            refreshing={isRefreshing}
+          />
+        </header>
+        <main className="flex flex-1 flex-col gap-8 pb-12">
+          <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
+          {isMarketFallback ? (
+            <div
+              data-testid="market-fallback-notice"
+              role="status"
+              aria-live="polite"
+              className="flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm"
+            >
+              {TOAST_MESSAGES.recommendationFallbackWarning}
+            </div>
+          ) : null}
+          <RecommendationsTable
+            region={region}
+            displayWeek={displayWeek}
+            rows={filteredRows}
+            selectedCropId={selectedCropId}
+            onSelect={setSelectedCropId}
+            onToggleFavorite={toggleFavorite}
+            isFavorite={isFavorite}
+            headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
+          />
+          <PriceChartSection
+            selectedCropId={selectedCropId}
+            marketScope={selectedMarket}
+          />
+        </main>
+      </div>
     </div>
   )
 }
