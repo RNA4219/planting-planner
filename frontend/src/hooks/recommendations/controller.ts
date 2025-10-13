@@ -1,11 +1,11 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef } from 'react'
 
 import type { CropCategory, MarketScope, Region } from '../../types'
 import { RecommendationRow, buildRecommendationRows, formatWeekLabel } from '../../utils/recommendations'
 
-import { useRecommendationLoader } from './loader'
 import { useCropCatalog } from '../useCropCatalog'
-import { saveMarketScope, saveSelectedCategory } from '../../lib/storage'
+import { useRecommendationLoader } from './loader'
+import { recommendationsStore, useRecommendationsStore } from './store'
 
 export interface UseRecommendationsOptions {
   favorites: readonly number[]
@@ -39,17 +39,38 @@ export const useRecommendations = ({
   initialMarketScope,
   initialCategory,
 }: UseRecommendationsOptions): UseRecommendationsResult => {
-  const initialRegionRef = useRef<Region>(initialRegion ?? 'temperate')
-  const [region, setRegion] = useState<Region>(initialRegionRef.current)
-  const initialMarketScopeRef = useRef<MarketScope>(initialMarketScope ?? 'national')
-  const initialCategoryRef = useRef<CropCategory>(initialCategory ?? 'leaf')
-  const [marketScope, setMarketScopeState] = useState<MarketScope>(initialMarketScopeRef.current)
-  const [category, setCategoryState] = useState<CropCategory>(initialCategoryRef.current)
-  const regionSyncRef = useRef<Region>(initialRegionRef.current)
+  const didHydrateRef = useRef(false)
+
+  if (!didHydrateRef.current) {
+    recommendationsStore.getState().hydrate({
+      region: initialRegion,
+      marketScope: initialMarketScope,
+      category: initialCategory,
+    })
+    didHydrateRef.current = true
+  }
+
+  const region = useRecommendationsStore((state) => state.region)
+  const setRegion = useRecommendationsStore((state) => state.setRegion)
+  const marketScope = useRecommendationsStore((state) => state.selectedMarket)
+  const setMarketScope = useRecommendationsStore((state) => state.setSelectedMarket)
+  const category = useRecommendationsStore((state) => state.selectedCategory)
+  const setCategory = useRecommendationsStore((state) => state.setSelectedCategory)
+  const hydrateStore = useRecommendationsStore((state) => state.hydrate)
+  const regionSyncRef = useRef<Region>(region)
   const regionFetchSkipRef = useRef<Region | null>(null)
-  const marketScopeSyncRef = useRef<MarketScope>(initialMarketScopeRef.current)
-  const categorySyncRef = useRef<CropCategory>(initialCategoryRef.current)
+  const marketScopeSyncRef = useRef<MarketScope>(marketScope)
+  const categorySyncRef = useRef<CropCategory>(category)
   const { catalog: cropCatalog } = useCropCatalog()
+
+  useEffect(() => {
+    hydrateStore({
+      region: initialRegion,
+      marketScope: initialMarketScope,
+      category: initialCategory,
+    })
+  }, [hydrateStore, initialCategory, initialMarketScope, initialRegion])
+
   const cropIndex = useMemo(() => {
     const map = new Map<string, { id: number; category?: string }>()
     cropCatalog.forEach((entry, cropName) => {
@@ -57,6 +78,7 @@ export const useRecommendations = ({
     })
     return map
   }, [cropCatalog])
+
   const {
     queryWeek,
     setQueryWeek: setRawQueryWeek,
@@ -68,6 +90,7 @@ export const useRecommendations = ({
     requestRecommendations,
     isMarketFallback,
   } = useRecommendationLoader({ region, marketScope, category })
+
   const latestRegionRef = useRef(region)
   const latestWeekRef = useRef(currentWeek)
   const latestMarketScopeRef = useRef(marketScope)
@@ -116,53 +139,6 @@ export const useRecommendations = ({
     },
     [setRawQueryWeek],
   )
-
-  const setMarketScope = useCallback(
-    (next: MarketScope) => {
-      setMarketScopeState((prev) => {
-        if (prev === next) {
-          return prev
-        }
-        saveMarketScope(next)
-        return next
-      })
-    },
-    [],
-  )
-
-  const setCategory = useCallback(
-    (next: CropCategory) => {
-      setCategoryState((prev) => {
-        if (prev === next) {
-          return prev
-        }
-        saveSelectedCategory(next)
-        return next
-      })
-    },
-    [],
-  )
-
-  useEffect(() => {
-    if (initialRegion !== undefined && initialRegion !== initialRegionRef.current) {
-      initialRegionRef.current = initialRegion
-      setRegion(initialRegion)
-    }
-  }, [initialRegion, setRegion])
-
-  useEffect(() => {
-    if (initialMarketScope !== undefined && initialMarketScope !== initialMarketScopeRef.current) {
-      initialMarketScopeRef.current = initialMarketScope
-      setMarketScope(initialMarketScope)
-    }
-  }, [initialMarketScope, setMarketScope])
-
-  useEffect(() => {
-    if (initialCategory !== undefined && initialCategory !== initialCategoryRef.current) {
-      initialCategoryRef.current = initialCategory
-      setCategory(initialCategory)
-    }
-  }, [initialCategory, setCategory])
 
   useEffect(() => {
     if (regionSyncRef.current === region) {
