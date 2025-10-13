@@ -43,6 +43,13 @@ const REQUIRED_MARKET_COLOR_KEYS = [
 ] as const
 
 describe('tailwind config', () => {
+  test('theme tokens use market namespace', () => {
+    expect(themeTokens).not.toHaveLength(0)
+    expect(themeTokens.every((token) => token.token.startsWith('market.'))).toBe(
+      true,
+    )
+  })
+
   test('market colors match theme tokens', () => {
     expect(tailwindConfig.theme.colors?.market).toEqual(expectedMarketColors)
   })

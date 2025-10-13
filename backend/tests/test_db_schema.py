@@ -159,8 +159,8 @@ def test_market_scope_categories_index_and_view_join(
             VALUES (?, ?, ?)
             """,
             [
-                ("accent.primary", "#22c55e", "#000000"),
-                ("accent.secondary", "#2563eb", "#ffffff"),
+                ("market.national", "#22c55e", "#000000"),
+                ("market.city.tokyo", "#2563eb", "#ffffff"),
             ],
         )
         conn.executemany(
@@ -170,8 +170,8 @@ def test_market_scope_categories_index_and_view_join(
             ) VALUES (?, ?, ?, ?, ?)
             """,
             [
-                ("national", "全国平均", "Asia/Tokyo", 10, "accent.primary"),
-                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.secondary"),
+                ("national", "全国平均", "Asia/Tokyo", 10, "market.national"),
+                ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "market.city.tokyo"),
             ],
         )
         conn.executemany(

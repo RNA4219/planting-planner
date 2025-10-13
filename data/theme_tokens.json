@@ -1,8 +1,8 @@
 [
-  { "token": "accent.national", "hex_color": "#22c55e", "text_color": "#0f172a" },
-  { "token": "accent.tokyo", "hex_color": "#2563eb", "text_color": "#f8fafc" },
-  { "token": "accent.osaka", "hex_color": "#f97316", "text_color": "#0f172a" },
-  { "token": "accent.nagoya", "hex_color": "#a855f7", "text_color": "#f8fafc" },
+  { "token": "market.national", "hex_color": "#22c55e", "text_color": "#0f172a" },
+  { "token": "market.city.tokyo", "hex_color": "#2563eb", "text_color": "#f8fafc" },
+  { "token": "market.city.osaka", "hex_color": "#f97316", "text_color": "#0f172a" },
+  { "token": "market.city.nagoya", "hex_color": "#a855f7", "text_color": "#f8fafc" },
   { "token": "market.success", "hex_color": "#16a34a", "text_color": "#f8fafc" },
   { "token": "market.error", "hex_color": "#dc2626", "text_color": "#f8fafc" },
   { "token": "market.warning", "hex_color": "#f97316", "text_color": "#0f172a" },
@@ -12,6 +12,5 @@
   { "token": "market.neutral.container", "hex_color": "#f1f5f9", "text_color": "#0f172a" },
   { "token": "market.neutral.hover", "hex_color": "#e2e8f0", "text_color": "#0f172a" },
   { "token": "market.neutral.strong", "hex_color": "#334155", "text_color": "#f8fafc" },
-  { "token": "market.national", "hex_color": "#22c55e", "text_color": "#0f172a" },
   { "token": "market.city", "hex_color": "#2563eb", "text_color": "#f8fafc" }
 ]
