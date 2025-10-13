@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { CropCategory } from '../types'
-
 const CATEGORY_KEY = 'plantingPlanner.category'
 
 const stubWindowWithStorage = (initial: Record<string, string> = {}) => {
@@ -30,14 +28,11 @@ describe('loadSelectedCategory', () => {
     vi.unstubAllEnvs()
   })
 
-  it('保存済みの fruit を復元する', async () => {
-    stubWindowWithStorage()
-    const { loadSelectedCategory, saveSelectedCategory } = await import('./storage')
+  it('保存済みの fruit は leaf にマイグレーションされる', async () => {
+    stubWindowWithStorage({ [CATEGORY_KEY]: JSON.stringify('fruit') })
+    const { loadSelectedCategory } = await import('./storage')
 
-    const fruit: CropCategory = 'fruit'
-    saveSelectedCategory(fruit)
-
-    expect(loadSelectedCategory()).toBe(fruit)
+    expect(loadSelectedCategory()).toBe('leaf')
   })
 
   it('無効値のみ保存されている場合は leaf にフォールバックする', async () => {

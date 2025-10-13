@@ -223,15 +223,6 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         >
           花き
         </button>
-        <button
-          aria-selected="false"
-          class="category-tabs__tab"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          果菜
-        </button>
       </div>
     `)
 

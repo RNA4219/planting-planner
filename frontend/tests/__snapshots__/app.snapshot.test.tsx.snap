@@ -169,15 +169,6 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
             >
               花き
             </button>
-            <button
-              aria-selected="false"
-              class="category-tabs__tab"
-              role="tab"
-              tabindex="-1"
-              type="button"
-            >
-              果菜
-            </button>
           </div>
         </div>
         <table
