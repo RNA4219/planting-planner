@@ -35,3 +35,11 @@
 7. リリース準備:
    - [ ] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
      - 完了条件: KPI・残課題・ロールバック手順がチェックリスト化され、週次レビューで承認済みであること。
+   - [x] UI 仕様のトースト記述を `ToastStack` と市場フォールバック警告の現仕様へ更新。
+     - 検証観点: フォールバック検出時に `warning` variant を enqueue → ToastStack の `role="status"` / auto dismiss と手動 dismiss が両立すること。
+   - [x] 型仕様との差分解消: `docs/spec/v0.3/TYPES.md` から `SelectedCategory` 追加記述を削除し、カテゴリ選択が `CropCategory` を共有する方針を明文化。
+     - 完了理由: `docs/spec/v0.3/TYPES.md` で `SelectedCategory` 型追加の記述を除去し、`CropCategory` の横断利用を明記した。
+
+7. ログ/監視:
+   - [x] ETL 警告ログを市場メタデータ検証失敗を示す文言へ更新。
+     - 完了理由: `backend/app/etl/transform.py` の警告を「市場メタデータ検証の失敗」へ統一し、Great Expectations 固有表現を除去済み。
