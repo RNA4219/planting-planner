@@ -32,6 +32,8 @@
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
+   - [x] データスキーマのカテゴリフォールバック説明を `market_scope_categories` と `_resolve_categories` の動的生成方針へ更新。
+     - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` で `market_scope_categories` 優先と `_resolve_categories` によるスコープ別カテゴリ補完を記述した。
    - [x] コントリビューション指針に CI と整合するフロントエンド検証手順 (`npm run typecheck` 含む) を追記。
      - 完了理由: `.github/workflows/ci.yml` のジョブ構成に合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd frontend && npm run typecheck` などの実行手順を明記した。
    - [x] 開発運用ドキュメントの監視方針を push/pull_request 実行へ更新。
