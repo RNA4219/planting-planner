@@ -18,10 +18,10 @@ export interface ToastStackProps {
 }
 
 const VARIANT_CLASS_NAMES: Record<ToastVariant, string> = {
-  success: 'bg-market-success text-white',
-  error: 'bg-market-error text-white',
-  warning: 'bg-market-warning text-white',
-  info: 'bg-market-info text-white',
+  success: 'toast--success bg-market-success text-white',
+  error: 'toast--error bg-market-error text-white',
+  warning: 'toast--warning bg-market-warning text-white',
+  info: 'toast--info bg-market-info text-white',
 }
 
 export const ToastStack = ({
