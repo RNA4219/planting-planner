@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { RecommendResponse } from '../types'
 import { normalizeRecommendationResponse } from './recommendations'
 import * as weekModule from '../lib/week'
 
@@ -11,7 +12,7 @@ describe('normalizeRecommendationResponse', () => {
   it('アイテムの播種週・収穫週が不正な場合にレスポンス週へフォールバックする', () => {
     vi.spyOn(weekModule, 'getCurrentIsoWeek').mockReturnValue('2099-W52')
 
-    const response = {
+    const response: RecommendResponse = {
       week: '2024-w06',
       region: 'temperate',
       items: [
