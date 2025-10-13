@@ -43,6 +43,47 @@ const createQueryClient = () =>
     },
   })
 
+const CATEGORY_LABELS: Record<CropCategory, string> = {
+  leaf: '葉菜類',
+  root: '根菜類',
+  flower: '花き',
+}
+
+type CanonicalCategory = CropCategory | 'fruit'
+
+const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
+  leaf: 'leaf',
+  '葉菜': 'leaf',
+  '葉菜類': 'leaf',
+  '葉物': 'leaf',
+  root: 'root',
+  '根菜': 'root',
+  '根菜類': 'root',
+  flower: 'flower',
+  '花き': 'flower',
+  '花き類': 'flower',
+  '花': 'flower',
+  fruit: 'fruit',
+  '果菜': 'fruit',
+  '果菜類': 'fruit',
+} as const
+
+const resolveCategoryCanonical = (value: string | null | undefined): CanonicalCategory | null => {
+  if (!value) {
+    return null
+  }
+  const normalized = value.normalize('NFKC').trim().toLowerCase()
+  if (!normalized) {
+    return null
+  }
+  const direct = CATEGORY_ALIASES[normalized]
+  if (direct) {
+    return direct
+  }
+  const collapsed = normalized.replace(/\s+/g, '')
+  return CATEGORY_ALIASES[collapsed] ?? null
+}
+
 export const AppContent = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
@@ -114,19 +155,35 @@ export const AppContent = () => {
     [searchKeyword],
   )
 
+  const canonicalSearchKeyword = useMemo(
+    () => resolveCategoryCanonical(normalizedSearchKeyword),
+    [normalizedSearchKeyword],
+  )
+
   const filteredRows = useMemo(() => {
-    if (!normalizedSearchKeyword) {
+    if (!normalizedSearchKeyword && !canonicalSearchKeyword) {
       return sortedRows
     }
     return sortedRows.filter((row) => {
       const cropName = row.crop.normalize('NFKC').toLowerCase()
-      const category = row.category?.normalize('NFKC').toLowerCase() ?? ''
-      return (
-        cropName.includes(normalizedSearchKeyword) ||
-        category.includes(normalizedSearchKeyword)
-      )
+      if (normalizedSearchKeyword && cropName.includes(normalizedSearchKeyword)) {
+        return true
+      }
+      const categoryLabel = row.category ? CATEGORY_LABELS[row.category] : ''
+      const normalizedCategoryLabel = categoryLabel.normalize('NFKC').toLowerCase()
+      if (
+        normalizedSearchKeyword &&
+        normalizedCategoryLabel.includes(normalizedSearchKeyword)
+      ) {
+        return true
+      }
+      if (!canonicalSearchKeyword) {
+        return false
+      }
+      const rowCanonicalCategory = resolveCategoryCanonical(row.category)
+      return rowCanonicalCategory !== null && rowCanonicalCategory === canonicalSearchKeyword
     })
-  }, [normalizedSearchKeyword, sortedRows])
+  }, [canonicalSearchKeyword, normalizedSearchKeyword, sortedRows])
 
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))

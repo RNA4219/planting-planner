@@ -168,6 +168,30 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     })
   })
 
+  it("検索欄に '葉菜類' を入力すると葉菜類の行がヒットする", async () => {
+    fetchCrops.mockResolvedValue(defaultCrops)
+    fetchRecommendations.mockResolvedValue(
+      createRecommendResponse({
+        items: [
+          createItem({ crop: '春菊', category: 'leaf' }),
+          createItem({ crop: 'にんじん', category: 'root' }),
+        ],
+      }),
+    )
+
+    const { user } = await renderApp()
+
+    await screen.findByText('春菊')
+
+    const searchBox = screen.getByRole('searchbox', { name: '作物検索' })
+    await user.clear(searchBox)
+    await user.type(searchBox, '葉菜類')
+
+    await waitFor(() => {
+      expect(screen.getByText('春菊')).toBeInTheDocument()
+    })
+  })
+
   it('カテゴリタブ切替でカテゴリ指定のリクエストとタブスナップショットが一致する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops)
     fetchRecommendations.mockResolvedValue(
