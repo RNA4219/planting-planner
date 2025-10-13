@@ -37,9 +37,9 @@ const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
 )
 
 const FALLBACK_THEME_BY_GROUP: Record<'national' | 'city' | 'default', MarketScopeTheme> = {
-  national: { token: 'market-national', hex: '#22c55e', text: '#FFFFFF' },
-  city: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
-  default: { token: 'market-neutral', hex: '#64748b', text: '#f8fafc' },
+  national: { token: 'market.national', hex: '#22c55e', text: '#FFFFFF' },
+  city: { token: 'market.city', hex: '#2563eb', text: '#f8fafc' },
+  default: { token: 'market.neutral', hex: '#64748b', text: '#f8fafc' },
 }
 
 const normalizeBackgroundToken = (scope: MarketScope, token: string): string => {
@@ -55,6 +55,22 @@ const normalizeBackgroundToken = (scope: MarketScope, token: string): string => 
   return 'market-neutral'
 }
 
+const normalizeDataThemeToken = (scope: MarketScope, token: string): string => {
+  if (token.startsWith('market.')) {
+    return token
+  }
+  if (token.startsWith('market-')) {
+    if (scope === 'national') {
+      return 'market.national'
+    }
+    if (scope.startsWith('city:')) {
+      return 'market.city'
+    }
+    return 'market.neutral'
+  }
+  return token
+}
+
 const resolveMarketTheme = (
   scope: MarketScope,
   options: readonly MarketScopeOption[],
@@ -68,16 +84,17 @@ const resolveMarketTheme = (
   const fallbackTheme = fallbackByScope ?? fallbackByGroup
 
   const activeOption = options.find((option) => option.value === scope)
-  const activeTheme = activeOption?.theme ?? fallbackTheme
+  const resolvedTheme = activeOption?.theme ?? fallbackTheme
 
-  const backgroundToken = activeTheme.token.startsWith('market-')
-    ? normalizeBackgroundToken(scope, activeTheme.token)
-    : normalizeBackgroundToken(scope, fallbackTheme.token)
+  const backgroundTokenSource = resolvedTheme.token.startsWith('market-')
+    ? resolvedTheme.token
+    : fallbackTheme.token
+  const backgroundToken = normalizeBackgroundToken(scope, backgroundTokenSource)
 
   const backgroundClass =
     MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
-  const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
-  const dataTheme = activeTheme.token ?? fallbackTheme.token
+  const textColor = resolvedTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
+  const dataTheme = normalizeDataThemeToken(scope, resolvedTheme.token)
 
   return { backgroundClass, dataTheme, textColor }
 }
