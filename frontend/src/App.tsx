@@ -177,6 +177,15 @@ export const AppContent = () => {
       ) {
         return true
       }
+      const normalizedCategoryValue = row.category
+        ? row.category.normalize('NFKC').toLowerCase()
+        : ''
+      if (
+        normalizedSearchKeyword &&
+        normalizedCategoryValue.includes(normalizedSearchKeyword)
+      ) {
+        return true
+      }
       if (!canonicalSearchKeyword) {
         return false
       }
