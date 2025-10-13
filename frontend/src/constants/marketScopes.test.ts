@@ -5,6 +5,16 @@ import { describe, expect, it } from 'vitest'
 
 import type { MarketScope } from '../types'
 import { MARKET_SCOPE_FALLBACK_DEFINITIONS } from './marketScopes'
+import type { MarketScope } from '../types'
+
+type MarketScopeJsonEntry = {
+  scope: MarketScope
+  display_name: string
+  theme_token: string
+}
+
+const normalizeThemeToken = (token: string): string =>
+  token.startsWith('accent.') ? `market-${token.slice('accent.'.length)}` : token
 
 type ThemeToken = {
   token: string
