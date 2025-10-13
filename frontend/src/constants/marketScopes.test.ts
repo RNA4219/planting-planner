@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import marketScopeDataset from '../../../data/market_scopes.json'
+import themeTokenDataset from '../../../data/theme_tokens.json'
 import { MARKET_SCOPE_FALLBACK_DEFINITIONS } from './marketScopes'
 import type { MarketScope } from '../types'
 
@@ -10,8 +11,26 @@ type MarketScopeJsonEntry = {
   theme_token: string
 }
 
-const normalizeThemeToken = (token: string): string =>
-  token.startsWith('accent.') ? `market-${token.slice('accent.'.length)}` : token
+type ThemeTokenJsonEntry = {
+  token: string
+  hex_color: string
+  text_color: string
+}
+
+const normalizeThemeToken = (token: string): string => {
+  const baseToken = token.startsWith('accent.')
+    ? `market-${token.slice('accent.'.length)}`
+    : token
+
+  return baseToken.replaceAll('.', '-')
+}
+
+const themeTokensByNormalizedToken = new Map(
+  (themeTokenDataset as ThemeTokenJsonEntry[]).map((entry) => [
+    normalizeThemeToken(entry.token),
+    entry,
+  ]),
+)
 
 describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
   it('テーマ情報を含むフォールバック定義を提供する', () => {
@@ -58,9 +77,22 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
       expect(fallbackDefinition).toBeDefined()
 
       expect(fallbackDefinition?.displayName).toBe(jsonDefinition.displayName)
-      expect(fallbackDefinition?.theme.token).toBe(
-        normalizeThemeToken(jsonDefinition.themeToken),
+      const normalizedToken = normalizeThemeToken(jsonDefinition.themeToken)
+
+      expect(fallbackDefinition?.theme.token).toBe(normalizedToken)
+
+      const themeTokenDefinition = themeTokensByNormalizedToken.get(
+        normalizedToken,
       )
+
+      if (
+        themeTokenDefinition !== undefined &&
+        !themeTokenDefinition.token.startsWith('accent.')
+      ) {
+        expect(fallbackDefinition?.theme.text).toBe(
+          themeTokenDefinition.text_color,
+        )
+      }
     }
   })
 })
