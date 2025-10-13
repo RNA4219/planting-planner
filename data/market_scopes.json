@@ -4,27 +4,31 @@
     "display_name": "全国平均",
     "timezone": "Asia/Tokyo",
     "priority": 10,
-    "theme_token": "accent.national"
+    "theme_token": "market.national",
+    "legacy_theme_token": "accent.national"
   },
   {
     "scope": "city:tokyo",
     "display_name": "東京都中央卸売",
     "timezone": "Asia/Tokyo",
     "priority": 20,
-    "theme_token": "accent.tokyo"
+    "theme_token": "market.city_tokyo",
+    "legacy_theme_token": "accent.tokyo"
   },
   {
     "scope": "city:osaka",
     "display_name": "大阪市中央卸売",
     "timezone": "Asia/Tokyo",
     "priority": 30,
-    "theme_token": "accent.osaka"
+    "theme_token": "market.city_osaka",
+    "legacy_theme_token": "accent.osaka"
   },
   {
     "scope": "city:nagoya",
     "display_name": "名古屋市中央卸売",
     "timezone": "Asia/Tokyo",
     "priority": 40,
-    "theme_token": "accent.nagoya"
+    "theme_token": "market.city_nagoya",
+    "legacy_theme_token": "accent.nagoya"
   }
 ]

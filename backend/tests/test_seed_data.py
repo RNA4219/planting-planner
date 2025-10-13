@@ -65,14 +65,14 @@ def seed_payload() -> data_loader.SeedPayload:
                 "display_name": "全国平均",
                 "timezone": "Asia/Tokyo",
                 "priority": 10,
-                "theme_token": "accent.national",
+                "theme_token": "market.national",
             },
             {
                 "scope": "city:tokyo",
                 "display_name": "東京都中央卸売",
                 "timezone": "Asia/Tokyo",
                 "priority": 20,
-                "theme_token": "accent.tokyo",
+                "theme_token": "market.city_tokyo",
             },
         ],
         market_scope_categories=[
@@ -93,12 +93,12 @@ def seed_payload() -> data_loader.SeedPayload:
         ],
         theme_tokens=[
             {
-                "token": "accent.national",
+                "token": "market.national",
                 "hex_color": "#22c55e",
                 "text_color": "#ffffff",
             },
             {
-                "token": "accent.tokyo",
+                "token": "market.city_tokyo",
                 "hex_color": "#2563eb",
                 "text_color": "#ffffff",
             },
@@ -177,12 +177,12 @@ def test_seed_inserts_expected_records(
 
     assert any(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
-        and params == ("national", "全国平均", "Asia/Tokyo", 10, "accent.national")
+        and params == ("national", "全国平均", "Asia/Tokyo", 10, "market.national")
         for sql, params in executed
     )
     assert any(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
-        and params == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "accent.tokyo")
+        and params == ("city:tokyo", "東京都中央卸売", "Asia/Tokyo", 20, "market.city_tokyo")
         for sql, params in executed
     )
 
@@ -200,13 +200,13 @@ def test_seed_inserts_expected_records(
     assert any(
         sql.startswith("INSERT INTO theme_tokens")
         and "ON CONFLICT" in sql.upper()
-        and params == ("accent.national", "#22c55e", "#ffffff")
+        and params == ("market.national", "#22c55e", "#ffffff")
         for sql, params in executed
     )
     assert any(
         sql.startswith("INSERT INTO theme_tokens")
         and "ON CONFLICT" in sql.upper()
-        and params == ("accent.tokyo", "#2563eb", "#ffffff")
+        and params == ("market.city_tokyo", "#2563eb", "#ffffff")
         for sql, params in executed
     )
 
