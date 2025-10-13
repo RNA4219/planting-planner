@@ -36,6 +36,8 @@
      - 完了理由: `.github/workflows/ci.yml` のジョブ構成に合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd frontend && npm run typecheck` などの実行手順を明記した。
    - [x] API リファレンス `/api/markets` に `timezone`・`priority`・`effective_from`・`categories` の説明とサンプル JSON を追記。
      - 完了理由: `docs/spec/v0.3/API_REFERENCE.md` に市場メタデータの追加フィールドを記述し、ETL の `_refresh_market_metadata_cache` で生成される構造と一致させた。
+   - [x] README の現行パスを v0.3 へ更新し、運用ルール変更がないことを確認。
+     - 完了理由: `docs/spec/README.md` の最新版リンクを `v0.3` に差し替え、仕様ルールの差分が不要であることを確認した。
 7. リリース準備:
    - [ ] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
      - 完了条件: KPI・残課題・ロールバック手順がチェックリスト化され、週次レビューで承認済みであること。
