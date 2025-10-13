@@ -6,14 +6,22 @@ export interface MarketScopeTheme {
   readonly text: string
 }
 
-interface MarketScopeMetadata {
+interface MarketScopeMetadata<TCategory> {
   readonly timezone?: string
   readonly priority?: number
   readonly effective_from?: string | null
-  readonly categories?: readonly string[]
+  readonly categories?: readonly TCategory[]
 }
 
-export interface MarketScopeDefinition extends MarketScopeMetadata {
+export interface MarketScopeCategory {
+  readonly category: string
+  readonly displayName: string
+  readonly priority?: number
+  readonly source?: string
+}
+
+export interface MarketScopeDefinition
+  extends MarketScopeMetadata<MarketScopeCategory> {
   readonly scope: MarketScope
   readonly displayName: string
   readonly theme: MarketScopeTheme
@@ -25,7 +33,15 @@ export interface MarketScopeApiTheme {
   readonly text_color: string
 }
 
-export interface MarketScopeApiDefinition extends MarketScopeMetadata {
+export interface MarketScopeApiCategory {
+  readonly category: string
+  readonly display_name: string
+  readonly priority?: number
+  readonly source?: string
+}
+
+export interface MarketScopeApiDefinition
+  extends MarketScopeMetadata<MarketScopeApiCategory> {
   readonly scope: MarketScope
   readonly display_name: string
   readonly theme: MarketScopeApiTheme
@@ -46,10 +62,19 @@ export const toMarketScopeOption = (
   label: definition.displayName,
 })
 
+const fromMarketScopeApiCategory = (
+  category: MarketScopeApiCategory,
+): MarketScopeCategory => ({
+  category: category.category,
+  displayName: category.display_name,
+  priority: category.priority,
+  source: category.source,
+})
+
 export const fromMarketScopeApiDefinition = (
   definition: MarketScopeApiDefinition,
 ): MarketScopeDefinition => {
-  const { scope, display_name, theme, ...metadata } = definition
+  const { scope, display_name, theme, categories, ...metadata } = definition
 
   return {
     scope,
@@ -60,6 +85,7 @@ export const fromMarketScopeApiDefinition = (
       text: theme.text_color,
     },
     ...metadata,
+    ...(categories ? { categories: categories.map(fromMarketScopeApiCategory) } : {}),
   }
 }
 
