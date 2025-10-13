@@ -2,9 +2,9 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CropCategory, MarketScope, Region } from '../../types'
-import type { UseRecommendationLoaderResult } from '../useRecommendations'
+import type { UseRecommendationLoaderResult } from '../recommendations/controller'
 
-import { useRecommendations } from '../useRecommendations'
+import { useRecommendations } from '../recommendations/controller'
 
 type LoaderArgs = {
   region: Region

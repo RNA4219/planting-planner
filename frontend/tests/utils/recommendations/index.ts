@@ -8,7 +8,7 @@ import { normalizeRecommendationResponse } from '../../../src/utils/recommendati
 
 import { fetchRecommend, fetchRecommendations, resetAppSpies } from '../renderApp'
 
-type UseRecommendationsModule = typeof import('../../../src/hooks/useRecommendations')
+type UseRecommendationsModule = typeof import('../../../src/hooks/recommendations/controller')
 export type RecommendationItem = RecommendResponse['items'][number]
 
 const fetcherMock = vi.fn<
@@ -128,7 +128,7 @@ export const setupRecommendationsTest = async (): Promise<SetupRecommendationsTe
   applyDefaultRecommendationMocks()
   fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
   const useRecommendationsModule: UseRecommendationsModule = await import(
-    '../../../src/hooks/useRecommendations'
+    '../../../src/hooks/recommendations/controller'
   )
   const useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
   return { useRecommendationsModule, useRecommendationsSpy }

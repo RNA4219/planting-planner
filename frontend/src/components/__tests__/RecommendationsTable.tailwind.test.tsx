@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { RecommendationsTable } from '../RecommendationsTable'
-import type { RecommendationRow } from '../../hooks/useRecommendations'
+import type { RecommendationRow } from '../../hooks/recommendations/controller'
 
 describe('RecommendationsTable (tailwind layout)', () => {
   afterEach(() => {

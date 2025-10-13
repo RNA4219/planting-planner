@@ -11,7 +11,7 @@ import {
   saveMarketScope as saveMarketScopeMock,
   saveSelectedCategory as saveSelectedCategoryMock,
 } from '../../utils/mocks/storage'
-import { useRecommendations } from '../../../src/hooks/useRecommendations'
+import { useRecommendations } from '../../../src/hooks/recommendations/controller'
 import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
 const fetchQueryMock = vi.fn()

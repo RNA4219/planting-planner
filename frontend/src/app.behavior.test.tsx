@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
-type UseRecommendationsModule = typeof import('./hooks/useRecommendations')
+type UseRecommendationsModule = typeof import('./hooks/recommendations/controller')
 
 import {
   fetchCrops,
@@ -19,7 +19,7 @@ describe('App behavior', () => {
 
   beforeEach(async () => {
     resetAppSpies()
-    useRecommendationsModule = await import('./hooks/useRecommendations')
+    useRecommendationsModule = await import('./hooks/recommendations/controller')
     useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
   })
 

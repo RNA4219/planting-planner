@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { MockInstance } from 'vitest'
 
-type UseRecommendationsModule = typeof import('../src/hooks/useRecommendations')
+type UseRecommendationsModule = typeof import('../src/hooks/recommendations/controller')
 
 import { MARKET_SCOPE_FALLBACK_DEFINITIONS } from '../src/constants/marketScopes'
 import {
@@ -54,7 +54,7 @@ describe('App snapshot', () => {
   beforeEach(async () => {
     resetAppSpies()
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
-    useRecommendationsModule = await import('../src/hooks/useRecommendations')
+    useRecommendationsModule = await import('../src/hooks/recommendations/controller')
     useRecommendationsSpy = vi.spyOn(useRecommendationsModule, 'useRecommendations')
     fetchCrops.mockResolvedValue([
       {

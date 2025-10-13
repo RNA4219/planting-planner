@@ -3,7 +3,7 @@ import type { MockInstance } from 'vitest'
 
 import { createAppTestHarness } from './renderApp'
 
-type UseRecommendationsModule = typeof import('../../src/hooks/useRecommendations')
+type UseRecommendationsModule = typeof import('../../src/hooks/recommendations/controller')
 type AppHarness = ReturnType<typeof createAppTestHarness>
 
 interface InteractionsHarness {
@@ -21,7 +21,7 @@ export const createInteractionsHarness = (): InteractionsHarness => {
   let spy: MockInstance | undefined
 
   beforeEach(async () => {
-    module = await import('../../src/hooks/useRecommendations')
+    module = await import('../../src/hooks/recommendations/controller')
     spy = vi.spyOn(module, 'useRecommendations')
   })
 
