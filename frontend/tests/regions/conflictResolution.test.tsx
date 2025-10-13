@@ -27,8 +27,8 @@ describe('Region switching interactions', () => {
   test('地域切替時に遅延レスポンスが上書きされない', async () => {
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchCrops.mockResolvedValue([
-      { id: 1, name: 'トマト', category: '果菜類' },
-      { id: 2, name: 'キャベツ', category: '葉菜類' },
+      { id: 1, name: 'トマト', category: 'flower' },
+      { id: 2, name: 'キャベツ', category: 'leaf' },
     ])
 
     const firstRequest = createDeferred<RecommendResponse>()

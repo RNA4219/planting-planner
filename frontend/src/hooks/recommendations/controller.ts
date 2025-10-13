@@ -1,7 +1,12 @@
 import { FormEvent, useCallback, useEffect, useMemo } from 'react'
 
 import type { CropCategory, MarketScope, Region } from '../../types'
-import { RecommendationRow, buildRecommendationRows, formatWeekLabel } from '../../utils/recommendations'
+import {
+  RecommendationRow,
+  buildRecommendationRows,
+  formatWeekLabel,
+  isCropCategory,
+} from '../../utils/recommendations'
 
 import { useRecommendationLoader } from './loader'
 import { useCropCatalog } from '../useCropCatalog'
@@ -70,9 +75,10 @@ export const useRecommendations = ({
   } = controllerStore.actions
   const { catalog: cropCatalog } = useCropCatalog()
   const cropIndex = useMemo(() => {
-    const map = new Map<string, { id: number; category?: string }>()
+    const map = new Map<string, { id: number; category?: CropCategory }>()
     cropCatalog.forEach((entry, cropName) => {
-      map.set(cropName, { id: entry.id, category: entry.category })
+      const category = isCropCategory(entry.category) ? entry.category : undefined
+      map.set(cropName, { id: entry.id, category })
     })
     return map
   }, [cropCatalog])

@@ -10,8 +10,8 @@ describe('Favorites interactions', () => {
   test('フォーム送信・行選択・お気に入り操作が想定通りに動作する', async () => {
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchCrops.mockResolvedValue([
-      { id: 1, name: 'トマト', category: '果菜類' },
-      { id: 2, name: 'レタス', category: '葉菜類' },
+      { id: 1, name: 'トマト', category: 'flower' },
+      { id: 2, name: 'レタス', category: 'leaf' },
     ])
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',

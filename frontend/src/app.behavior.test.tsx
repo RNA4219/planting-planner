@@ -51,8 +51,8 @@ describe('App behavior', () => {
 
   it('市場切替後の作物選択で価格APIが市場スコープを受け取る', async () => {
     fetchCrops.mockResolvedValue([
-      { id: 1, name: 'トマト', category: '果菜類' },
-      { id: 2, name: 'レタス', category: '葉菜類' },
+      { id: 1, name: 'トマト', category: 'flower' },
+      { id: 2, name: 'レタス', category: 'leaf' },
     ])
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',

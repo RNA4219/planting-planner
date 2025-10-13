@@ -11,8 +11,8 @@ const { fetchCrops, fetchRecommendations, fetchPrice, renderApp } = harness
 describe('Region switching resets crop selection', () => {
   test('地域切替で選択が解除され価格チャートが初期状態に戻る', async () => {
     fetchCrops.mockResolvedValue([
-      { id: 1, name: 'トマト', category: '果菜類' },
-      { id: 2, name: 'キュウリ', category: '果菜類' },
+      { id: 1, name: 'トマト', category: 'flower' },
+      { id: 2, name: 'キュウリ', category: 'flower' },
     ])
 
     fetchRecommendations.mockResolvedValueOnce({
