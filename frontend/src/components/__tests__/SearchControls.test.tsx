@@ -4,7 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SearchControls } from '../SearchControls'
-import type { MarketScopeOption } from '../../constants/marketScopes'
+import {
+  toMarketScopeOption,
+  type MarketScopeDefinition,
+  type MarketScopeOption,
+} from '../../constants/marketScopes'
 
 const { fetchMarketsMock } = vi.hoisted(() => ({
   fetchMarketsMock: vi.fn<
@@ -63,10 +67,19 @@ describe('SearchControls', () => {
   })
 
   it('市場リストを React Query のレスポンスに合わせて描画する', async () => {
-    const markets: MarketScopeOption[] = [
-      { value: 'national', label: '全国平均（API）' },
-      { value: 'city:fukuoka', label: '福岡市中央卸売（API）' },
+    const definitions: MarketScopeDefinition[] = [
+      {
+        scope: 'national',
+        displayName: '全国平均（API）',
+        theme: { token: 'api-national', hex: '#123456', text: '#FFFFFF' },
+      },
+      {
+        scope: 'city:fukuoka',
+        displayName: '福岡市中央卸売（API）',
+        theme: { token: 'api-fukuoka', hex: '#654321', text: '#FFFFFF' },
+      },
     ]
+    const markets = definitions.map(toMarketScopeOption)
     fetchMarketsMock.mockResolvedValue({
       markets,
       generated_at: '2024-05-01T00:00:00Z',

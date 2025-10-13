@@ -103,6 +103,7 @@ export const renderApp = async (options: RenderAppOptions = {}) => {
       throw new Error('recommendations not requested yet')
     }
   })
+  await Promise.resolve()
   if (fakeTimersMode === 'renderApp' && !shouldRestoreTimers) {
     vi.useFakeTimers()
     shouldRestoreTimers = true
