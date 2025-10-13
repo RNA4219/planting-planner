@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SearchControls } from '../SearchControls'
+import { SEARCH_CONTROLS_TEXT } from '../../constants/messages'
 import { MARKET_SCOPE_OPTIONS, toMarketScopeOption, type MarketScopeDefinition } from '../../constants/marketScopes'
 const { fetchMarketsMock } = vi.hoisted(() => ({
   fetchMarketsMock: vi.fn<() => Promise<{ markets: ReturnType<typeof toMarketScopeOption>[]; generated_at: string }>>(),
@@ -107,6 +108,18 @@ describe('SearchControls', () => {
     const form = forms[forms.length - 1]!
     expect(form).toHaveClass('flex', 'flex-col', 'gap-4')
     expect(form.className).toMatch(/bg-market-|border-market-|text-market-/)
+    queryClient.clear()
+  })
+
+  it('検索入力に aria-label を付与する', () => {
+    const { queryClient } = renderSearchControls()
+    const searchInput = screen
+      .getAllByRole('searchbox', { name: SEARCH_CONTROLS_TEXT.searchAriaLabel })
+      .at(-1)
+    if (!searchInput) {
+      throw new Error('検索入力が見つかりませんでした')
+    }
+    expect(searchInput).toHaveAttribute('aria-label', SEARCH_CONTROLS_TEXT.searchAriaLabel)
     queryClient.clear()
   })
 })
