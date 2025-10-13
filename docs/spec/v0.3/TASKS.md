@@ -23,3 +23,5 @@
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で Great Expectations 言及を置換し、独自検証とフォールバック手順を記録した。
    - [x] テスト計画の E2E 記述を CI の push/pull_request トリガーに合わせて更新し、nightly 記述を削除。
      - 完了理由: `docs/spec/v0.3/TESTING.md` の E2E セクションを push/pull_request 実行前提の内容へ改訂済み。
+   - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
+     - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
