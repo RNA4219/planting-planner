@@ -265,7 +265,7 @@ def test_run_etl_logs_and_continues_when_validation_fails(
 
         updated = etl.run_etl(conn, data_loader=lambda: records)
         assert updated == 1
-        assert "Great Expectations validation failed" in caplog.text
+        assert "市場メタデータ検証の失敗" in caplog.text
         rows = conn.execute("SELECT scope, week FROM market_prices").fetchall()
         assert [(row["scope"], row["week"]) for row in rows] == [("national", "2024-W05")]
     finally:

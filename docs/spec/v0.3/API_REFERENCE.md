@@ -14,16 +14,28 @@
         {
           "scope": "national" | "city:<id>",
           "display_name": "...",
+          "timezone": "Asia/Tokyo",
+          "priority": 10,
           "theme": {
             "token": "...",         // クライアントのテーマ解決で利用
             "hex_color": "#RRGGBB",  // 市場テーマカラー
             "text_color": "#RRGGBB"  // 市場テーマ文字色
-          }
+          },
+          "effective_from": "2024-01-01",
+          "categories": [
+            {
+              "category": "leafy",
+              "display_name": "葉物野菜",
+              "priority": 1,
+              "source": "seed"
+            }
+          ]
         }
       ],
       "generated_at": "2024-01-01T00:00:00Z"
     }
     ```
 
-    `markets` 配列と `generated_at` はバックエンドの `metadata_cache` (`cache_key = market_metadata`) に保存されている JSON をそのまま返す。クライアント側では `theme` を UI 用テーマ構造へマッピングした上で、市場選択肢のソースとして利用する。
+    `markets` 配列と `generated_at` はバックエンドの `metadata_cache` (`cache_key = market_metadata`) に保存されている JSON をそのまま返す。`timezone` は市場データのローカルタイムゾーン、`priority` は UI 並び順を決める整数、`effective_from` は当該市場情報の適用開始日（`YYYY-MM-DD` 形式）を示す。`categories` は市場ごとのカテゴリ定義を保持するオブジェクト配列で、各要素にカテゴリ識別子 (`category`)、表示名 (`display_name`)、優先度 (`priority`)、データ由来 (`source`) を含む。クライアント側では `theme` を UI 用テーマ構造へマッピングし、カテゴリタブは `categories` を優先的に利用しつつ欠損時は従来フォールバックと整合する。
+
   - キャッシュ未整備時は 503 (`detail = "market metadata cache not ready"`) を返し、クライアントは内蔵定義 (`MARKET_SCOPE_FALLBACK_DEFINITIONS`) にフォールバックして UI を継続する。`/api/markets` では `fallback` ヘッダーは使用せず、`/api/price` と `/api/recommend` の `fallback` ヘッダーの有無で市場データ欠損を判断する。

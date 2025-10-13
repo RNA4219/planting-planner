@@ -12,6 +12,10 @@
 
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
    - [x] ドキュメント整備: PRD スコープ/非スコープに `GET /api/markets` を正式追加し、成功指標へ可用性 KPI を追記済み。さらに `docs/spec/v0.3/ARCHITECTURE.md` のテーマ/品質項目を現行 CI 構成と Playwright モック方針、Tailwind トークン読込へ更新した。
+   - [ ] Playwright フレーク監視ダッシュボード整備: [週4計画](./ROADMAP.md) に沿って CI 成果のメトリクス収集を自動化し、`frontend-e2e` ジョブで最新成功率を可視化する。
+     - 完了条件: CI 実行履歴から flake 率を集計するスクリプトまたはダッシュボードが作成され、`frontend-e2e` の失敗理由が 1 画面で追跡できること。
+   - [ ] Playwright クリティカルパス拡充: [週4計画](./ROADMAP.md) の E2E 安定化に合わせて、結帳・カテゴリ切替のシナリオを `frontend/tests/e2e` 配下へ追加し、`npm run test:e2e` を緑化する。
+     - 完了条件: 新規シナリオが CI 上で安定動作し、クリティカルパスで未検知だったバグ再現ケースに対する回帰テストが追加されていること。
 5. DevOps:
    - [x] CI に `npm run test:e2e` と Lighthouse スモークを追加。
      - 完了理由: `.github/workflows/ci.yml` の `frontend-e2e` ジョブが `npm run test:e2e` を実行し、`frontend-lighthouse` ジョブが Lighthouse スモーク (`lhci autorun`) を走らせている。
@@ -30,3 +34,16 @@
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
    - [x] コントリビューション指針に CI と整合するフロントエンド検証手順 (`npm run typecheck` 含む) を追記。
      - 完了理由: `.github/workflows/ci.yml` のジョブ構成に合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd frontend && npm run typecheck` などの実行手順を明記した。
+   - [x] API リファレンス `/api/markets` に `timezone`・`priority`・`effective_from`・`categories` の説明とサンプル JSON を追記。
+     - 完了理由: `docs/spec/v0.3/API_REFERENCE.md` に市場メタデータの追加フィールドを記述し、ETL の `_refresh_market_metadata_cache` で生成される構造と一致させた。
+7. リリース準備:
+   - [ ] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
+     - 完了条件: KPI・残課題・ロールバック手順がチェックリスト化され、週次レビューで承認済みであること。
+   - [x] UI 仕様のトースト記述を `ToastStack` と市場フォールバック警告の現仕様へ更新。
+     - 検証観点: フォールバック検出時に `warning` variant を enqueue → ToastStack の `role="status"` / auto dismiss と手動 dismiss が両立すること。
+   - [x] 型仕様との差分解消: `docs/spec/v0.3/TYPES.md` から `SelectedCategory` 追加記述を削除し、カテゴリ選択が `CropCategory` を共有する方針を明文化。
+     - 完了理由: `docs/spec/v0.3/TYPES.md` で `SelectedCategory` 型追加の記述を除去し、`CropCategory` の横断利用を明記した。
+
+8. ログ/監視:
+   - [x] ETL 警告ログを市場メタデータ検証失敗を示す文言へ更新。
+     - 完了理由: `backend/app/etl/transform.py` の警告を「市場メタデータ検証の失敗」へ統一し、Great Expectations 固有表現を除去済み。
