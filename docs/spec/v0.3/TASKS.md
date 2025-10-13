@@ -21,3 +21,5 @@
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で `validate_market_prices` による scope/価格レンジ検証とフォールバック挙動を明記した。
    - [x] ETL 仕様のバリデーション記述を `backend/app/etl/expectations.validate_market_prices` に合わせて全国平均フォールバック挙動を明記。
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で Great Expectations 言及を置換し、独自検証とフォールバック手順を記録した。
+   - [x] テスト計画の E2E 記述を CI の push/pull_request トリガーに合わせて更新し、nightly 記述を削除。
+     - 完了理由: `docs/spec/v0.3/TESTING.md` の E2E セクションを push/pull_request 実行前提の内容へ改訂済み。
