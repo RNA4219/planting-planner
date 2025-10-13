@@ -23,3 +23,4 @@
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で Great Expectations 言及を置換し、独自検証とフォールバック手順を記録した。
    - [x] テスト計画の E2E 記述を CI の push/pull_request トリガーに合わせて更新し、nightly 記述を削除。
      - 完了理由: `docs/spec/v0.3/TESTING.md` の E2E セクションを push/pull_request 実行前提の内容へ改訂済み。
+   - [x] PRD CI/スタイル記述更新: `docs/spec/v0.3/PRD.md` の品質保証とアーキテクチャ指針を現行 CI ジョブと Tailwind/トークン運用へ揃えた。
