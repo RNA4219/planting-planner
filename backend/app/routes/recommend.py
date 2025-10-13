@@ -59,7 +59,7 @@ def recommend(
     except utils_week.WeekFormatError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    _, fallback = _resolve_market_scope(conn, market_scope, reference_week)
+    effective_scope, fallback = _resolve_market_scope(conn, market_scope, reference_week)
     _expose_fallback_header(response, enabled=fallback)
 
     query = [
@@ -71,6 +71,19 @@ def recommend(
         "WHERE gd.region = ?",
     ]
     params: list[object] = [region]
+    if effective_scope != schemas.DEFAULT_MARKET_SCOPE:
+        query.extend(
+            [
+                "AND EXISTS (",
+                "    SELECT 1",
+                "    FROM market_prices AS mp",
+                "    WHERE mp.crop_id = c.id",
+                "      AND mp.scope = ?",
+                "      AND mp.week = ?",
+                ")",
+            ]
+        )
+        params.extend([effective_scope, reference_week])
     if category is not None:
         query.append("AND c.category = ?")
         params.append(category)
