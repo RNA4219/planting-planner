@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | id | INTEGER PK | 作物 ID |
 | name | TEXT | 作物名 |
-| category | TEXT | `leaf` `root` `fruit` `flower` 等 |
+| category | TEXT | `leaf` `root` `flower` 等 |
 | variety | TEXT | 品種名（任意） |
 
 ### growth_days

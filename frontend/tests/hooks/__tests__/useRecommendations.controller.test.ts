@@ -7,6 +7,10 @@ import {
   recommendationControllerMocks,
   resetRecommendationControllerMocks,
 } from '../../utils/recommendations'
+import {
+  saveMarketScope as saveMarketScopeMock,
+  saveSelectedCategory as saveSelectedCategoryMock,
+} from '../../utils/mocks/storage'
 import { useRecommendations } from '../../../src/hooks/useRecommendations'
 import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
@@ -38,6 +42,8 @@ describe('hooks / useRecommendations controller', () => {
       const typed = options as { queryFn: () => Promise<unknown> }
       return typed.queryFn()
     })
+    saveMarketScopeMock.mockClear()
+    saveSelectedCategoryMock.mockClear()
   })
 
   it('updates region via handleSubmit and requests override region', async () => {
@@ -114,5 +120,35 @@ describe('hooks / useRecommendations controller', () => {
 
     expect(result.current.selectedMarket).toBe('city:osaka')
     expect(result.current.selectedCategory).toBe('flower')
+  })
+
+  it('persists controller selections only when they change', async () => {
+    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+
+    const { result } = renderHookWithQueryClient(() =>
+      useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
+    )
+
+    await waitFor(() => {
+      expect(fetcherMock).toHaveBeenCalled()
+    })
+
+    await act(async () => {
+      result.current.setMarketScope('city:tokyo')
+      result.current.setCategory('flower')
+    })
+
+    expect(saveMarketScopeMock).toHaveBeenCalledTimes(1)
+    expect(saveMarketScopeMock).toHaveBeenCalledWith('city:tokyo')
+    expect(saveSelectedCategoryMock).toHaveBeenCalledTimes(1)
+    expect(saveSelectedCategoryMock).toHaveBeenCalledWith('flower')
+
+    await act(async () => {
+      result.current.setMarketScope('city:tokyo')
+      result.current.setCategory('flower')
+    })
+
+    expect(saveMarketScopeMock).toHaveBeenCalledTimes(1)
+    expect(saveSelectedCategoryMock).toHaveBeenCalledTimes(1)
   })
 })

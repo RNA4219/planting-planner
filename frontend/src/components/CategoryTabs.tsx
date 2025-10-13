@@ -2,14 +2,13 @@ import type { KeyboardEvent } from 'react'
 
 import type { CropCategory } from '../types'
 
-type CategoryTabDefinition = Readonly<{ key: CropCategory; label: string }>
+const CATEGORY_LABELS = {
+  leaf: '葉菜',
+  root: '根菜',
+  flower: '花き',
+} as const satisfies Record<CropCategory, string>
 
-const CATEGORY_TABS = [
-  { key: 'leaf', label: '葉菜' },
-  { key: 'root', label: '根菜' },
-  { key: 'flower', label: '花き' },
-  { key: 'fruit', label: '果菜' },
-] as const satisfies readonly CategoryTabDefinition[]
+const CATEGORY_ORDER = ['leaf', 'root', 'flower'] as const satisfies readonly CropCategory[]
 
 interface CategoryTabsProps {
   category: CropCategory
