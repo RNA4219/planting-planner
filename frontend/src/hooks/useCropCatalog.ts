@@ -10,7 +10,7 @@ const api = apiModule as typeof import('../lib/api') & {
 export interface CropCatalogEntry {
   id: number
   name: string
-  category: string
+  category: CropCategory
 }
 
 export type CropCatalogMap = Map<string, CropCatalogEntry>
@@ -19,6 +19,11 @@ export interface UseCropCatalogResult {
   catalog: CropCatalogMap
   isLoading: boolean
 }
+
+export type CropCategory = 'leaf' | 'root' | 'flower'
+
+const isCropCategory = (value: string): value is CropCategory =>
+  value === 'leaf' || value === 'root' || value === 'flower'
 
 const fetchCrops = api.fetchCrops
 
@@ -61,6 +66,9 @@ export const useCropCatalog = (): UseCropCatalogResult => {
   const catalog = useMemo<CropCatalogMap>(() => {
     const map: CropCatalogMap = new Map()
     crops.forEach((crop) => {
+      if (!isCropCategory(crop.category)) {
+        return
+      }
       map.set(crop.name, {
         id: crop.id,
         name: crop.name,
