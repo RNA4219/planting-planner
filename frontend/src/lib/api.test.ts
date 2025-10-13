@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PriceSeries, RecommendResponse } from '../types'
-import type { MarketScopeOption } from '../constants/marketScopes'
+import {
+  fromMarketScopeApiDefinition,
+  toMarketScopeOption,
+  type MarketScopeApiDefinition,
+} from '../constants/marketScopes'
 import type { RecommendResponseWithFallback } from './api'
 
 type FetchRecommend = typeof import('./api')['fetchRecommend']
@@ -289,10 +293,18 @@ describe('fetchMarkets', () => {
   }
 
   it('markets エンドポイントのレスポンスを返す', async () => {
-    const payload: { markets: MarketScopeOption[]; generated_at: string } = {
+    const payload: { markets: MarketScopeApiDefinition[]; generated_at: string } = {
       markets: [
-        { value: 'national', label: '全国平均（API）' },
-        { value: 'city:fukuoka', label: '福岡市中央卸売（API）' },
+        {
+          scope: 'national',
+          display_name: '全国平均（API）',
+          theme: { token: 'api-national', hex_color: '#123456', text_color: '#FFFFFF' },
+        },
+        {
+          scope: 'city:fukuoka',
+          display_name: '福岡市中央卸売（API）',
+          theme: { token: 'api-fukuoka', hex_color: '#654321', text_color: '#FFFFFF' },
+        },
       ],
       generated_at: '2024-05-01T00:00:00Z',
     }
@@ -309,7 +321,12 @@ describe('fetchMarkets', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/markets', {
       headers: { 'Content-Type': 'application/json' },
     })
-    expect(result).toEqual(payload)
+    expect(result).toEqual({
+      generated_at: payload.generated_at,
+      markets: payload.markets
+        .map(fromMarketScopeApiDefinition)
+        .map(toMarketScopeOption),
+    })
   })
 
   it('503 の場合は利用不可メッセージで例外を投げる', async () => {

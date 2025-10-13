@@ -279,7 +279,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
         </table>
       </section>
       <section
-        class="recommend__chart"
+        class="mt-8"
       >
         <h2>
           価格推移
@@ -291,7 +291,7 @@ exports[`App snapshot > 初期表示をスナップショット保存する 1`] 
           作物を選択すると価格推移が表示されます。
         </p>
         <p
-          class="recommend__chart-hint"
+          class="mt-2 text-sm text-slate-500"
         >
           作物一覧で行をクリックすると、価格推移が表示されます。
         </p>

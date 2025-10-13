@@ -8,7 +8,12 @@ import type {
   RefreshStatusResponse,
   Region,
 } from '../types'
-import type { MarketScopeOption } from '../constants/marketScopes'
+import {
+  fromMarketScopeApiDefinition,
+  toMarketScopeOption,
+  type MarketScopeApiDefinition,
+  type MarketScopeOption,
+} from '../constants/marketScopes'
 
 const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
@@ -95,10 +100,21 @@ export interface MarketsResponse {
   readonly generated_at: string
 }
 
+type MarketsApiResponse = {
+  readonly markets: MarketScopeApiDefinition[]
+  readonly generated_at: string
+}
+
 export const fetchMarkets = async (): Promise<MarketsResponse> => {
   const url = buildUrl('/markets')
   try {
-    return await request<MarketsResponse>(url)
+    const payload = await request<MarketsApiResponse>(url)
+    return {
+      generated_at: payload.generated_at,
+      markets: payload.markets
+        .map(fromMarketScopeApiDefinition)
+        .map(toMarketScopeOption),
+    }
   } catch (error) {
     if (error instanceof HttpError && error.status === 503) {
       throw new HttpError('市場一覧 API は現在利用できません (503)', error.status, {
