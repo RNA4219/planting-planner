@@ -2,12 +2,18 @@ import { type KeyboardEvent, type ReactNode } from 'react'
 
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/useRecommendations'
-import type { Region } from '../types'
+import type { CropCategory, Region } from '../types'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
   temperate: '温暖地',
   warm: '暖地',
+}
+
+const CATEGORY_LABELS: Record<CropCategory, string> = {
+  leaf: '葉菜類',
+  root: '根菜類',
+  flower: '花き',
 }
 
 const MARKET_THEME_CLASS = {
@@ -145,7 +151,9 @@ export const RecommendationsTable = ({
                       <span className="text-sm font-semibold text-slate-700">{item.crop}</span>
                     </div>
                     {item.category ? (
-                      <span className="text-xs text-slate-500">カテゴリ: {item.category}</span>
+                      <span className="text-xs text-slate-500">
+                        カテゴリ: {CATEGORY_LABELS[item.category]}
+                      </span>
                     ) : null}
                   </td>
                   <td className="grid grid-cols-2 gap-2 text-xs text-slate-600 align-top">

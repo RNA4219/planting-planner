@@ -13,7 +13,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
   const baseRow: RecommendationRow = {
     crop: 'Tomato',
     cropId: 1,
-    category: 'fruit',
+    category: 'flower',
     growth_days: 70,
     sowing_week: '2024-W10',
     harvest_week: '2024-W20',

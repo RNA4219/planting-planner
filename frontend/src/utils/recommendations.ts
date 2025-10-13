@@ -1,5 +1,5 @@
 import * as weekModule from '../lib/week'
-import type { RecommendResponse, RecommendationItem } from '../types'
+import type { CropCategory, RecommendResponse, RecommendationItem } from '../types'
 
 const week = weekModule as typeof import('../lib/week') & {
   currentIsoWeek?: () => string
@@ -7,9 +7,12 @@ const week = weekModule as typeof import('../lib/week') & {
 
 const { compareIsoWeek, formatIsoWeek, normalizeIsoWeek } = week
 
+export const isCropCategory = (value: unknown): value is CropCategory =>
+  value === 'leaf' || value === 'root' || value === 'flower'
+
 export type RecommendationRow = RecommendationItem & {
   cropId?: number
-  category?: string
+  category?: CropCategory
   rowKey: string
   sowingWeekLabel: string
   harvestWeekLabel: string
@@ -75,7 +78,7 @@ export const normalizeRecommendationResponse = (
 interface BuildRecommendationRowsArgs {
   items: RecommendationItem[]
   favorites: readonly number[]
-  cropIndex: Map<string, { id: number; category?: string }>
+  cropIndex: Map<string, { id: number; category?: CropCategory }>
 }
 
 export const buildRecommendationRows = ({
@@ -87,10 +90,11 @@ export const buildRecommendationRows = ({
   return items
     .map<RecommendationRow>((item) => {
       const catalogEntry = cropIndex.get(item.crop)
+      const category = catalogEntry?.category
       return {
         ...item,
         cropId: catalogEntry?.id,
-        category: catalogEntry?.category,
+        category: isCropCategory(category) ? category : undefined,
         rowKey: `${item.crop}-${item.sowing_week}-${item.harvest_week}`,
         sowingWeekLabel: formatIsoWeek(item.sowing_week),
         harvestWeekLabel: formatIsoWeek(item.harvest_week),

@@ -26,12 +26,12 @@ describe('App snapshot', () => {
       {
         id: 1,
         name: 'トマト',
-        category: '果菜類',
+        category: 'flower',
       },
       {
         id: 2,
         name: 'レタス',
-        category: '葉菜類',
+        category: 'leaf',
       },
     ])
     fetchRecommendations.mockResolvedValue({

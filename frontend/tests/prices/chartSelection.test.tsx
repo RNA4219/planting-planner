@@ -10,8 +10,8 @@ describe('Price chart interactions', () => {
   test('価格チャート用の行選択で fetchPrice が呼び出される', async () => {
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchCrops.mockResolvedValue([
-      { id: 1, name: 'トマト', category: '果菜類' },
-      { id: 2, name: 'レタス', category: '葉菜類' },
+      { id: 1, name: 'トマト', category: 'flower' },
+      { id: 2, name: 'レタス', category: 'leaf' },
     ])
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
