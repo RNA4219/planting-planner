@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
@@ -104,6 +105,18 @@ def seed_payload() -> data_loader.SeedPayload:
             },
         ],
     )
+
+
+@pytest.fixture
+def theme_token_set() -> set[str]:
+    path = data_loader.DEFAULT_DATA_DIR / "theme_tokens.json"
+    assert path.exists(), "theme_tokens.json が存在しません"
+
+    with path.open("r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+
+    tokens = {item["token"] for item in payload}
+    return tokens
 
 
 def test_seed_inserts_expected_records(
@@ -273,3 +286,18 @@ def test_seed_normalizes_crop_categories(
 
     assert insert_categories == expected
     assert update_categories == expected
+
+
+def test_market_scopes_use_market_theme_tokens(theme_token_set: set[str]) -> None:
+    payload = data_loader.load_seed_payload()
+
+    market_scope_tokens = {scope["theme_token"] for scope in payload.market_scopes}
+
+    missing_tokens = market_scope_tokens - theme_token_set
+    assert not missing_tokens, f"未登録のテーマトークン: {sorted(missing_tokens)}"
+    assert market_scope_tokens == {
+        "accent.national",
+        "accent.tokyo",
+        "accent.osaka",
+        "accent.nagoya",
+    }
