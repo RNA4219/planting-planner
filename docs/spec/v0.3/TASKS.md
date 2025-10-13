@@ -7,5 +7,6 @@
    - [x] SearchControls を Tailwind ベースへ置換: `frontend/src/components/__tests__/SearchControls.test.tsx` を Tailwind レイアウト検証で更新し、`frontend/src/components/SearchControls.tsx` をユーティリティクラス主体に書き換えてテストを通す。
      - 完了理由: `frontend/src/components/SearchControls.tsx` を Tailwind ユーティリティ中心に書き換え済み。
 3. UI 実装: 市場切替コンポーネントとカテゴリタブのステート連携。
+   - [ ] CategoryTabs のモバイル縦積みレイアウト対応: `frontend/tests/category-tabs.test.tsx` に `flex-col` / `sm:flex-row` の期待を追加してテストを先に赤くし、`frontend/src/components/CategoryTabs.tsx` をモバイル縦積み＋`sm` 以上横並びの Tailwind クラスへ調整した上でテストを緑化する。
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
 5. DevOps: CI に `npm run test:e2e` と Lighthouse スモークを追加。
