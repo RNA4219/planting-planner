@@ -4,7 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { RegionSelect } from './RegionSelect'
 import type { MarketScope, Region } from '../types'
 import { SEARCH_CONTROLS_TEXT } from '../constants/messages'
-import { MARKET_SCOPE_OPTIONS } from '../constants/marketScopes'
+import {
+  MARKET_SCOPE_FALLBACK_DEFINITIONS,
+  MARKET_SCOPE_OPTIONS,
+  type MarketScopeOption,
+  type MarketScopeTheme,
+} from '../constants/marketScopes'
 import { fetchMarkets } from '../lib/api'
 
 interface SearchControlsProps {
@@ -19,6 +24,62 @@ interface SearchControlsProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
+}
+
+const MARKET_THEME_BACKGROUND_CLASSES: Record<string, string> = {
+  'market-national': 'bg-market-national',
+  'market-city': 'bg-market-city',
+  'market-neutral': 'bg-market-neutral',
+}
+
+const FALLBACK_THEME_BY_SCOPE = new Map<MarketScope, MarketScopeTheme>(
+  MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => [definition.scope, definition.theme]),
+)
+
+const FALLBACK_THEME_BY_GROUP: Record<'national' | 'city' | 'default', MarketScopeTheme> = {
+  national: { token: 'market-national', hex: '#22c55e', text: '#FFFFFF' },
+  city: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
+  default: { token: 'market-neutral', hex: '#64748b', text: '#f8fafc' },
+}
+
+const normalizeBackgroundToken = (scope: MarketScope, token: string): string => {
+  if (token in MARKET_THEME_BACKGROUND_CLASSES) {
+    return token
+  }
+  if (scope === 'national') {
+    return 'market-national'
+  }
+  if (scope.startsWith('city:')) {
+    return 'market-city'
+  }
+  return 'market-neutral'
+}
+
+const resolveMarketTheme = (
+  scope: MarketScope,
+  options: readonly MarketScopeOption[],
+): { readonly backgroundClass: string; readonly dataTheme: string; readonly textColor: string } => {
+  const fallbackByScope = FALLBACK_THEME_BY_SCOPE.get(scope)
+  const fallbackByGroup = scope === 'national'
+    ? FALLBACK_THEME_BY_GROUP.national
+    : scope.startsWith('city:')
+      ? FALLBACK_THEME_BY_GROUP.city
+      : FALLBACK_THEME_BY_GROUP.default
+  const fallbackTheme = fallbackByScope ?? fallbackByGroup
+
+  const activeOption = options.find((option) => option.value === scope)
+  const activeTheme = activeOption?.theme ?? fallbackTheme
+
+  const backgroundToken = activeTheme.token.startsWith('market-')
+    ? normalizeBackgroundToken(scope, activeTheme.token)
+    : normalizeBackgroundToken(scope, fallbackTheme.token)
+
+  const backgroundClass =
+    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
+  const textColor = activeTheme.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
+  const dataTheme = activeTheme.token ?? fallbackTheme.token
+
+  return { backgroundClass, dataTheme, textColor }
 }
 
 export const SearchControls = ({
@@ -39,7 +100,8 @@ export const SearchControls = ({
     queryFn: fetchMarkets,
   })
 
-  const marketOptions = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const marketOptions: readonly MarketScopeOption[] = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const marketTheme = resolveMarketTheme(marketScope, marketOptions)
 
   const refreshButtonClassName = refreshing
     ? 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-market-accent/10 px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
@@ -56,8 +118,10 @@ export const SearchControls = ({
         <span>市場</span>
         <select
           aria-label="市場"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className={`w-full rounded-md border border-slate-300 ${marketTheme.backgroundClass} px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100`}
+          data-theme={marketTheme.dataTheme}
           name="marketScope"
+          style={{ color: marketTheme.textColor }}
           value={marketScope}
           onChange={(event) => {
             onMarketScopeChange(event.target.value as MarketScope)
