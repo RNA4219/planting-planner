@@ -22,8 +22,6 @@ import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 
-import './App.css'
-
 const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
   marginBottom: '1rem',
   padding: '0.75rem 1rem',

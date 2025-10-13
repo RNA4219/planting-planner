@@ -2,7 +2,7 @@
 
 ## システム構成
 - バックエンド: FastAPI + SQLite。ETL を Celery ワーカー（またはバックグラウンドタスク）で実行。
-- フロントエンド: React + TypeScript + Vite。`frontend/src/App.css` を中心に BEM 風のカスタム CSS とトースト用ユーティリティクラスでスタイリング。
+- フロントエンド: React + TypeScript + Vite。コンポーネント内でのスタイル定義とユーティリティクラスでスタイリング。
 - インフラ: 単一コンテナ構成を維持し、ETL 用スクリプトは同一リポジトリ管理。
 
 ## データフロー
