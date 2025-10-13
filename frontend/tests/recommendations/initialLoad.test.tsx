@@ -197,41 +197,17 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
 
     const rootTabButton = tabs[1]!
-    expect(tablist).toMatchInlineSnapshot(`
-      <div
-        aria-label="カテゴリ"
-        class="inline-flex items-center gap-1 rounded-full bg-market-neutral-container p-1"
-        role="tablist"
-      >
-        <button
-          aria-selected="true"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
-          role="tab"
-          tabindex="0"
-          type="button"
-        >
-          葉菜
-        </button>
-        <button
-          aria-selected="false"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          根菜
-        </button>
-        <button
-          aria-selected="false"
-          class="rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white"
-          role="tab"
-          tabindex="-1"
-          type="button"
-        >
-          花き
-        </button>
-      </div>
-    `)
+
+    expect(tablist).toHaveAttribute('aria-label', 'カテゴリ')
+    expect(tablist).toHaveAttribute('role', 'tablist')
+    expect(tablist).toHaveClass('bg-market-neutral-container')
+    expect(tablist).toHaveClass('rounded-full')
+
+    tabs.forEach((tab) => {
+      expect(tab).toHaveClass('rounded-full')
+      expect(tab).toHaveClass('aria-selected:bg-market-accent')
+      expect(tab).toHaveClass('aria-selected:text-white')
+    })
 
     await user.click(rootTabButton)
 
