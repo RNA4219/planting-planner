@@ -1,13 +1,5 @@
 
-import {
-  type CSSProperties,
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { CategoryTabs } from './components/CategoryTabs'
@@ -21,16 +13,6 @@ import { useRecommendations } from './hooks/useRecommendations'
 import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
-
-const MARKET_FALLBACK_NOTICE_STYLE: CSSProperties = {
-  marginBottom: '1rem',
-  padding: '0.75rem 1rem',
-  borderRadius: '0.75rem',
-  border: '1px solid #fed7aa',
-  backgroundColor: '#fff7ed',
-  color: '#9a3412',
-  fontWeight: 600,
-}
 
 const createQueryClient = () =>
   new QueryClient({
@@ -185,31 +167,33 @@ export const AppContent = () => {
   )
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1 className="app__title">{APP_TEXT.title}</h1>
-        <SearchControls
-          queryWeek={queryWeek}
-          currentWeek={currentWeek}
-          onWeekChange={handleWeekChange}
-          onRegionChange={handleRegionChange}
-          marketScope={marketScope}
-          onMarketScopeChange={handleMarketScopeChange}
-          searchKeyword={searchKeyword}
-          onSearchChange={handleSearchChange}
-          onSubmit={handleSubmit}
-          onRefresh={startRefresh}
-          refreshing={isRefreshing}
-        />
+    <div className="flex min-h-screen flex-col bg-market-neutral/5">
+      <header className="bg-market-neutral-container text-market-neutral-strong shadow-sm">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 lg:flex-row lg:items-center lg:justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">{APP_TEXT.title}</h1>
+          <SearchControls
+            queryWeek={queryWeek}
+            currentWeek={currentWeek}
+            onWeekChange={handleWeekChange}
+            onRegionChange={handleRegionChange}
+            marketScope={marketScope}
+            onMarketScopeChange={handleMarketScopeChange}
+            searchKeyword={searchKeyword}
+            onSearchChange={handleSearchChange}
+            onSubmit={handleSubmit}
+            onRefresh={startRefresh}
+            refreshing={isRefreshing}
+          />
+        </div>
       </header>
-      <main className="app__main">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8 bg-market-neutral/5">
         <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
         {isMarketFallback ? (
           <div
             data-testid="market-fallback-notice"
             role="status"
             aria-live="polite"
-            style={MARKET_FALLBACK_NOTICE_STYLE}
+            className="rounded-2xl border border-market-warning bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning"
           >
             {TOAST_MESSAGES.recommendationFallbackWarning}
           </div>

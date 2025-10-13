@@ -13,7 +13,7 @@ import {
   resetAppSpies,
 } from './utils/renderApp'
 
-describe('App snapshot', () => {
+describe('App tailwind theme', () => {
   let useRecommendationsModule: UseRecommendationsModule
   let useRecommendationsSpy: MockInstance
 
@@ -63,15 +63,35 @@ describe('App snapshot', () => {
     resetAppSpies()
   })
 
-  test('初期表示をスナップショット保存する', async () => {
+  test('ヘッダーとメインコンテナが market カラーのユーティリティクラスを持つ', async () => {
     await renderApp()
     await waitFor(() => {
       expect(screen.getByRole('row', { name: /トマト/ })).toBeInTheDocument()
     })
 
-    const container = document.body.firstElementChild
-    expect(container).not.toBeNull()
-    expect(container).toMatchSnapshot()
     expect(useRecommendationsSpy).toHaveBeenCalled()
+
+    const header = screen.getByRole('banner')
+    const main = screen.getByRole('main')
+
+    expect(header).toHaveClass('bg-market-neutral-container')
+    expect(header).toHaveClass('text-market-neutral-strong')
+    expect(main).toHaveClass('bg-market-neutral/5')
+  })
+
+  test('マーケットフォールバック通知が market カラーの警告スタイルを使う', async () => {
+    fetchRecommendations.mockResolvedValueOnce({
+      week: '2024-W31',
+      region: 'temperate',
+      items: [],
+      isMarketFallback: true,
+    })
+
+    await renderApp()
+
+    const notice = await screen.findByTestId('market-fallback-notice')
+    expect(notice).toHaveClass('border-market-warning')
+    expect(notice).toHaveClass('bg-market-warning/10')
+    expect(notice).toHaveClass('text-market-warning')
   })
 })
