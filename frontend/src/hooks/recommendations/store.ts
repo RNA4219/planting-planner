@@ -54,19 +54,17 @@ export const useRecommendationStore = create<RecommendationPreferencesStore>()(
     (set) => ({
       ...DEFAULT_RECOMMENDATION_PREFERENCES,
       setRegion: (region) =>
-        set((state) => (state.region === region ? state : { ...state, region }), false, 'setRecommendationRegion'),
+        set((state) => (state.region === region ? state : { ...state, region }), false),
       setSelectedMarket: (market) =>
         set(
           (state) => (state.selectedMarket === market ? state : { ...state, selectedMarket: market }),
           false,
-          'setRecommendationMarket',
         ),
       setSelectedCategory: (category) =>
         set(
           (state) =>
             state.selectedCategory === category ? state : { ...state, selectedCategory: category },
           false,
-          'setRecommendationCategory',
         ),
     }),
     {
