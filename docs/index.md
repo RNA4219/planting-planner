@@ -10,6 +10,7 @@
 - 型定義（TS IF）: [docs/spec/v0.3/TYPES.md](./spec/v0.3/TYPES.md)
 - 開発手順: [docs/spec/v0.3/DEVELOPMENT.md](./spec/v0.3/DEVELOPMENT.md)
 - テスト戦略: [docs/spec/v0.3/TESTING.md](./spec/v0.3/TESTING.md)
+- リリースチェックリスト: [docs/spec/v0.3/RELEASE_CHECKLIST.md](./spec/v0.3/RELEASE_CHECKLIST.md)
 - 貢献ルール: [docs/spec/v0.3/CONTRIBUTING.md](./spec/v0.3/CONTRIBUTING.md)
 - 免責: [docs/spec/v0.3/DISCLAIMER.md](./spec/v0.3/DISCLAIMER.md)
 - ロードマップ: [docs/spec/v0.3/ROADMAP.md](./spec/v0.3/ROADMAP.md)
