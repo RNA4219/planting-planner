@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import type { RecommendResponseWithFallback } from '../src/lib/api'
@@ -38,9 +38,11 @@ describe('App behavior', () => {
 
     await renderApp()
 
-    const warningToast = await screen.findByText(
+    const toastStack = await screen.findByTestId('toast-stack')
+    const warningToast = within(toastStack).getByText(
       '市場データが一時的に利用できないため、推定値を表示しています。',
     )
+
     expect(warningToast).toBeInTheDocument()
   })
 })
