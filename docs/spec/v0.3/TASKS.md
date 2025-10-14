@@ -11,8 +11,8 @@
 3. UI 実装: 市場切替コンポーネントとカテゴリタブのステート連携。
    - [x] CategoryTabs のモバイル縦積みレイアウト対応: `frontend/tests/category-tabs.test.tsx` に `flex-col` / `sm:flex-row` の期待を追加してテストを先に赤くし、`frontend/src/components/CategoryTabs.tsx` をモバイル縦積み＋`sm` 以上横並びの Tailwind クラスへ調整した上でテストを緑化する。
      - 完了理由: `frontend/src/components/CategoryTabs.tsx` で `flex-col` / `sm:flex-row` と `w-full` / `sm:w-auto` の Tailwind クラスを適用済みで、`frontend/tests/category-tabs.test.tsx` でも同クラスを検証している。
-   - [x] カテゴリタブを市場メタデータのカテゴリ順へ同期: `frontend/src/components/CategoryTabs.tsx` と `frontend/src/app/useCategoryTabs.ts` を対象に、市場 API の `categories` 配列を読み込むフックを先にテストで固定化し、UI が選択市場変更でタブ順を更新することを TDD で実装する。
-     - 完了理由: `frontend/src/app/useCategoryTabs.ts` と `frontend/tests/recommendations/initialLoad.test.tsx` の結合テストで市場メタデータのカテゴリ順同期が検証され、カテゴリ選択が `initialLoad` シナリオで期待通りの順序となることを確認した。
+   - [x] カテゴリタブを市場メタデータのカテゴリ順へ同期: `frontend/src/components/CategoryTabs.tsx` と `frontend/src/app/useCategoryTabs.ts` を対象に、市場 API の `categories` 配列を読み込むフックを先にテストで固定化し、UI が選択市場変更でタブ順を更新することを TDD で実装する。テストは `frontend/src/hooks/recommendations/store.test.ts` に配置された状態管理ストアの単体テストから開始し、カテゴリ選択の永続化と同期が壊れていないことを先に確認する。
+     - 完了理由: `frontend/src/app/useCategoryTabs.ts` と `frontend/tests/recommendations/initialLoad.test.tsx` の結合テストで市場メタデータのカテゴリ順同期が検証され、あわせて `frontend/src/hooks/recommendations/store.test.ts` の永続化テストで `selectedCategory` / `selectedMarket` が最新ストア構成と一致することを確認したため、カテゴリ選択が `initialLoad` シナリオで期待通りの順序となることを確認した。
    - [x] App.tsx 分割リファクタ: `AppContent` をプレゼンテーション層コンポーネントと状態管理フックへ切り出し、既存結合テストが新構成でも通るように段階移行する。
      - 完了理由: `frontend/src/App.tsx` が `frontend/src/app/AppScreen.tsx` と `frontend/src/app/useCategoryTabs.ts` へ責務分離され、AppScreen が表示・通知処理を担い、useCategoryTabs フックがカテゴリタブ状態を連携している。進行証跡: `frontend/src/app/AppScreen.tsx` および関連フック実装で分割後の構成を確認できる。
 
