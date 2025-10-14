@@ -1,6 +1,8 @@
 # タスク分解 — v0.3
 
 1. API 層: `marketScope` 受理ロジックと単体テスト追加。
+   - [x] MarketScopeQuery の入力正規化と市場別フォールバック検証を完了する。
+     - 完了理由: `backend/app/dependencies.py` の `_market_scope_query` / `MarketScopeQuery` が `national`→デフォルト化、空文字・`all` 無視、`city:<id>` を `schemas.parse_market_scope` で検証し 422 を返す実装になっており、`backend/tests/test_recommend.py` のパラメタイズ検証・都市価格優先・フォールバックヘッダー網羅テストで全市場スコープ分岐をカバーしている。
 2. フロント基盤: Tailwind 設定と共通レイアウトの置換、アクセシビリティ確認。
    - [x] App ヘッダー/メインの Tailwind リファクタ: `frontend/tests/app.snapshot.test.tsx` の期待値を Tailwind クラス前提で赤にし、`frontend/src/App.tsx` から `app__*` クラスと `MARKET_FALLBACK_NOTICE_STYLE` を除去してユーティリティクラスへ移行した上でテストを緑化する。
      - 完了理由: `frontend/src/App.tsx` で Tailwind ユーティリティクラスへ置換済み。
@@ -9,6 +11,7 @@
 3. UI 実装: 市場切替コンポーネントとカテゴリタブのステート連携。
    - [x] CategoryTabs のモバイル縦積みレイアウト対応: `frontend/tests/category-tabs.test.tsx` に `flex-col` / `sm:flex-row` の期待を追加してテストを先に赤くし、`frontend/src/components/CategoryTabs.tsx` をモバイル縦積み＋`sm` 以上横並びの Tailwind クラスへ調整した上でテストを緑化する。
      - 完了理由: `frontend/src/components/CategoryTabs.tsx` で `flex-col` / `sm:flex-row` と `w-full` / `sm:w-auto` の Tailwind クラスを適用済みで、`frontend/tests/category-tabs.test.tsx` でも同クラスを検証している。
+   - [ ] カテゴリタブを市場メタデータのカテゴリ順へ同期: `frontend/src/components/CategoryTabs.tsx` と `frontend/src/hooks/recommendations/__tests__/store.test.ts` を対象に、市場 API の `categories` 配列を読み込むフックを先にテストで固定化し、UI が選択市場変更でタブ順を更新することを TDD で実装する。
 
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
    - [x] ドキュメント整備: PRD スコープ/非スコープに `GET /api/markets` を正式追加し、成功指標へ可用性 KPI を追記済み。さらに `docs/spec/v0.3/ARCHITECTURE.md` のテーマ/品質項目を現行 CI 構成と Playwright モック方針、Tailwind トークン読込へ更新した。
