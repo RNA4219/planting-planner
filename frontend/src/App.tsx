@@ -205,6 +205,12 @@ export const AppContent = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
+  const recommendationsTabpanelId = 'recommendations-tabpanel'
+  const activeCategoryTabId = useMemo(
+    () => `category-tab-${category}`,
+    [category],
+  )
+
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
   }, [category, marketScope, region, setSelectedCropId])
