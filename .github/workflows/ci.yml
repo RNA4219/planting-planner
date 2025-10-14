@@ -71,6 +71,30 @@ jobs:
             frontend/test-results
           if-no-files-found: ignore
 
+  frontend-e2e-metrics:
+    name: frontend e2e metrics
+    runs-on: ubuntu-latest
+    needs: frontend-e2e
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - name: collect playwright metrics
+        run: python -m app.ci.playwright_metrics --workflow-file ci.yml
+      - name: upload playwright metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-e2e-metrics
+          path: backend/playwright-e2e-metrics.json
+
   backend-lint:
     name: backend lint (ruff+black+mypy)
     runs-on: ubuntu-latest
