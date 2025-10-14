@@ -27,8 +27,7 @@ def test_write_market_scopes_applies_defaults() -> None:
 
     assert any(
         sql.startswith("INSERT OR REPLACE INTO market_scopes")
-        and params
-        == ("pref:kanagawa", "神奈川", "Asia/Tokyo", 100, "accent.kanagawa")
+        and params == ("pref:kanagawa", "神奈川", "Asia/Tokyo", 100, "accent.kanagawa")
         for sql, params in executed
     )
 
@@ -92,4 +91,3 @@ def test_write_seed_payload_delegates_market_sections(monkeypatch: pytest.Monkey
     stub_crops.assert_called_once_with(conn, crops)
     stub_price.assert_called_once_with(conn, price_samples)
     stub_growth.assert_called_once_with(conn, growth_days)
-
