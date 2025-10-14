@@ -32,6 +32,9 @@
    - [x] PRD CI/スタイル記述更新: `docs/spec/v0.3/PRD.md` の品質保証とアーキテクチャ指針を現行 CI ジョブと Tailwind/トークン運用へ揃えた。
    - [x] 型仕様のストア記述を現行 Zustand 実装へ更新: `docs/spec/v0.3/TYPES.md` から Redux 記述を削除し、`frontend/src/hooks/recommendations/store.ts` の Zustand ストアで `selectedMarket` / `selectedCategory` を保持する方針を明示。
      - 完了理由: `docs/spec/v0.3/TYPES.md` に Redux 非採用と Zustand ストアの状態キー（`selectedMarket` / `selectedCategory`）を記載し、参照元として `frontend/src/hooks/recommendations/store.ts` を明記した。
+   - [x] PRD Playwright 並列実行記述更新: `docs/spec/v0.3/PRD.md` の CI 設定を Playwright デフォルトワーカー数準拠へ修正し、固定並列数検討時の留意点を追加。
+     - 完了理由: `docs/spec/v0.3/PRD.md` で CI 並列数をデフォルトワーカー準拠と明記し、固定 1 へ戻す場合は flake 率悪化や CI 時間増を評価するメモを追記した。
+     - 検討事項: 並列数を固定する場合は CI インフラ制限とシナリオ分割可否を確認し、スロットリングで代替できるかを先に検証する。
    - [x] データスキーマのテーマトークン共有記述を `data/theme_tokens.json` と Tailwind 参照方式に合わせて修正。
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
