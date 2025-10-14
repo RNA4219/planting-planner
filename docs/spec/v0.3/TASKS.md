@@ -12,6 +12,8 @@
    - [x] CategoryTabs のモバイル縦積みレイアウト対応: `frontend/tests/category-tabs.test.tsx` に `flex-col` / `sm:flex-row` の期待を追加してテストを先に赤くし、`frontend/src/components/CategoryTabs.tsx` をモバイル縦積み＋`sm` 以上横並びの Tailwind クラスへ調整した上でテストを緑化する。
      - 完了理由: `frontend/src/components/CategoryTabs.tsx` で `flex-col` / `sm:flex-row` と `w-full` / `sm:w-auto` の Tailwind クラスを適用済みで、`frontend/tests/category-tabs.test.tsx` でも同クラスを検証している。
    - [ ] カテゴリタブを市場メタデータのカテゴリ順へ同期: `frontend/src/components/CategoryTabs.tsx` と `frontend/src/hooks/recommendations/__tests__/store.test.ts` を対象に、市場 API の `categories` 配列を読み込むフックを先にテストで固定化し、UI が選択市場変更でタブ順を更新することを TDD で実装する。
+   - [x] App.tsx 分割リファクタ: `AppContent` をプレゼンテーション層コンポーネントと状態管理フックへ切り出し、既存結合テストが新構成でも通るように段階移行する。
+     - 完了理由: `frontend/src/App.tsx` が `frontend/src/app/AppScreen.tsx` と `frontend/src/app/useCategoryTabs.ts` へ責務分離され、AppScreen が表示・通知処理を担い、useCategoryTabs フックがカテゴリタブ状態を連携している。進行証跡: `frontend/src/app/AppScreen.tsx` および関連フック実装で分割後の構成を確認できる。
 
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
    - [x] ドキュメント整備: PRD スコープ/非スコープに `GET /api/markets` を正式追加し、成功指標へ可用性 KPI を追記済み。さらに `docs/spec/v0.3/ARCHITECTURE.md` のテーマ/品質項目を現行 CI 構成と Playwright モック方針、Tailwind トークン読込へ更新した。
