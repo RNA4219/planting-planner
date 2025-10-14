@@ -19,6 +19,11 @@
     1. `ci.yml` ワークフローの最新成功ランから `frontend e2e (playwright)` ジョブを開く。
     2. アーティファクト `playwright-e2e-metrics.json` をダウンロードし、上記パスへ保存する。
   - CLI でメトリクスを収集する場合は `python -m app.ci.playwright_metrics --workflow-file .github/workflows/ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json` のように `--job-name` と `--output` 引数を指定する。
+  - 添付物: [`playwright-e2e-metrics.json`](https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml)
+  - GitHub Actions からの取得手順:
+    1. 上記 CI 実行履歴にアクセスし、対象リリースの `frontend e2e (playwright)` が含まれるワークフローを選択する。
+    2. 実行詳細の `Artifacts` から `playwright-e2e-metrics.json` をダウンロードする。
+  - ローカルで再取得する場合は `cd backend && pip install -r requirements.txt` を行い、`python -m app.ci.playwright_metrics --owner R-N-A --repo planting-planner --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output playwright-e2e-metrics.json` を実行する。
 - [ ] Playwright 実行結果 HTML をレビューし、主要シナリオのスクリーンショットを確認した。
   - 添付物: [最新レポート](../../frontend/tests/e2e/report/index.html)
 - [ ] Playwright トレースを検証した。
