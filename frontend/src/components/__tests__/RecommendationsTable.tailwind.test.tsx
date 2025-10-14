@@ -1,11 +1,33 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactElement } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RecommendationsTable } from '../RecommendationsTable'
 import type { RecommendationRow } from '../../hooks/recommendations/controller'
+import type { MarketScopeOption } from '../../constants/marketScopes'
+
+const { fetchMarketsMock } = vi.hoisted(() => ({
+  fetchMarketsMock: vi.fn<() => Promise<{ markets: readonly MarketScopeOption[]; generated_at: string }>>(),
+}))
+
+vi.mock('../../lib/api', () => ({ fetchMarkets: fetchMarketsMock }))
+
+const renderWithQueryClient = (ui: ReactElement) => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return {
+    ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
+    queryClient,
+  }
+}
 
 describe('RecommendationsTable (tailwind layout)', () => {
+  beforeEach(() => {
+    fetchMarketsMock.mockReset()
+    fetchMarketsMock.mockResolvedValue({ markets: [], generated_at: '2024-05-01T00:00:00Z' })
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -24,7 +46,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
   }
 
   it('ロード中は animate-pulse の Skeleton を表示する', async () => {
-    const { container } = render(
+    const { container, queryClient } = renderWithQueryClient(
       <RecommendationsTable
         region="temperate"
         displayWeek="2024-W10"
@@ -40,6 +62,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
 
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
     expect(screen.getByRole('status')).toHaveTextContent('読み込み中')
+    queryClient.clear()
   })
 
   it('カードが市場テーマ色を反映する', async () => {
@@ -59,7 +82,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
       },
     ]
 
-    render(
+    const { queryClient } = renderWithQueryClient(
       <RecommendationsTable
         region="temperate"
         displayWeek="2024-W10"
@@ -78,10 +101,11 @@ describe('RecommendationsTable (tailwind layout)', () => {
       expect(card.className).toContain('card-market')
       expect(card.className).toContain('bg-market-city')
     }
+    queryClient.clear()
   })
 
   it('アクセシビリティ属性を維持する', async () => {
-    render(
+    const { queryClient } = renderWithQueryClient(
       <RecommendationsTable
         region="temperate"
         displayWeek="2024-W10"
@@ -113,5 +137,51 @@ describe('RecommendationsTable (tailwind layout)', () => {
       name: 'Tomatoをお気に入りに追加',
     })
     expect(favoriteButtons.length).toBeGreaterThan(0)
+    queryClient.clear()
+  })
+
+  it('React Query の市場カテゴリメタデータを描画する', async () => {
+    const markets: readonly MarketScopeOption[] = [
+      {
+        scope: 'city:osaka',
+        displayName: '大阪市中央卸売（API）',
+        theme: { token: 'market-city', hex: '#2563eb', text: '#f8fafc' },
+        categories: [
+          {
+            category: 'leaf',
+            displayName: '葉菜類（大阪）',
+          },
+        ],
+        value: 'city:osaka',
+        label: '大阪市中央卸売（API）',
+      },
+    ]
+
+    fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
+
+    const { queryClient } = renderWithQueryClient(
+      <RecommendationsTable
+        region="temperate"
+        displayWeek="2024-W10"
+        rows={[
+          {
+            ...baseRow,
+            crop: 'Komatsuna',
+            cropId: 3,
+            category: 'leaf',
+            rowKey: 'Komatsuna-2024-W10-2024-W20',
+          },
+        ]}
+        selectedCropId={null}
+        onSelect={() => {}}
+        onToggleFavorite={() => {}}
+        isFavorite={() => false}
+        marketScope="city:osaka"
+      />,
+    )
+
+    await screen.findByText('カテゴリ: 葉菜類（大阪）')
+
+    queryClient.clear()
   })
 })
