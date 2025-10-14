@@ -45,9 +45,18 @@ const buildCategoryTabsFromMetadata = (
   if (!categories) {
     return DEFAULT_CATEGORY_TABS
   }
+  type CropCategoryEntry = {
+    category: NonNullable<MarketScopeOption['categories']>[number] & {
+      category: CropCategory
+    }
+    index: number
+  }
+
   const mapped = categories
     .map((category, index) => ({ category, index }))
-    .filter(({ category }) => isCropCategory(category.category))
+    .filter((entry): entry is CropCategoryEntry =>
+      isCropCategory(entry.category.category),
+    )
 
   if (mapped.length > 0) {
     const sorted = [...mapped].sort((a, b) => {
