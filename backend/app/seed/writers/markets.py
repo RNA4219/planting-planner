@@ -68,9 +68,7 @@ def write_price_samples(
         )
 
 
-def write_theme_tokens(
-    conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]
-) -> None:
+def write_theme_tokens(conn: sqlite3.Connection, theme_tokens: Iterable[Mapping[str, Any]]) -> None:
     for token in theme_tokens:
         conn.execute(
             """

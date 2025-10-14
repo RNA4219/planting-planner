@@ -14,7 +14,6 @@ from typing import Any, TypeVar
 _T = TypeVar("_T")
 
 
-
 _PACKAGE_DIR = Path(__file__).with_name("writers")
 _module = sys.modules[__name__]
 _module.__path__ = getattr(_module, "__path__", []) or [str(_PACKAGE_DIR)]
