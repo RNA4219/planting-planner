@@ -10,7 +10,7 @@ import {
   type MarketScopeOption,
   type MarketScopeTheme,
 } from '../constants/marketScopes'
-import { fetchMarkets } from '../lib/api'
+import { fetchMarkets } from '../lib/marketMetadata'
 
 interface SearchControlsProps {
   queryWeek: string

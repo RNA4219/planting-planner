@@ -1,8 +1,10 @@
 import { type KeyboardEvent, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from '../types'
+import { fetchMarkets } from '../lib/marketMetadata'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',
@@ -15,6 +17,9 @@ const CATEGORY_LABELS: Record<CropCategory, string> = {
   root: '根菜類',
   flower: '花き',
 }
+
+const isCropCategory = (value: string): value is CropCategory =>
+  Object.hasOwn(CATEGORY_LABELS, value)
 
 const resolveMarketScopeTheme = (marketScope: MarketScope): string => {
   if (marketScope === 'national') {
@@ -58,6 +63,28 @@ export const RecommendationsTable = ({
   const listLabel = `${REGION_LABEL[region]}向けの推奨一覧（基準週: ${displayWeek}）`
   const resolvedTabpanelId = tabpanelId ?? 'recommendations-tabpanel'
   const resolvedLabelledById = labelledById ?? undefined
+
+  const { data: marketsResponse } = useQuery({
+    queryKey: ['markets'],
+    queryFn: fetchMarkets,
+  })
+
+  const activeMarketCategories = marketsResponse?.markets
+    .find((market) => market.scope === marketScope)
+    ?.categories
+
+  const resolveCategoryLabel = (category: CropCategory): string => {
+    if (activeMarketCategories) {
+      const metadataCategory = activeMarketCategories.find(
+        (item): item is { category: CropCategory; displayName: string } =>
+          isCropCategory(item.category) && item.category === category,
+      )
+      if (metadataCategory) {
+        return metadataCategory.displayName
+      }
+    }
+    return CATEGORY_LABELS[category]
+  }
 
   const handleInteractiveKeyDown = (
     event: KeyboardEvent<HTMLElement>,
@@ -156,7 +183,7 @@ export const RecommendationsTable = ({
                     </div>
                     {item.category ? (
                       <span className="text-xs text-slate-500">
-                        カテゴリ: {CATEGORY_LABELS[item.category]}
+                        カテゴリ: {resolveCategoryLabel(item.category)}
                       </span>
                     ) : null}
                   </td>

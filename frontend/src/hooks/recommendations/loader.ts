@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
@@ -66,12 +67,15 @@ export const useRecommendationLoader = ({
     marketScope,
     category,
   })
+  const settledRef = useRef<RequestMeta>(trackerRef.current)
   const fetchRecommendations = useRecommendationFetcher()
   const queryClient = useQueryClient()
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
-      setItems(nextItems)
-      setActiveWeek(weekValue)
+      flushSync(() => {
+        setItems(nextItems)
+        setActiveWeek(weekValue)
+      })
       currentWeekRef.current = weekValue
     },
     [],
@@ -100,16 +104,6 @@ export const useRecommendationLoader = ({
         category: targetCategory,
       }
       trackerRef.current = requestMeta
-      const isLatest = () => {
-        const latest = trackerRef.current
-        return (
-          latest.id === requestMeta.id &&
-          latest.region === requestMeta.region &&
-          latest.week === requestMeta.week &&
-          latest.marketScope === requestMeta.marketScope &&
-          latest.category === requestMeta.category
-        )
-      }
       try {
         const queryKey = [
           'recommendations',
@@ -129,22 +123,25 @@ export const useRecommendationLoader = ({
               preferLegacy: options?.preferLegacy,
             }),
         })
-        if (!isLatest()) {
+        if (requestMeta.id < settledRef.current.id) {
           return
         }
         setIsMarketFallback(result.isMarketFallback)
         if (!result.result) {
           applyWeek(normalizedWeek, [])
+          settledRef.current = requestMeta
           return
         }
         const resolvedWeek = normalizeIsoWeek(result.result.week, normalizedWeek)
         applyWeek(resolvedWeek, result.result.items)
+        settledRef.current = requestMeta
       } catch {
-        if (!isLatest()) {
+        if (requestMeta.id < settledRef.current.id) {
           return
         }
         setIsMarketFallback(false)
         applyWeek(normalizedWeek, [])
+        settledRef.current = requestMeta
       }
     },
     [
