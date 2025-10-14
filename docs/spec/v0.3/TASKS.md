@@ -37,7 +37,7 @@
    - [x] コントリビューション指針に CI と整合するフロントエンド検証手順 (`npm run typecheck` 含む) を追記。
      - 完了理由: `.github/workflows/ci.yml` のジョブ構成に合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd frontend && npm run typecheck` などの実行手順を明記した。
    - [x] コントリビューション指針のバックエンド lint 手順を CI と同期。
-     - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブに合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd backend && ruff check .` / `cd backend && black --check .` の実行手順を追記した。
+     - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブに合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd backend && ruff check .` / `cd backend && black --check .` の実行手順を追記し、必須チェックが揃ったことを記録した。
    - [x] 開発運用ドキュメントの監視方針を push/pull_request 実行へ更新。
      - 完了理由: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションで `pytest` / `mypy` を `push` / `pull_request` トリガーへ置き換え、nightly 記述を削除した。
    - [x] API リファレンス `/api/markets` に `timezone`・`priority`・`effective_from`・`categories` の説明とサンプル JSON を追記。
