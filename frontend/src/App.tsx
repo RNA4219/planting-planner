@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
@@ -65,6 +65,9 @@ const buildCategoryTabsFromMetadata = (
   return DEFAULT_CATEGORY_TABS
 }
 
+const MARKET_FALLBACK_NOTICE_CLASSNAME =
+  'flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm'
+
 const createInitialCategoryTabsMap = (): CategoryTabsMap => {
   const map: CategoryTabsMap = new Map()
   MARKET_SCOPE_FALLBACK_DEFINITIONS.forEach((definition) => {
@@ -94,7 +97,6 @@ export const AppContent = () => {
     category,
     setMarketScope,
     selectedMarket,
-    selectedCategory,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -191,6 +193,8 @@ export const AppContent = () => {
     [searchKeyword],
   )
 
+  const recommendationsTabpanelId = useId()
+
   const filteredRows = useMemo(() => {
     if (!normalizedSearchKeyword) {
       return sortedRows
@@ -205,12 +209,6 @@ export const AppContent = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
-  const activeCategoryTabId = useMemo(
-    () => `category-tab-${selectedCategory}`,
-    [selectedCategory],
-  )
-
-  const recommendationsTabpanelId = 'recommendations-tabpanel'
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
   }, [category, marketScope, region, setSelectedCropId])
@@ -308,7 +306,7 @@ export const AppContent = () => {
               data-testid="market-fallback-notice"
               role="status"
               aria-live="polite"
-              className="flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm"
+              className={MARKET_FALLBACK_NOTICE_CLASSNAME}
             >
               {TOAST_MESSAGES.recommendationFallbackWarning}
             </div>
@@ -331,7 +329,7 @@ export const AppContent = () => {
               />
             )}
             tabpanelId={recommendationsTabpanelId}
-            labelledById={activeCategoryTabId}
+            labelledById={`category-tab-${category}`}
           />
           <PriceChartSection
             selectedCropId={selectedCropId}
