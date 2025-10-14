@@ -14,6 +14,11 @@
 
 ## フレーク率レポート
 - [ ] CI ダッシュボードから `frontend e2e (playwright)` のフレーク率を更新した。
+  - 添付物: `reports/ci/playwright-e2e-metrics.json`（CI アーティファクト `playwright-e2e-metrics.json` を保存する）
+  - GitHub Actions から取得する場合:
+    1. `ci.yml` ワークフローの最新成功ランから `frontend e2e (playwright)` ジョブを開く。
+    2. アーティファクト `playwright-e2e-metrics.json` をダウンロードし、上記パスへ保存する。
+  - CLI でメトリクスを収集する場合は `python -m app.ci.playwright_metrics --workflow-file .github/workflows/ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json` のように `--job-name` と `--output` 引数を指定する。
   - 添付物: [`playwright-e2e-metrics.json`](https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml)
   - GitHub Actions からの取得手順:
     1. 上記 CI 実行履歴にアクセスし、対象リリースの `frontend e2e (playwright)` が含まれるワークフローを選択する。
