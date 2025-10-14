@@ -50,8 +50,24 @@ def test_run_etl_populates_market_prices_and_cache(market_conn: sqlite3.Connecti
     )
 
     records = [
-        {"crop_id": 1, "scope": "national", "week": "2024-01-01", "avg_price": 12, "stddev": 1, "unit": "円/100g", "source": "market"},
-        {"crop_id": 1, "scope": "city:tokyo", "week": "2024-W02", "avg_price": 200, "stddev": 10, "unit": "円/kg", "source": "market"},
+        {
+            "crop_id": 1,
+            "scope": "national",
+            "week": "2024-01-01",
+            "avg_price": 12,
+            "stddev": 1,
+            "unit": "円/100g",
+            "source": "market",
+        },
+        {
+            "crop_id": 1,
+            "scope": "city:tokyo",
+            "week": "2024-W02",
+            "avg_price": 200,
+            "stddev": 10,
+            "unit": "円/kg",
+            "source": "market",
+        },
     ]
 
     updated = etl.run_etl(market_conn, data_loader=lambda: records)

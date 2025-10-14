@@ -17,7 +17,9 @@ def dummy_conn() -> DummyConnection:
     return DummyConnection()
 
 
-def test_write_crops_delegates_to_split_module(monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection) -> None:
+def test_write_crops_delegates_to_split_module(
+    monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection
+) -> None:
     calls: list[tuple[Any, list[Any]]] = []
 
     def stub(conn: Any, payload: Iterable[Any]) -> None:
@@ -31,7 +33,9 @@ def test_write_crops_delegates_to_split_module(monkeypatch: pytest.MonkeyPatch, 
     assert calls == [(dummy_conn, crops_payload)]
 
 
-def test_write_market_scopes_delegates(monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection) -> None:
+def test_write_market_scopes_delegates(
+    monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection
+) -> None:
     calls: list[tuple[Any, list[Any]]] = []
 
     def stub(conn: Any, payload: Iterable[Any]) -> None:
@@ -45,7 +49,9 @@ def test_write_market_scopes_delegates(monkeypatch: pytest.MonkeyPatch, dummy_co
     assert calls == [(dummy_conn, scopes_payload)]
 
 
-def test_write_seed_payload_validates_and_delegates(monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection) -> None:
+def test_write_seed_payload_validates_and_delegates(
+    monkeypatch: pytest.MonkeyPatch, dummy_conn: DummyConnection
+) -> None:
     order: list[str] = []
 
     def record(name: str):
@@ -62,7 +68,9 @@ def test_write_seed_payload_validates_and_delegates(monkeypatch: pytest.MonkeyPa
 
     monkeypatch.setattr(writers, "write_theme_tokens", record("theme_tokens"))
     monkeypatch.setattr(writers.markets, "write_market_scopes", record("market_scopes"))
-    monkeypatch.setattr(writers.markets, "write_market_scope_categories", record("market_scope_categories"))
+    monkeypatch.setattr(
+        writers.markets, "write_market_scope_categories", record("market_scope_categories")
+    )
     monkeypatch.setattr(writers.crops, "write_crops", record("crops"))
     monkeypatch.setattr(writers, "write_price_samples", record("price_samples"))
     monkeypatch.setattr(writers, "write_growth_days", record("growth_days"))

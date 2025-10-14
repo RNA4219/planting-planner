@@ -263,9 +263,7 @@ def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) 
             fallback_required = True
         else:
             if not valid:
-                _LOGGER.warning(
-                    "市場メタデータ検証の失敗: バリデーション基準を満たしませんでした"
-                )
+                _LOGGER.warning("市場メタデータ検証の失敗: バリデーション基準を満たしませんでした")
                 fallback_required = True
         if fallback_required:
             inserted_market = [item for item in transformed_market if item[1] == "national"]
