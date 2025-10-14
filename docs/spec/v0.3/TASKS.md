@@ -17,8 +17,9 @@
 
 4. QA: React Testing Library 結合テスト更新と Playwright シナリオ作成。
    - [x] ドキュメント整備: PRD スコープ/非スコープに `GET /api/markets` を正式追加し、成功指標へ可用性 KPI を追記済み。さらに `docs/spec/v0.3/ARCHITECTURE.md` のテーマ/品質項目を現行 CI 構成と Playwright モック方針、Tailwind トークン読込へ更新した。
-   - [ ] Playwright フレーク監視ダッシュボード整備: [週4計画](./ROADMAP.md) に沿って CI 成果のメトリクス収集を自動化し、`frontend-e2e` ジョブで最新成功率を可視化する。
-     - 完了条件: CI 実行履歴から flake 率を集計するスクリプトまたはダッシュボードが作成され、`frontend-e2e` の失敗理由が 1 画面で追跡できること。
+   - [ ] Playwright フレーク監視ダッシュボード整備: [週4計画](./ROADMAP.md) に沿って CI 成果のメトリクス収集を自動化し、`frontend e2e (playwright)` ジョブで最新成功率を可視化する。
+    - CLI 実行例では `python backend/app/ci/playwright_metrics.py --job-name "frontend e2e (playwright)" ...` のように `--job-name` を `backend/app/ci/playwright_metrics.py` の `DEFAULT_JOB_NAME` と一致させる。
+    - 完了条件: CI 実行履歴から flake 率を集計するスクリプトまたはダッシュボードが作成され、`frontend e2e (playwright)` の失敗理由が 1 画面で追跡できること。
    - [x] Playwright クリティカルパス拡充: [週4計画](./ROADMAP.md) の E2E 安定化に合わせて、結帳・カテゴリ切替のシナリオを `frontend/tests/e2e` 配下へ追加し、`npm run test:e2e` を緑化する。
      - 完了理由: `frontend/tests/e2e/checkout-flow.spec.ts` を追加し、`npm run test:e2e` が緑化したことを確認した。
      - 完了条件: 新規シナリオが CI 上で安定動作し、クリティカルパスで未検知だったバグ再現ケースに対する回帰テストが追加されていること。
