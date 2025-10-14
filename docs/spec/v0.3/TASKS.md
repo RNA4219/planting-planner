@@ -42,6 +42,8 @@
      - 完了理由: `.github/workflows/ci.yml` の `frontend-verify` 系ジョブで `npm run typecheck` を実行しており、監視項目への追記でドキュメントと実運用の差分を解消した。
    - [x] 開発運用監視の typecheck 手順を `cd frontend && npm run typecheck` へ更新。
      - 完了理由: ルート直下からの `npm run typecheck` 実行では frontend パッケージが参照できないため、監視手順をディレクトリ移動込みで明示した。
+   - [x] 開発運用監視に frontend build を追記: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションへ `cd frontend && npm run build` を追加し、CI の `frontend` ジョブと整合させる。
+     - 完了理由: CI では本番ビルド成否を `npm run build` で検証しており、監視対象へ含めることでローカル手順との差分によるビルド崩れを防止する。
    - [x] コントリビューション指針に frontend build 手順を追加: `docs/spec/v0.3/CONTRIBUTING.md` のチェックリストへ `cd frontend && npm run build` を追記し、CI の `frontend` ジョブと整合させる。
      - 完了理由: `.github/workflows/ci.yml` の `frontend` ジョブで `npm run build` を実行しており、ローカル検証と CI 要件の差分をなくすため。
    - [x] データスキーマのカテゴリフォールバック説明を `market_scope_categories` と `_resolve_categories` の動的生成方針へ更新。
