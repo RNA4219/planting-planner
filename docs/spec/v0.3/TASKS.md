@@ -83,8 +83,9 @@
    - [x] README の現行パスを v0.3 へ更新し、運用ルール変更がないことを確認。
      - 完了理由: `docs/spec/README.md` の最新版リンクを `v0.3` に差し替え、仕様ルールの差分が不要であることを確認した。
 7. リリース準備:
-   - [ ] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
+   - [x] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
      - 完了条件: KPI・残課題・ロールバック手順がチェックリスト化され、週次レビューで承認済みであること。
+     - 完了理由: `docs/spec/v0.3/RELEASE_CHECKLIST.md` で KPI・未解決課題・ロールバック手順を網羅したチェックリストを整備済み。
    - [x] UI 仕様のトースト記述を `ToastStack` と市場フォールバック警告の現仕様へ更新。
      - 検証観点: フォールバック検出時に `warning` variant を enqueue → ToastStack の `role="status"` / auto dismiss と手動 dismiss が両立すること。
    - [x] 型仕様との差分解消: `docs/spec/v0.3/TYPES.md` から `SelectedCategory` 追加記述を削除し、カテゴリ選択が `CropCategory` を共有する方針を明文化。
