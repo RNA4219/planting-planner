@@ -89,6 +89,27 @@ export const fromMarketScopeApiDefinition = (
   }
 }
 
+const FALLBACK_CATEGORY_DEFINITIONS: readonly MarketScopeCategory[] = [
+  {
+    category: 'leaf',
+    displayName: '葉菜類',
+    priority: 100,
+    source: 'fallback',
+  },
+  {
+    category: 'root',
+    displayName: '根菜類',
+    priority: 200,
+    source: 'fallback',
+  },
+  {
+    category: 'flower',
+    displayName: '果菜類',
+    priority: 300,
+    source: 'fallback',
+  },
+]
+
 export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
   {
     scope: 'national',
@@ -100,7 +121,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     },
     timezone: 'Asia/Tokyo',
     priority: 10,
-    categories: [],
+    categories: FALLBACK_CATEGORY_DEFINITIONS,
   },
   {
     scope: 'city:tokyo',
@@ -112,7 +133,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     },
     timezone: 'Asia/Tokyo',
     priority: 20,
-    categories: [],
+    categories: FALLBACK_CATEGORY_DEFINITIONS,
   },
   {
     scope: 'city:osaka',
@@ -124,7 +145,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     },
     timezone: 'Asia/Tokyo',
     priority: 30,
-    categories: [],
+    categories: FALLBACK_CATEGORY_DEFINITIONS,
   },
   {
     scope: 'city:nagoya',
@@ -136,7 +157,7 @@ export const MARKET_SCOPE_FALLBACK_DEFINITIONS: MarketScopeDefinition[] = [
     },
     timezone: 'Asia/Tokyo',
     priority: 40,
-    categories: [],
+    categories: FALLBACK_CATEGORY_DEFINITIONS,
   },
 ]
 

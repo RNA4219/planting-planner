@@ -50,6 +50,40 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
     }
   })
 
+  it('標準カテゴリ定義を categories に保持する', () => {
+    expect(MARKET_SCOPE_FALLBACK_DEFINITIONS).not.toHaveLength(0)
+
+    for (const definition of MARKET_SCOPE_FALLBACK_DEFINITIONS) {
+      expect(definition).toHaveProperty('categories')
+      expect(Array.isArray(definition.categories)).toBe(true)
+      expect(definition.categories).toHaveLength(3)
+
+      const categoriesById = new Map(
+        definition.categories.map((category) => [category.category, category]),
+      )
+
+      expect(categoriesById.has('leaf')).toBe(true)
+      expect(categoriesById.has('root')).toBe(true)
+      expect(categoriesById.has('flower')).toBe(true)
+
+      expect(categoriesById.get('leaf')).toEqual(
+        expect.objectContaining({
+          displayName: expect.any(String),
+        }),
+      )
+      expect(categoriesById.get('root')).toEqual(
+        expect.objectContaining({
+          displayName: expect.any(String),
+        }),
+      )
+      expect(categoriesById.get('flower')).toEqual(
+        expect.objectContaining({
+          displayName: expect.any(String),
+        }),
+      )
+    }
+  })
+
   it('JSON 定義とフォールバック定義が 1 対 1 で一致する', () => {
     const jsonDefinitions = (marketScopeDataset as MarketScopeJsonEntry[]).map(
       (entry) => ({
