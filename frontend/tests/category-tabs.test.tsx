@@ -1,27 +1,40 @@
 import '@testing-library/jest-dom/vitest'
 
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useState } from 'react'
 
-import { CategoryTabs } from '../src/components/CategoryTabs'
+import {
+  CategoryTabs,
+  DEFAULT_CATEGORY_TABS,
+  type CategoryTabDefinition,
+} from '../src/components/CategoryTabs'
 import type { CropCategory } from '../src/types'
 
-const LABELS: Record<CropCategory, string> = {
-  leaf: '葉菜',
-  root: '根菜',
-  flower: '花き',
-}
+const CATEGORY_DEFINITIONS: readonly CategoryTabDefinition[] = DEFAULT_CATEGORY_TABS
+const LABELS = Object.fromEntries(
+  CATEGORY_DEFINITIONS.map((tab) => [tab.key, tab.label] as const),
+) as Record<CropCategory, string>
 
 // @ts-expect-error fruit は選択肢から除外済み
 const FRUIT_LABEL = LABELS.fruit ?? '果菜'
 
+afterEach(() => {
+  cleanup()
+})
+
 describe('CategoryTabs', () => {
-  it('renders three tabs without fruit and emits選択変更', async () => {
+  it('renders provided tabs without fruit and emits選択変更', async () => {
     const onChange = vi.fn()
 
-    render(<CategoryTabs category="leaf" onChange={onChange} />)
+    render(
+      <CategoryTabs
+        category="leaf"
+        categories={CATEGORY_DEFINITIONS}
+        onChange={onChange}
+      />,
+    )
 
     expect(screen.queryByRole('tab', { name: FRUIT_LABEL })).not.toBeInTheDocument()
 
@@ -30,7 +43,7 @@ describe('CategoryTabs', () => {
     expect(tablist).toHaveClass('sm:flex-row')
 
     const tabButtons = screen.getAllByRole('tab')
-    expect(tabButtons).toHaveLength(3)
+    expect(tabButtons).toHaveLength(CATEGORY_DEFINITIONS.length)
 
     tabButtons.forEach((tab) => {
       expect(tab).toHaveClass('w-full')
@@ -44,8 +57,8 @@ describe('CategoryTabs', () => {
       throw new Error('onChange should be called once with root')
     }
 
-    (Object.values(LABELS) as string[]).forEach((label) => {
-      expect(screen.getByRole('tab', { name: label })).toBeInTheDocument()
+    CATEGORY_DEFINITIONS.forEach((tab) => {
+      expect(screen.getByRole('tab', { name: tab.label })).toBeInTheDocument()
     })
   })
 
@@ -54,12 +67,18 @@ describe('CategoryTabs', () => {
 
     const Wrapper = () => {
       const [category, setCategory] = useState<CropCategory>('leaf')
-      return <CategoryTabs category={category} onChange={setCategory} />
+      return (
+        <CategoryTabs
+          category={category}
+          categories={CATEGORY_DEFINITIONS}
+          onChange={setCategory}
+        />
+      )
     }
 
     const { getAllByRole, findAllByRole } = render(<Wrapper />)
 
-    const tabCount = Object.keys(LABELS).length
+    const tabCount = CATEGORY_DEFINITIONS.length
     const getTabs = () =>
       getAllByRole('tab').slice(-tabCount) as HTMLButtonElement[]
     const [firstTab] = getTabs()
@@ -84,5 +103,14 @@ describe('CategoryTabs', () => {
     const activeAfterLeft = await findActiveTab(LABELS.leaf)
     expect(activeAfterLeft).toHaveFocus()
     expect(activeAfterLeft).toHaveAttribute('tabIndex', '0')
+  })
+
+  it('returns null when no categories provided', () => {
+    const onChange = vi.fn()
+    const { queryByRole } = render(
+      <CategoryTabs category="leaf" categories={[]} onChange={onChange} />,
+    )
+    expect(queryByRole('tablist')).not.toBeInTheDocument()
+    expect(onChange).not.toHaveBeenCalled()
   })
 })

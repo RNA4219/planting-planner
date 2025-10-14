@@ -9,6 +9,11 @@ import {
   renderApp,
   storageState,
 } from '../utils/renderApp'
+import { fetchMarkets } from '../utils/mocks/api'
+import {
+  MARKET_SCOPE_FALLBACK_DEFINITIONS,
+  toMarketScopeOption,
+} from '../../src/constants/marketScopes'
 import {
   createItem,
   createRecommendResponse,
@@ -216,6 +221,57 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
         'temperate',
         '2024-W30',
         expect.objectContaining({ marketScope: 'national', category: 'root' }),
+      )
+    })
+  })
+
+  it('市場カテゴリ定義に従ってタブとカテゴリ引数が同期する', async () => {
+    const marketOptions = MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => {
+      if (definition.scope !== 'national') {
+        return toMarketScopeOption(definition)
+      }
+      return toMarketScopeOption({
+        ...definition,
+        categories: [
+          { category: 'root', displayName: '根菜' },
+          { category: 'flower', displayName: '花き' },
+        ],
+      })
+    })
+    fetchMarkets.mockResolvedValue({
+      generated_at: '2024-07-01T00:00:00.000Z',
+      markets: marketOptions,
+    })
+    fetchCrops.mockResolvedValue(defaultCrops)
+    fetchRecommendations.mockResolvedValue(
+      createRecommendResponse({
+        items: [createItem({ crop: 'にんじん', category: 'root' })],
+      }),
+    )
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'root' }),
+      )
+    })
+
+    const tablist = await screen.findByRole('tablist', { name: 'カテゴリ' })
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['根菜', '花き'])
+    expect(within(tablist).queryByRole('tab', { name: '葉菜' })).not.toBeInTheDocument()
+
+    const flowerTab = within(tablist).getByRole('tab', { name: '花き' })
+    await user.click(flowerTab)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'flower' }),
       )
     })
   })

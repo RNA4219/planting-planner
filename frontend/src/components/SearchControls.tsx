@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent } from 'react'
+import { useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { RegionSelect } from './RegionSelect'
@@ -24,6 +24,7 @@ interface SearchControlsProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onRefresh: () => void | Promise<void>
   refreshing: boolean
+  onMarketsUpdate?: (markets: readonly MarketScopeOption[]) => void
 }
 
 const MARKET_THEME_BACKGROUND_CLASSES: Record<string, string> = {
@@ -114,6 +115,7 @@ export const SearchControls = ({
   onSubmit,
   onRefresh,
   refreshing,
+  onMarketsUpdate,
 }: SearchControlsProps) => {
   const { data: marketsResponse, isSuccess } = useQuery({
     queryKey: ['markets'],
@@ -121,6 +123,12 @@ export const SearchControls = ({
   })
 
   const marketOptions: readonly MarketScopeOption[] = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  useEffect(() => {
+    if (!onMarketsUpdate || !isSuccess || !marketsResponse) {
+      return
+    }
+    onMarketsUpdate(marketsResponse.markets)
+  }, [isSuccess, marketsResponse, onMarketsUpdate])
   const { fallbackTheme, optionTheme } = resolveMarketTheme(marketScope, marketOptions)
   const marketTheme = getMarketSelectTheme(marketScope, optionTheme, fallbackTheme)
 
