@@ -5,6 +5,7 @@
   - `cd frontend && npm run typecheck`
   - `cd frontend && npm run lint`
   - `cd frontend && npm run test`
+  - `cd frontend && npm run build`
   - `cd frontend && npm run test:e2e`
   - `cd backend && ruff check .` (CI: backend-lint)
   - `cd backend && black --check .` (CI: backend-lint)
