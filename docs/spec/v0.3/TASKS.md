@@ -61,7 +61,9 @@
    - [x] API リファレンス `/api/recommend` フォールバックヘッダー追記。
      - ヘッダー検証観点: 市場欠損フォールバックは 200 応答となるため、`fallback: true` と `access-control-expose-headers: fallback` の両方を確認して UI 側の警告や再計算抑止を行う。
    - [x] API リファレンス `/api/recommend` フォールバック露出条件追記。
-     - 検証観点: 通常応答では `fallback` ヘッダーが付与されないことを確認し、フォールバック時のみ `fallback: true` と `access-control-expose-headers: fallback` が揃うことをヘッダー差分で検証する。
+     - 検証観点: 通常応答では `fallback: true` ヘッダーが付与されないことを確認し、フォールバック時のみ `fallback: true` が追加される。`access-control-expose-headers: fallback` は常時存在するため、`fallback: true` の有無でフォールバックを判断する。
+   - [x] API リファレンス `/api/recommend` `/api/price` のフォールバックヘッダー記述を更新。
+     - 検証観点: 全応答で `access-control-expose-headers: fallback` が露出し、`fallback: true` ヘッダーの有無でフォールバック判定すること。
    - [x] API リファレンス `/api/markets` に `timezone`・`priority`・`effective_from`・`categories` の説明とサンプル JSON を追記。
      - 完了理由: `docs/spec/v0.3/API_REFERENCE.md` に市場メタデータの追加フィールドを記述し、ETL の `_refresh_market_metadata_cache` で生成される構造と一致させた。
    - [x] Docs トップのリンクとバージョン表記を v0.3 に更新。
