@@ -9,7 +9,7 @@
   - `cd frontend && npm run test:e2e`
   - `cd backend && ruff check .` (CI: backend-lint)
   - `cd backend && black --check .` (CI: backend-lint)
-  - `cd backend && pytest`
   - `cd backend && mypy`
+  - `cd backend && pytest`
 - Tailwind クラス追加時は `tailwind.config.ts` の `market` カラートークンを利用し、独自色は禁止。
 - Playwright シナリオは `tests/e2e/README.md` にステップ概要を追記して保守性を確保。

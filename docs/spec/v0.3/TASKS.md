@@ -52,6 +52,8 @@
      - 完了理由: `.github/workflows/ci.yml` のジョブ構成に合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd frontend && npm run typecheck` などの実行手順を明記した。
    - [x] コントリビューション指針のバックエンド lint 手順を CI と同期。
      - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブに合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd backend && ruff check .` / `cd backend && black --check .` の実行手順を追記し、必須チェックが揃ったことを記録した。
+   - [x] コントリビューション指針の検証コマンド順序を CI と同期 (`npm run build` 含む)。
+     - 完了理由: `.github/workflows/ci.yml` の `frontend`→`frontend-e2e`→`backend-lint`→`backend-test` の順序に合わせ、`docs/spec/v0.3/CONTRIBUTING.md` で `npm run build` を含むコマンド群を並べ替えた。
    - [x] 開発運用ドキュメントの監視方針を push/pull_request 実行へ更新。
      - 完了理由: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションで `pytest` / `mypy` を `push` / `pull_request` トリガーへ置き換え、nightly 記述を削除した。
    - [x] API リファレンス `/api/recommend` フォールバックヘッダー追記。
