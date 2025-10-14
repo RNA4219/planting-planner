@@ -44,6 +44,8 @@
      - 完了理由: ルート直下からの `npm run typecheck` 実行では frontend パッケージが参照できないため、監視手順をディレクトリ移動込みで明示した。
    - [x] 開発運用監視に frontend build 検証を追記。
      - 完了理由: `.github/workflows/ci.yml` の `frontend` ジョブで `npm run build` が必須のため、監視対象へ `cd frontend && npm run build` を追加してローカル検証と CI の手順差異を解消した。
+   - [x] 開発運用監視の lint/test/e2e 手順を `cd frontend && …` へ統一。
+     - 完了理由: ルート直下で `npm run lint` / `npm run test` / `npm run test:e2e` を実行すると frontend パッケージを解決できず失敗するため、`cd frontend &&` を明示して再現性を確保した。
    - [x] コントリビューション指針に frontend build 手順を追加: `docs/spec/v0.3/CONTRIBUTING.md` のチェックリストへ `cd frontend && npm run build` を追記し、CI の `frontend` ジョブと整合させる。
      - 完了理由: `.github/workflows/ci.yml` の `frontend` ジョブで `npm run build` を実行しており、ローカル検証と CI 要件の差分をなくすため。
    - [x] データスキーマのカテゴリフォールバック説明を `market_scope_categories` と `_resolve_categories` の動的生成方針へ更新。
