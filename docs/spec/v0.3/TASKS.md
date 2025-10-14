@@ -34,6 +34,8 @@
      - 完了理由: `docs/spec/v0.3/DATA_SOURCES.md` で seed/フロントの共通 JSON 参照に差し替え、ETL 生成記述を削除した。
    - [x] 開発運用監視に backend lint 拡充を追記: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションへ `ruff check .` / `black --check .` を追加し、CI トリガーと同期させる。
      - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブが `push` / `pull_request` で `ruff check .` / `black --check .` を実行しているため、監視対象へ明記して齟齬を防止。
+   - [x] 開発運用監視に frontend typecheck を追記: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションへ `npm run typecheck` を追加し、CI の pre-merge チェックと整合させる。
+     - 完了理由: `.github/workflows/ci.yml` の `frontend-verify` 系ジョブで `npm run typecheck` を実行しており、監視項目への追記でドキュメントと実運用の差分を解消した。
    - [x] データスキーマのカテゴリフォールバック説明を `market_scope_categories` と `_resolve_categories` の動的生成方針へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` で `market_scope_categories` 優先と `_resolve_categories` によるスコープ別カテゴリ補完を記述した。
    - [x] カテゴリ再構築仕様を `_resolve_categories` の `market_prices` / `crops` JOIN ロジックへ合わせて追記。
