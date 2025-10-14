@@ -276,6 +276,67 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     })
   })
 
+  it('市場メタデータが逆順でも priority 昇順でカテゴリタブとリクエストが揃う', async () => {
+    const marketOptions = MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => {
+      if (definition.scope !== 'national') {
+        return toMarketScopeOption(definition)
+      }
+      return toMarketScopeOption({
+        ...definition,
+        categories: [
+          { category: 'leaf', displayName: '葉菜', priority: 2 },
+          { category: 'root', displayName: '根菜', priority: 1 },
+          { category: 'flower', displayName: '花き' },
+        ],
+      })
+    })
+    fetchMarkets.mockResolvedValue({
+      generated_at: '2024-07-01T00:00:00.000Z',
+      markets: marketOptions,
+    })
+    fetchCrops.mockResolvedValue(defaultCrops)
+    fetchRecommendations.mockResolvedValue(
+      createRecommendResponse({
+        items: [createItem({ crop: 'にんじん', category: 'root' })],
+      }),
+    )
+
+    const { user } = await renderApp()
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
+    })
+
+    const tablist = await screen.findByRole('tablist', { name: 'カテゴリ' })
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['根菜', '葉菜', '花き'])
+
+    const [rootTab, leafTab] = tabs
+    await user.click(rootTab)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'root' }),
+      )
+    })
+
+    await user.click(leafTab)
+
+    await waitFor(() => {
+      expect(fetchRecommendations).toHaveBeenLastCalledWith(
+        'temperate',
+        '2024-W30',
+        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+      )
+    })
+  })
+
   it('カテゴリタブが推奨一覧セクションを aria-controls で参照する', async () => {
     fetchCrops.mockResolvedValue(defaultCrops)
     fetchRecommendations.mockResolvedValue(createRecommendResponse())
