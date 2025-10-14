@@ -16,15 +16,17 @@
 - [ ] CI ダッシュボードから `frontend e2e (playwright)` のフレーク率を更新した。
   - 添付物: `reports/ci/playwright-e2e-metrics.json`（CI アーティファクト `playwright-e2e-metrics.json` を保存する）
   - GitHub Actions から取得する場合:
-    1. `ci.yml` ワークフローの最新成功ランから `frontend e2e (playwright)` ジョブを開く。
-    2. アーティファクト `playwright-e2e-metrics.json` をダウンロードし、上記パスへ保存する。
-  - CLI でメトリクスを収集する場合は `python -m app.ci.playwright_metrics --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json` のように `--job-name` と `--output` 引数を指定する。
+    1. `ci.yml` ワークフローの対象ランから `frontend e2e (playwright)` ジョブを開く。
+    2. 実行詳細の `Artifacts` から `playwright-e2e-metrics.json` をダウンロードする。
+    3. `mkdir -p reports/ci` を実行して保存先を用意し、`reports/ci/playwright-e2e-metrics.json` として保存する。
+  - CLI でメトリクスを収集する場合は出力先を `reports/ci/playwright-e2e-metrics.json` に指定する。
+    ```bash
+    mkdir -p reports/ci
+    python -m app.ci.playwright_metrics --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json
+    ```
   - 備考: GitHub API はワークフローファイル名のみを受け付けるため `ci.yml` を指定する（`.github/workflows/ci.yml` を渡すと 404 エラーになる既知事象を 2025-10-14 に解消済み）。
   - 添付物: [`playwright-e2e-metrics.json`](https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml)
-  - GitHub Actions からの取得手順:
-    1. 上記 CI 実行履歴にアクセスし、対象リリースの `frontend e2e (playwright)` が含まれるワークフローを選択する。
-    2. 実行詳細の `Artifacts` から `playwright-e2e-metrics.json` をダウンロードする。
-  - ローカルで再取得する場合は `cd backend && pip install -r requirements.txt` を行い、`python -m app.ci.playwright_metrics --owner R-N-A --repo planting-planner --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output playwright-e2e-metrics.json` を実行する。
+  - ローカルで再取得する場合は `cd backend && pip install -r requirements.txt` を行い、`mkdir -p reports/ci` で保存先を作成してから `python -m app.ci.playwright_metrics --owner R-N-A --repo planting-planner --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json` を実行する。
 - [ ] Playwright 実行結果 HTML をレビューし、主要シナリオのスクリーンショットを確認した。
   - 添付物: `frontend/playwright-report/index.html`（CI アーティファクト `playwright-report` の HTML レポートを保存する）
   - GitHub Actions から取得する場合:
