@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import UTC, date, datetime
 from typing import Any, cast
 
-from .. import utils_week
+from .. import schemas, utils_week
 from . import expectations
 from .loader import DataLoader, load_price_feed
 
@@ -15,6 +15,12 @@ __all__ = ["run_etl"]
 
 _UNIT_FACTORS: dict[str, float] = {"円/kg": 1.0, "円/100g": 10.0, "円/500g": 2.0, "円/g": 1000.0}
 _LOGGER = logging.getLogger(__name__)
+
+_CATEGORY_DISPLAY_NAMES: dict[schemas.CropCategory, str] = {
+    "leaf": "葉菜類",
+    "root": "根菜類",
+    "flower": "花き",
+}
 
 
 def _normalize_week(value: Any) -> str:
@@ -179,15 +185,25 @@ def _resolve_categories(
         """,
         (scope,),
     ).fetchall()
-    return [
-        {
-            "category": str(row["category"]),
-            "display_name": str(row["category"]),
-            "priority": 100,
-            "source": "fallback",
-        }
-        for row in fallback_rows
-    ]
+    resolved: list[dict[str, Any]] = []
+    for row in fallback_rows:
+        category = str(row["category"])
+        display_name = category
+        try:
+            category_key = schemas.parse_crop_category(category)
+        except ValueError:
+            display_name = category
+        else:
+            display_name = _CATEGORY_DISPLAY_NAMES.get(category_key, category)
+        resolved.append(
+            {
+                "category": category,
+                "display_name": display_name,
+                "priority": 100,
+                "source": "fallback",
+            }
+        )
+    return resolved
 
 
 def run_etl(conn: sqlite3.Connection, *, data_loader: DataLoader | None = None) -> int:

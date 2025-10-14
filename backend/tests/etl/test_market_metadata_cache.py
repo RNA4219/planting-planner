@@ -85,5 +85,5 @@ def test_run_etl_populates_market_prices_and_cache(market_conn: sqlite3.Connecti
     assert national["effective_from"] == "2024-W01"
     assert payload["generated_at"].endswith("Z")
     assert national["categories"] == [
-        {"category": "leaf", "display_name": "leaf", "priority": 100, "source": "fallback"}
+        {"category": "leaf", "display_name": "葉菜類", "priority": 100, "source": "fallback"}
     ]
