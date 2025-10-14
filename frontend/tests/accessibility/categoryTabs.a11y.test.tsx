@@ -40,12 +40,14 @@ describe('アクセシビリティ: CategoryTabs', () => {
     await renderApp()
     await screen.findAllByTestId('recommendation-card')
 
+    const panel = await screen.findByRole('tabpanel')
+    const panelId = panel.getAttribute('id')
+
     const activeTab = await getActiveTab()
     expect(activeTab).toHaveAttribute('id', 'category-tab-leaf')
-    expect(activeTab).toHaveAttribute('aria-controls', 'recommendations-tabpanel')
 
-    const panel = await screen.findByRole('tabpanel')
-    expect(panel).toHaveAttribute('id', 'recommendations-tabpanel')
+    expect(panelId).toBeTruthy()
+    expect(activeTab).toHaveAttribute('aria-controls', panelId as string)
     expect(panel).toHaveAttribute('aria-labelledby', 'category-tab-leaf')
   })
 })
