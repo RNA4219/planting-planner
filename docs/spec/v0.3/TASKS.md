@@ -38,6 +38,8 @@
      - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブが `push` / `pull_request` で `ruff check .` / `black --check .` を実行しているため、監視対象へ明記して齟齬を防止。
    - [x] 開発運用監視に frontend typecheck を追記: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションへ `npm run typecheck` を追加し、CI の pre-merge チェックと整合させる。
      - 完了理由: `.github/workflows/ci.yml` の `frontend-verify` 系ジョブで `npm run typecheck` を実行しており、監視項目への追記でドキュメントと実運用の差分を解消した。
+   - [x] 開発運用監視の typecheck 手順を `cd frontend && npm run typecheck` へ更新。
+     - 完了理由: ルート直下からの `npm run typecheck` 実行では frontend パッケージが参照できないため、監視手順をディレクトリ移動込みで明示した。
    - [x] データスキーマのカテゴリフォールバック説明を `market_scope_categories` と `_resolve_categories` の動的生成方針へ更新。
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` で `market_scope_categories` 優先と `_resolve_categories` によるスコープ別カテゴリ補完を記述した。
    - [x] カテゴリ再構築仕様を `_resolve_categories` の `market_prices` / `crops` JOIN ロジックへ合わせて追記。
