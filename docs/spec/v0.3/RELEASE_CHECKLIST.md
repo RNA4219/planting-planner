@@ -15,16 +15,16 @@
 ## フレーク率レポート
 - [ ] CI ダッシュボードから `frontend e2e (playwright)` のフレーク率を更新した。
   - 添付物: `reports/ci/playwright-e2e-metrics.json`（CI アーティファクト `playwright-e2e-metrics.json` を保存する）
-  - GitHub Actions から取得する場合:
-    1. `ci.yml` ワークフローの対象ランから `frontend e2e (playwright)` ジョブを開く。
-    2. 実行詳細の `Artifacts` から `playwright-e2e-metrics.json` をダウンロードする。
-    3. `mkdir -p reports/ci` を実行して保存先を用意し、`reports/ci/playwright-e2e-metrics.json` として保存する。
-  - CLI でメトリクスを収集する場合:
-    ```bash
-    mkdir -p reports/ci
-    python -m app.ci.playwright_metrics --owner R-N-A --repo planting-planner --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json
-    ```
-  - 備考: GitHub API はワークフローファイル名のみを受け付けるため `ci.yml` を指定する（フルパスを渡すと 404 エラーになる既知事象を 2025-10-14 に解消済み）。
+  - 取得手順:
+    - `mkdir -p reports/ci` を実行して保存先を用意する。
+    - GitHub Actions から取得する場合:
+      1. `ci.yml` ワークフローの対象ランから `frontend e2e (playwright)` ジョブを開く。
+      2. 実行詳細の `Artifacts` から `playwright-e2e-metrics.json` をダウンロードし、`reports/ci/playwright-e2e-metrics.json` として保存する。
+    - CLI でメトリクスを収集する場合:
+      ```bash
+      python -m app.ci.playwright_metrics --owner R-N-A --repo planting-planner --workflow-file ci.yml --job-name "frontend e2e (playwright)" --output reports/ci/playwright-e2e-metrics.json
+      ```
+    - 備考: GitHub API はワークフローファイル名のみを受け付けるため `ci.yml` を指定する（フルパスを渡すと 404 エラーになる既知事象を 2025-10-14 に解消済み）。
 - [ ] Playwright 実行結果 HTML をレビューし、主要シナリオのスクリーンショットを確認した。
   - 添付物: `frontend/playwright-report/index.html`（CI アーティファクト `playwright-report` の HTML レポートを保存する）
   - GitHub Actions から取得する場合:
