@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FavStar } from './FavStar'
 import type { RecommendationRow } from '../hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from '../types'
-import { fetchMarkets } from '../lib/api'
+import { fetchMarkets } from '../lib/marketMetadata'
 
 const REGION_LABEL: Record<Region, string> = {
   cold: '寒冷地',

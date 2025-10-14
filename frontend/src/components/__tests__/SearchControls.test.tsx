@@ -8,7 +8,7 @@ import { MARKET_SCOPE_OPTIONS, toMarketScopeOption, type MarketScopeDefinition }
 const { fetchMarketsMock } = vi.hoisted(() => ({
   fetchMarketsMock: vi.fn<() => Promise<{ markets: ReturnType<typeof toMarketScopeOption>[]; generated_at: string }>>(),
 }))
-vi.mock('../../lib/api', () => ({ fetchMarkets: fetchMarketsMock }))
+vi.mock('../../lib/marketMetadata', () => ({ fetchMarkets: fetchMarketsMock }))
 const createProps = () => ({
   queryWeek: '2024-W01',
   currentWeek: '2024-W20',

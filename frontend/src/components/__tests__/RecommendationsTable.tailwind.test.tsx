@@ -2,20 +2,22 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactElement } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RecommendationsTable } from '../RecommendationsTable'
 import type { RecommendationRow } from '../../hooks/recommendations/controller'
 import type { MarketScopeOption } from '../../constants/marketScopes'
 
-const { fetchMarketsMock } = vi.hoisted(() => ({
-  fetchMarketsMock: vi.fn<() => Promise<{ markets: readonly MarketScopeOption[]; generated_at: string }>>(),
-}))
-
-vi.mock('../../lib/api', () => ({ fetchMarkets: fetchMarketsMock }))
-
-const renderWithQueryClient = (ui: ReactElement) => {
+const renderWithQueryClient = (
+  ui: ReactElement,
+  options?: { setup?: (client: QueryClient) => void },
+) => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  queryClient.setQueryData(['markets'], {
+    markets: [],
+    generated_at: '1970-01-01T00:00:00Z',
+  })
+  options?.setup?.(queryClient)
   return {
     ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
     queryClient,
@@ -23,11 +25,6 @@ const renderWithQueryClient = (ui: ReactElement) => {
 }
 
 describe('RecommendationsTable (tailwind layout)', () => {
-  beforeEach(() => {
-    fetchMarketsMock.mockReset()
-    fetchMarketsMock.mockResolvedValue({ markets: [], generated_at: '2024-05-01T00:00:00Z' })
-  })
-
   afterEach(() => {
     cleanup()
   })
@@ -157,8 +154,6 @@ describe('RecommendationsTable (tailwind layout)', () => {
       },
     ]
 
-    fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
-
     const { queryClient } = renderWithQueryClient(
       <RecommendationsTable
         region="temperate"
@@ -178,6 +173,14 @@ describe('RecommendationsTable (tailwind layout)', () => {
         isFavorite={() => false}
         marketScope="city:osaka"
       />,
+      {
+        setup: (client) => {
+          client.setQueryData(['markets'], {
+            markets,
+            generated_at: '2024-05-01T00:00:00Z',
+          })
+        },
+      },
     )
 
     await screen.findByText('カテゴリ: 葉菜類（大阪）')

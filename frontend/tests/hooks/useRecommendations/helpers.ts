@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
 
 import type { CropCategory, MarketScope, Region } from '../../../src/types'
+import * as apiModule from '../../../src/lib/api'
 import type { RecommendResponseWithFallback } from '../../../src/lib/api'
 
 type FetchRecommendationsMock = (
@@ -17,10 +18,10 @@ const fetchMocks = vi.hoisted(() => ({
 export const fetchCropsMock = fetchMocks.fetchCropsMock
 export const fetchRecommendationsMock = fetchMocks.fetchRecommendationsMock
 
-vi.mock('../../../src/lib/api', () => ({
-  fetchCrops: fetchCropsMock,
-  fetchRecommendations: fetchRecommendationsMock,
-}))
+vi.spyOn(apiModule, 'fetchCrops').mockImplementation(fetchCropsMock)
+vi
+  .spyOn(apiModule, 'fetchRecommendations')
+  .mockImplementation((region, week, options) => fetchRecommendationsMock(region, week, options))
 
 export const createDeferred = <T>() => {
   let resolve!: (value: T | PromiseLike<T>) => void
