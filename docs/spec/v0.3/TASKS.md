@@ -28,7 +28,8 @@
    - [x] CI に `npm run test:e2e` と Lighthouse スモークを追加。
      - 完了理由: `.github/workflows/ci.yml` の `frontend-e2e` ジョブが `npm run test:e2e` を実行し、`frontend-lighthouse` ジョブが Lighthouse スモーク (`lhci autorun`) を走らせている。
 6. ドキュメント:
-   - [ ] アーキテクチャ品質記述を `frontend e2e (playwright)` ジョブ表記と `--job-name` 必須運用へ揃える。レビュー完了後にチェックを入れる。
+   - [x] アーキテクチャ品質記述を `frontend e2e (playwright)` ジョブ表記と `--job-name` 必須運用へ揃える。レビュー完了後にチェックを入れる。
+     - 完了理由: `docs/spec/v0.3/ARCHITECTURE.md` の品質項目で `frontend e2e (playwright)` ジョブ表記とメトリクス CLI の `--job-name` 指定必須を明示済み。
    - [x] アーキテクチャ概要の品質・テーマ項目を現行 CI / Playwright モック方針と Tailwind 移行状況に更新。
    - [x] ETL 仕様のバリデーション項目を現行の独自検証と全国平均フォールバック方針へ更新。
      - 完了理由: `docs/spec/v0.3/ETL_SPEC.md` で `validate_market_prices` による scope/価格レンジ検証とフォールバック挙動を明記した。
