@@ -28,8 +28,8 @@
    - [x] テスト計画の E2E 記述を CI の push/pull_request トリガーに合わせて更新し、nightly 記述を削除。
      - 完了理由: `docs/spec/v0.3/TESTING.md` の E2E セクションを push/pull_request 実行前提の内容へ改訂済み。
    - [x] PRD CI/スタイル記述更新: `docs/spec/v0.3/PRD.md` の品質保証とアーキテクチャ指針を現行 CI ジョブと Tailwind/トークン運用へ揃えた。
-   - [x] 型仕様のストア記述を現行 Zustand 実装へ更新: `docs/spec/v0.3/TYPES.md` から Redux 記述を削除し、Zustand ストア（`frontend/src/hooks/recommendations/store.ts`）を参照させる。
-     - 完了理由: `docs/spec/v0.3/TYPES.md` で Redux 言及を除去し、Zustand ストアに `selectedMarket` / `selectedCategory` を保持する現行仕様を明記した。
+   - [x] 型仕様のストア記述を現行 Zustand 実装へ更新: `docs/spec/v0.3/TYPES.md` から Redux 記述を削除し、`frontend/src/hooks/recommendations/store.ts` の Zustand ストアで `selectedMarket` / `selectedCategory` を保持する方針を明示。
+     - 完了理由: `docs/spec/v0.3/TYPES.md` に Redux 非採用と Zustand ストアの状態キー（`selectedMarket` / `selectedCategory`）を記載し、参照元として `frontend/src/hooks/recommendations/store.ts` を明記した。
    - [x] データスキーマのテーマトークン共有記述を `data/theme_tokens.json` と Tailwind 参照方式に合わせて修正。
      - 完了理由: `docs/spec/v0.3/DATA_SCHEMA.md` のカラートークン項目を `metadata_cache` 更新と静的資産共有に沿って書き換えた。
    - [x] データソース記述のカラートークン項目を `data/theme_tokens.json` 共有運用へ更新。
