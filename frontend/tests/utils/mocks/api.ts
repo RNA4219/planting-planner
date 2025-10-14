@@ -71,3 +71,37 @@ export const resetApiMocks = () => {
   fetchRefreshStatus.mockReset()
   fetchPrice.mockReset()
 }
+
+export const createRecommendResponse = (
+  overrides: Partial<RecommendResponseWithFallback> = {},
+): RecommendResponseWithFallback => ({
+  week: overrides.week ?? '2024-W30',
+  region: overrides.region ?? 'temperate',
+  items: overrides.items ?? [],
+  isMarketFallback: overrides.isMarketFallback ?? false,
+})
+
+export interface RecommendationCallSnapshot {
+  readonly region: Region
+  readonly week: string | undefined
+  readonly marketScope: MarketScope
+  readonly category: CropCategory
+}
+
+export const getRecommendationCallSnapshots = (): RecommendationCallSnapshot[] =>
+  fetchRecommendations.mock.calls.map(([region, week, options]) => ({
+    region,
+    week,
+    marketScope: options.marketScope,
+    category: options.category,
+  }))
+
+export const queueRecommendationResponses = (
+  ...responses: ReadonlyArray<Partial<RecommendResponseWithFallback>>
+) => {
+  responses.forEach((response) => {
+    fetchRecommendations.mockImplementationOnce(async () =>
+      createRecommendResponse(response),
+    )
+  })
+}
