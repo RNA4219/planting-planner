@@ -2,12 +2,12 @@ import type { KeyboardEvent } from 'react'
 
 import type { CropCategory } from '../types'
 
-interface CategoryTabDefinition {
+export interface CategoryTabDefinition {
   key: CropCategory
   label: string
 }
 
-const CATEGORY_TABS = [
+export const DEFAULT_CATEGORY_TABS = [
   { key: 'leaf', label: '葉菜' },
   { key: 'root', label: '根菜' },
   { key: 'flower', label: '花き' },
@@ -15,7 +15,9 @@ const CATEGORY_TABS = [
 
 interface CategoryTabsProps {
   category: CropCategory
+  categories?: readonly CategoryTabDefinition[]
   onChange: (next: CropCategory) => void
+  controlsId?: string
 }
 
 const wrapIndex = (index: number, length: number) => {
@@ -28,8 +30,21 @@ const wrapIndex = (index: number, length: number) => {
 const TAB_CLASS =
   'rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white'
 
-export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
-  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+export const CategoryTabs = ({
+  category,
+  categories = DEFAULT_CATEGORY_TABS,
+  onChange,
+  controlsId,
+}: CategoryTabsProps) => {
+  if (!categories.length) {
+    return null
+  }
+
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+    tabs: readonly CategoryTabDefinition[],
+  ) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
       return
     }
@@ -37,16 +52,16 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
     event.preventDefault()
 
     const delta = event.key === 'ArrowRight' ? 1 : -1
-    const nextIndex = wrapIndex(currentIndex + delta, CATEGORY_TABS.length)
-    const nextTab = CATEGORY_TABS[nextIndex]
+    const nextIndex = wrapIndex(currentIndex + delta, tabs.length)
+    const nextTab = tabs[nextIndex]
 
     if (nextTab && nextTab.key !== category) {
       onChange(nextTab.key)
     }
 
     const tablist = event.currentTarget.closest('[role="tablist"]')
-    const tabs = tablist?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    tabs?.[nextIndex]?.focus()
+    const tabElements = tablist?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    tabElements?.[nextIndex]?.focus()
   }
 
   return (
@@ -54,8 +69,9 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
       className="flex w-full flex-col items-stretch gap-1 rounded-full bg-market-neutral-container p-1 sm:inline-flex sm:flex-row sm:items-center"
       role="tablist"
       aria-label="カテゴリ"
+      aria-controls={controlsId}
     >
-      {CATEGORY_TABS.map((tab: CategoryTabDefinition, index: number) => {
+      {categories.map((tab: CategoryTabDefinition, index: number) => {
         const isActive = tab.key === category
         return (
           <button
@@ -71,7 +87,7 @@ export const CategoryTabs = ({ category, onChange }: CategoryTabsProps) => {
               }
             }}
             onKeyDown={(event) => {
-              handleKeyDown(event, index)
+              handleKeyDown(event, index, categories)
             }}
           >
             {tab.label}
