@@ -6,10 +6,11 @@ import importlib.util
 import sqlite3
 import sys
 from collections.abc import Callable, Iterable, Mapping
+from importlib.abc import Loader
 from importlib.machinery import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 _T = TypeVar("_T")
 
@@ -37,7 +38,10 @@ def _load_submodule(name: str) -> ModuleType:
 
     module = importlib.util.module_from_spec(spec)
     sys.modules[full_name] = module
-    spec.loader.exec_module(module)  # type: ignore[union-attr]
+    loader = spec.loader
+    if not isinstance(loader, Loader):
+        raise ImportError(f"Invalid loader for submodule {full_name}")
+    loader.exec_module(module)
     setattr(sys.modules[__name__], name, module)
     return module
 
@@ -51,7 +55,7 @@ payload = _load_submodule("payload")
 def _resolve_override(module_name: str, attr: str, default: _T) -> _T:
     override_module = sys.modules.get(module_name)
     if override_module is not None and hasattr(override_module, attr):
-        return getattr(override_module, attr)
+        return cast(_T, getattr(override_module, attr))
     return default
 
 
