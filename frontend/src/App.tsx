@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
@@ -94,7 +94,6 @@ export const AppContent = () => {
     category,
     setMarketScope,
     selectedMarket,
-    selectedCategory,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -191,6 +190,8 @@ export const AppContent = () => {
     [searchKeyword],
   )
 
+  const recommendationsTabpanelId = useId()
+
   const filteredRows = useMemo(() => {
     if (!normalizedSearchKeyword) {
       return sortedRows
@@ -205,12 +206,6 @@ export const AppContent = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
-  const activeCategoryTabId = useMemo(
-    () => `category-tab-${selectedCategory}`,
-    [selectedCategory],
-  )
-
-  const recommendationsTabpanelId = 'recommendations-tabpanel'
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
   }, [category, marketScope, region, setSelectedCropId])
@@ -331,7 +326,7 @@ export const AppContent = () => {
               />
             )}
             tabpanelId={recommendationsTabpanelId}
-            labelledById={activeCategoryTabId}
+            labelledById={`category-tab-${category}`}
           />
           <PriceChartSection
             selectedCropId={selectedCropId}
