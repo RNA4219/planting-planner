@@ -29,9 +29,7 @@ def test_write_growth_days_coerces_numeric_strings(growth_conn: sqlite3.Connecti
         [{"crop_id": "1", "region": "jp", "days": "30"}],
     )
 
-    row = growth_conn.execute(
-        "SELECT crop_id, region, days FROM growth_days"
-    ).fetchone()
+    row = growth_conn.execute("SELECT crop_id, region, days FROM growth_days").fetchone()
 
     assert row == (1, "jp", 30)
 
