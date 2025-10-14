@@ -17,7 +17,10 @@ interface CategoryTabsProps {
   category: CropCategory
   categories?: readonly CategoryTabDefinition[]
   onChange: (next: CropCategory) => void
+  tabpanelId?: string
 }
+
+const resolveTabId = (key: CropCategory) => `category-tab-${key}`
 
 const wrapIndex = (index: number, length: number) => {
   if (length === 0) {
@@ -70,11 +73,14 @@ export const CategoryTabs = ({
     >
       {categories.map((tab: CategoryTabDefinition, index: number) => {
         const isActive = tab.key === category
+        const tabId = resolveTabId(tab.key)
         return (
           <button
             key={tab.key}
             type="button"
             role="tab"
+            id={tabId}
+            aria-controls={controlsId}
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             className={`${TAB_CLASS} w-full sm:w-auto`}
