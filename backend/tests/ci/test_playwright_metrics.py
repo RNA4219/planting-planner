@@ -22,7 +22,7 @@ def transport() -> httpx.MockTransport:
         101: {
             "jobs": [
                 {
-                    "name": "frontend-e2e",
+                    "name": "frontend e2e (playwright)",
                     "run_attempt": 1,
                     "status": "completed",
                     "conclusion": "success",
@@ -32,7 +32,7 @@ def transport() -> httpx.MockTransport:
         102: {
             "jobs": [
                 {
-                    "name": "frontend-e2e",
+                    "name": "frontend e2e (playwright)",
                     "run_attempt": 1,
                     "status": "completed",
                     "conclusion": "failure",
@@ -42,7 +42,7 @@ def transport() -> httpx.MockTransport:
         103: {
             "jobs": [
                 {
-                    "name": "frontend-e2e",
+                    "name": "frontend e2e (playwright)",
                     "run_attempt": 2,
                     "status": "completed",
                     "conclusion": "success",
