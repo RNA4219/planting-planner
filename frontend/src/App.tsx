@@ -2,26 +2,19 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-import {
-  CategoryTabs,
-  DEFAULT_CATEGORY_TABS,
-  type CategoryTabDefinition,
-} from './components/CategoryTabs'
+import { AppScreen } from './app/AppScreen'
+import { useAppNotifications } from './app/useAppNotifications'
+import { useCategoryTabs } from './app/useCategoryTabs'
+import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
-import { ToastStack, type ToastStackItem } from './components/ToastStack'
+import { ToastStack } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { useRecommendations } from './hooks/recommendations/controller'
-import { useRefreshStatusController } from './hooks/refresh/controller'
 import type { CropCategory, MarketScope, Region } from './types'
-import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
-import {
-  MARKET_SCOPE_FALLBACK_DEFINITIONS,
-  type MarketScopeOption,
-} from './constants/marketScopes'
-import { isCropCategory } from './utils/recommendations'
+import { APP_TEXT } from './constants/messages'
 
 const createQueryClient = () =>
   new QueryClient({
@@ -34,48 +27,6 @@ const createQueryClient = () =>
       },
     },
   })
-
-type CategoryTabsMap = Map<MarketScope, readonly CategoryTabDefinition[]>
-
-const areCategoryTabsEqual = (
-  a: readonly CategoryTabDefinition[],
-  b: readonly CategoryTabDefinition[],
-) => a.length === b.length && a.every((tab, index) => {
-  const other = b[index]
-  return other !== undefined && other.key === tab.key && other.label === tab.label
-})
-
-const buildCategoryTabsFromMetadata = (
-  categories: MarketScopeOption['categories'],
-): readonly CategoryTabDefinition[] => {
-  if (!categories) {
-    return DEFAULT_CATEGORY_TABS
-  }
-  const mapped = categories
-    .map((category) => {
-      if (!isCropCategory(category.category)) {
-        return null
-      }
-      return { key: category.category, label: category.displayName }
-    })
-    .filter((category): category is CategoryTabDefinition => category !== null)
-  if (mapped.length > 0) {
-    return mapped
-  }
-  return DEFAULT_CATEGORY_TABS
-}
-
-const createInitialCategoryTabsMap = (): CategoryTabsMap => {
-  const map: CategoryTabsMap = new Map()
-  MARKET_SCOPE_FALLBACK_DEFINITIONS.forEach((definition) => {
-    const categories =
-      definition.categories && definition.categories.length > 0
-        ? definition.categories
-        : undefined
-    map.set(definition.scope, buildCategoryTabsFromMetadata(categories))
-  })
-  return map
-}
 
 export const AppContent = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
@@ -109,48 +60,10 @@ export const AppContent = () => {
     initialMarketScope: initialMarketScopeRef.current,
     initialCategory: initialCategoryRef.current,
   })
-  const [categoryTabsByScope, setCategoryTabsByScope] = useState<CategoryTabsMap>(
-    createInitialCategoryTabsMap,
-  )
-  const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController()
-  const lastSuccessToastIdRef = useRef<string | null>(null)
-  const marketFallbackToastSeqRef = useRef(0)
-  const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
-  const resolveCategoriesForScope = useCallback(
-    (scope: MarketScope): readonly CategoryTabDefinition[] => {
-      return categoryTabsByScope.get(scope) ?? DEFAULT_CATEGORY_TABS
-    },
-    [categoryTabsByScope],
-  )
-
-  const ensureValidCategory = useCallback(
-    (scope: MarketScope, currentCategory: CropCategory): CropCategory => {
-      const tabs = resolveCategoriesForScope(scope)
-      if (!tabs.length) {
-        return currentCategory
-      }
-      return tabs.some((tab) => tab.key === currentCategory)
-        ? currentCategory
-        : tabs[0]!.key
-    },
-    [resolveCategoriesForScope],
-  )
-
-  const handleMarketsUpdate = useCallback((markets: readonly MarketScopeOption[]) => {
-    setCategoryTabsByScope((prev) => {
-      let updated = false
-      const next = new Map(prev)
-      markets.forEach((market) => {
-        const tabs = buildCategoryTabsFromMetadata(market.categories)
-        const current = next.get(market.scope)
-        if (!current || !areCategoryTabsEqual(current, tabs)) {
-          next.set(market.scope, tabs)
-          updated = true
-        }
-      })
-      return updated ? next : prev
-    })
-  }, [])
+  const { resolveCategoriesForScope, ensureValidCategory, handleMarketsUpdate } =
+    useCategoryTabs()
+  const { isRefreshing, startRefresh, combinedToasts, handleToastDismiss, fallbackNotice } =
+    useAppNotifications({ reloadCurrentWeek, isMarketFallback })
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -222,124 +135,53 @@ export const AppContent = () => {
     }
   }, [category, ensureValidCategory, marketScope, setCategory])
 
-  useEffect(() => {
-    const latestSuccess = [...pendingToasts].reverse().find((toast) => toast.variant === 'success')
-    if (!latestSuccess) {
-      return
-    }
-    if (lastSuccessToastIdRef.current === latestSuccess.id) {
-      return
-    }
-    lastSuccessToastIdRef.current = latestSuccess.id
-    void reloadCurrentWeek()
-  }, [pendingToasts, reloadCurrentWeek])
-
-  useEffect(() => {
-    if (!isMarketFallback) {
-      if (marketFallbackToasts.length > 0) {
-        setMarketFallbackToasts([])
-      }
-      return
-    }
-    const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
-    marketFallbackToastSeqRef.current += 1
-    setMarketFallbackToasts((prev) => [
-      ...prev,
-      {
-        id,
-        variant: 'warning',
-        message: TOAST_MESSAGES.recommendationFallbackWarning,
-        detail: null,
-      },
-    ])
-  }, [isMarketFallback, marketFallbackToasts.length])
-
-  const handleToastDismiss = useCallback(
-    (id: string) => {
-      let removed = false
-      setMarketFallbackToasts((prev) => {
-        if (!prev.some((toast) => toast.id === id)) {
-          return prev
-        }
-        removed = true
-        return prev.filter((toast) => toast.id !== id)
-      })
-      if (!removed) {
-        dismissToast(id)
-      }
-    },
-    [dismissToast],
-  )
-
-  const combinedToasts = useMemo(
-    () => [
-      ...pendingToasts,
-      ...(isMarketFallback ? [] : marketFallbackToasts),
-    ],
-    [isMarketFallback, marketFallbackToasts, pendingToasts],
-  )
-
   return (
-    <div className="min-h-screen bg-market-neutral-container">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
-        <header className="space-y-6 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-lg backdrop-blur">
-          <h1 className="text-3xl font-bold tracking-tight text-market-neutral-strong sm:text-4xl">
-            {APP_TEXT.title}
-          </h1>
-          <SearchControls
-            queryWeek={queryWeek}
-            currentWeek={currentWeek}
-            onWeekChange={handleWeekChange}
-            onRegionChange={handleRegionChange}
-            marketScope={marketScope}
-            onMarketScopeChange={handleMarketScopeChange}
-            searchKeyword={searchKeyword}
-            onSearchChange={handleSearchChange}
-            onSubmit={handleSubmit}
-            onRefresh={startRefresh}
-            refreshing={isRefreshing}
-            onMarketsUpdate={handleMarketsUpdate}
-          />
-        </header>
-        <main className="flex flex-1 flex-col gap-8 pb-12">
-          <ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />
-          {isMarketFallback ? (
-            <div
-              data-testid="market-fallback-notice"
-              role="status"
-              aria-live="polite"
-              className="flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm"
-            >
-              {TOAST_MESSAGES.recommendationFallbackWarning}
-            </div>
-          ) : null}
-          <RecommendationsTable
-            region={region}
-            displayWeek={displayWeek}
-            rows={filteredRows}
-            selectedCropId={selectedCropId}
-            onSelect={setSelectedCropId}
-            onToggleFavorite={toggleFavorite}
-            isFavorite={isFavorite}
-            marketScope={selectedMarket}
-            headerSlot={(
-              <CategoryTabs
-                category={category}
-                categories={resolveCategoriesForScope(marketScope)}
-                onChange={setCategory}
-                controlsId={recommendationsTabpanelId}
-              />
-            )}
-            tabpanelId={recommendationsTabpanelId}
-            labelledById={activeCategoryTabId}
-          />
-          <PriceChartSection
-            selectedCropId={selectedCropId}
-            marketScope={selectedMarket}
-          />
-        </main>
-      </div>
-    </div>
+    <AppScreen
+      title={APP_TEXT.title}
+      searchControls={
+        <SearchControls
+          queryWeek={queryWeek}
+          currentWeek={currentWeek}
+          onWeekChange={handleWeekChange}
+          onRegionChange={handleRegionChange}
+          marketScope={marketScope}
+          onMarketScopeChange={handleMarketScopeChange}
+          searchKeyword={searchKeyword}
+          onSearchChange={handleSearchChange}
+          onSubmit={handleSubmit}
+          onRefresh={startRefresh}
+          refreshing={isRefreshing}
+          onMarketsUpdate={handleMarketsUpdate}
+        />
+      }
+      toastStack={<ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />}
+      fallbackNotice={fallbackNotice}
+      recommendationsTable={
+        <RecommendationsTable
+          region={region}
+          displayWeek={displayWeek}
+          rows={filteredRows}
+          selectedCropId={selectedCropId}
+          onSelect={setSelectedCropId}
+          onToggleFavorite={toggleFavorite}
+          isFavorite={isFavorite}
+          marketScope={selectedMarket}
+          headerSlot={
+            <CategoryTabs
+              category={category}
+              categories={resolveCategoriesForScope(marketScope)}
+              onChange={setCategory}
+              controlsId={recommendationsTabpanelId}
+            />
+          }
+          tabpanelId={recommendationsTabpanelId}
+          labelledById={activeCategoryTabId}
+        />
+      }
+      priceChartSection={
+        <PriceChartSection selectedCropId={selectedCropId} marketScope={selectedMarket} />
+      }
+    />
   )
 }
 
