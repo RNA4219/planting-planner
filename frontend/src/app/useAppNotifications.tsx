@@ -40,22 +40,25 @@ export const useAppNotifications = ({
 
   useEffect(() => {
     if (!isMarketFallback) {
-      if (marketFallbackToasts.length > 0) {
-        setMarketFallbackToasts([])
-      }
+      marketFallbackToastSeqRef.current = 0
+      setMarketFallbackToasts((prev) => (prev.length > 0 ? [] : prev))
       return
     }
-    const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
-    marketFallbackToastSeqRef.current += 1
-    setMarketFallbackToasts((prev) => [
-      ...prev,
-      {
-        id,
-        variant: 'warning',
-        message: TOAST_MESSAGES.recommendationFallbackWarning,
-        detail: null,
-      },
-    ])
+    setMarketFallbackToasts((prev) => {
+      if (prev.length > 0) {
+        return prev
+      }
+      const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
+      marketFallbackToastSeqRef.current += 1
+      return [
+        {
+          id,
+          variant: 'warning',
+          message: TOAST_MESSAGES.recommendationFallbackWarning,
+          detail: null,
+        },
+      ]
+    })
   }, [isMarketFallback, marketFallbackToasts.length])
 
   const handleToastDismiss = useCallback(
@@ -76,11 +79,8 @@ export const useAppNotifications = ({
   )
 
   const combinedToasts = useMemo(
-    () => [
-      ...pendingToasts,
-      ...(isMarketFallback ? [] : marketFallbackToasts),
-    ],
-    [isMarketFallback, marketFallbackToasts, pendingToasts],
+    () => [...pendingToasts, ...marketFallbackToasts],
+    [marketFallbackToasts, pendingToasts],
   )
 
   const fallbackNotice = useMemo(() => {
