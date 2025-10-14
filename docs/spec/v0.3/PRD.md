@@ -43,7 +43,7 @@ v0.3 は既存の栽培計画支援を拡張し、市場視点の切替とカテ
 - API リクエストに `marketScope` パラメータを追加（`national` デフォルト、都市は `city:<city_id>`）。既存レスポンス JSON を変更しない。
 - カテゴリタブは `CropCategory` 列挙を流用。store に `selectedCategory` を追加し、既存 selectors を拡張。
 - Tailwind 設定は `frontend/tailwind.config.ts` を更新し、コンポーネントは Tailwind ユーティリティとテーマトークン（`theme.colors.market.*` など）へ全面移行する。
-- Playwright セットアップは `frontend/tests/e2e` に配置し、`npm run test:e2e` を追加。CI は並列数 1 で実行。
+- Playwright セットアップは `frontend/tests/e2e` に配置し、`npm run test:e2e` を追加。CI は Playwright のデフォルトワーカー数で実行し、固定 1 にはしない。固定並列数へ戻す場合は flake 率や実行時間の悪化を評価し、必要最小限のシナリオ抽出後に適用する。
 
 ## テスト計画
 
