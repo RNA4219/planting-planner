@@ -8,14 +8,9 @@ import {
   createDeferred,
   fetchCropsMock,
   fetchRecommendationsMock,
-  renderHookWithQueryClient,
   setupFetchQueryMock,
-} from '../helpers'
-
-vi.mock('../../../src/lib/api', () => ({
-  fetchCrops: fetchCropsMock,
-  fetchRecommendations: fetchRecommendationsMock,
-}))
+} from './helpers'
+import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
 const fetchQueryMock = vi.hoisted(() => vi.fn())
 
