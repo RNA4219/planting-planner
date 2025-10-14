@@ -14,5 +14,7 @@
 - `App` からタブパネルIDを共有して、タブとテーブルが同一IDを参照するよう統合。
 
 ## テスト手順
-1. `pnpm --filter planting-planner-frontend test`
-2. `tests/accessibility/categoryTabs.a11y.test.tsx` が成功し、アクティブタブとタブパネルのARIA属性が期待通りであることを確認する。
+1. `cd frontend`
+2. `npm run test -- --run tests/accessibility/categoryTabs.a11y.test.tsx`
+   - Vitest の単体ファイルは `npm run test -- --run <テストファイルパス>` で指定できる。
+3. `tests/accessibility/categoryTabs.a11y.test.tsx` が成功し、アクティブタブとタブパネルのARIA属性が期待通りであることを確認する。
