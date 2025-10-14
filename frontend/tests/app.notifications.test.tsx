@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { TOAST_MESSAGES } from '../src/constants/messages'
 import { useAppNotifications } from '../src/app/useAppNotifications'
+import type { ToastStackItem } from '../src/components/ToastStack'
 import { useRefreshStatusController } from '../src/hooks/refresh/controller'
 
 vi.mock('../src/hooks/refresh/controller', () => ({
@@ -18,12 +19,16 @@ describe('useAppNotifications', () => {
 
   test('マーケットフォールバック時にトーストを1件だけ表示し続ける', async () => {
     const reloadCurrentWeek = vi.fn()
-    useRefreshStatusControllerMock.mockReturnValue({
+    const startRefresh = vi.fn()
+    const dismissToast = vi.fn()
+    const pendingToastsRef: { current: ToastStackItem[] } = { current: [] }
+
+    useRefreshStatusControllerMock.mockImplementation(() => ({
       isRefreshing: false,
-      startRefresh: vi.fn(),
-      pendingToasts: [],
-      dismissToast: vi.fn(),
-    })
+      startRefresh,
+      pendingToasts: pendingToastsRef.current,
+      dismissToast,
+    }))
 
     const { result, rerender } = renderHook(() =>
       useAppNotifications({ reloadCurrentWeek, isMarketFallback: true }),
@@ -38,7 +43,7 @@ describe('useAppNotifications', () => {
     expect(initialToast.variant).toBe('warning')
     expect(initialToast.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
 
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 2; i += 1) {
       await act(async () => {
         rerender()
       })
@@ -47,5 +52,30 @@ describe('useAppNotifications', () => {
       expect(currentToast.id).toBe(initialToast.id)
       expect(currentToast.variant).toBe('warning')
     }
+
+    const successToast: ToastStackItem = {
+      id: 'success-toast',
+      variant: 'success',
+      message: 'ok',
+      detail: null,
+    }
+    pendingToastsRef.current = [successToast]
+
+    await act(async () => {
+      rerender()
+    })
+
+    expect(result.current.combinedToasts).toHaveLength(2)
+    const [firstToast, secondToast] = result.current.combinedToasts
+    expect(firstToast).toBe(successToast)
+    expect(secondToast.id).toBe(initialToast.id)
+    expect(secondToast.variant).toBe('warning')
+
+    await act(async () => {
+      rerender()
+    })
+    expect(result.current.combinedToasts).toHaveLength(2)
+    const [, latestFallback] = result.current.combinedToasts
+    expect(latestFallback.id).toBe(initialToast.id)
   })
 })

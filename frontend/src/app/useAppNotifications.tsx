@@ -40,6 +40,7 @@ export const useAppNotifications = ({
 
   useEffect(() => {
     if (!isMarketFallback) {
+      marketFallbackToastSeqRef.current = 0
       setMarketFallbackToasts((prev) => (prev.length > 0 ? [] : prev))
       return
     }
