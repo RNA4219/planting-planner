@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
@@ -115,8 +115,6 @@ export const AppContent = () => {
   const lastSuccessToastIdRef = useRef<string | null>(null)
   const marketFallbackToastSeqRef = useRef(0)
   const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
-  const recommendationsTabpanelId = useId()
-
   const resolveCategoriesForScope = useCallback(
     (scope: MarketScope): readonly CategoryTabDefinition[] => {
       return categoryTabsByScope.get(scope) ?? DEFAULT_CATEGORY_TABS
