@@ -145,7 +145,7 @@ def test_run_etl_populates_market_prices_and_cache(tmp_path: Path) -> None:
         assert national["categories"] == [
             {
                 "category": "leaf",
-                "display_name": "leaf",
+                "display_name": "葉菜類",
                 "priority": 100,
                 "source": "fallback",
             }
