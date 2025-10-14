@@ -198,7 +198,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     const tablist = await screen.findByRole('tablist', { name: 'カテゴリ' })
     const tabs = within(tablist).getAllByRole('tab')
     expect(tabs).toHaveLength(3)
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜', '根菜', '花き'])
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['葉菜類', '根菜類', '花き類'])
     expect(within(tablist).queryByRole('tab', { name: '果菜' })).not.toBeInTheDocument()
 
     const rootTabButton = tabs[1]!
