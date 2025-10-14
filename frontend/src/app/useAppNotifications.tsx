@@ -59,7 +59,7 @@ export const useAppNotifications = ({
         },
       ]
     })
-  }, [isMarketFallback])
+  }, [isMarketFallback, marketFallbackToasts.length])
 
   const handleToastDismiss = useCallback(
     (id: string) => {

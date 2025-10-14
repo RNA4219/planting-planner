@@ -77,5 +77,26 @@ describe('useAppNotifications', () => {
     expect(result.current.combinedToasts).toHaveLength(2)
     const [, latestFallback] = result.current.combinedToasts
     expect(latestFallback.id).toBe(initialToast.id)
+
+    await act(async () => {
+      result.current.handleToastDismiss(initialToast.id)
+    })
+
+    expect(result.current.combinedToasts).toHaveLength(2)
+    let [successAfterDismiss, restoredFallback] = result.current.combinedToasts
+    expect(successAfterDismiss).toBe(successToast)
+    expect(restoredFallback.id).not.toBe(initialToast.id)
+    expect(restoredFallback.variant).toBe('warning')
+    expect(restoredFallback.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
+
+    await act(async () => {
+      rerender()
+    })
+
+    expect(result.current.combinedToasts).toHaveLength(2)
+    ;[successAfterDismiss, restoredFallback] = result.current.combinedToasts
+    expect(successAfterDismiss).toBe(successToast)
+    expect(restoredFallback.variant).toBe('warning')
+    expect(restoredFallback.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
   })
 })
