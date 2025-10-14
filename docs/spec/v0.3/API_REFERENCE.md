@@ -1,9 +1,9 @@
 # API リファレンス — v0.3
 
 - `GET /api/recommend`: `marketScope`（`national` or `city:<id>`）と `category` クエリを追加。レスポンス形式は変更なし。スコープ未指定は全国平均。
-  - 市場データ欠損時は 200 で全国平均へフォールバックし、レスポンスヘッダーに `fallback: true` と `access-control-expose-headers: fallback` を付与する。通常応答では両ヘッダーを付与せず、クライアントは `fallback` ヘッダーが存在する場合のみフォールバック検知として扱い、UI の注意喚起（例: トースト表示）やローカルキャッシュの利用可否を判定する。
+  - 市場データ欠損時は 200 で全国平均へフォールバックし、レスポンスヘッダーに `fallback: true` と `access-control-expose-headers: fallback` を付与する。通常応答でも `access-control-expose-headers: fallback` を常時付与し、`fallback: true` ヘッダーが存在する場合のみフォールバック検知として扱う。クライアントはヘッダー差分で UI の注意喚起（例: トースト表示）やローカルキャッシュの利用可否を判定する。
 - `GET /api/crops`: `category` フィルタを受け取り、カテゴリタブからの一覧取得に利用。未指定は全件。
-- `GET /api/price`: `marketScope` を任意指定。都市データ欠損時は 200 で全国平均値と `fallback=true` を返すレスポンスヘッダーを追加。
+- `GET /api/price`: `marketScope` を任意指定。都市データ欠損時は 200 で全国平均値と `fallback: true` を返すレスポンスヘッダーを追加し、通常応答でも `access-control-expose-headers: fallback` を常時付与する。`fallback: true` ヘッダーはフォールバック時のみ付与され、クライアントはヘッダー差分でフォールバックを検知する。
 - `POST /api/refresh` / `GET /api/refresh/status`: 仕様は v0.2 と同じだが、成功後に `market_metadata` キャッシュの更新を確認するログを出力。
 - `GET /api/markets`
   - クエリパラメータなし。`Content-Type: application/json` を付与した `GET` リクエストを受け付ける（`frontend/src/lib/api.ts` が送出）。
