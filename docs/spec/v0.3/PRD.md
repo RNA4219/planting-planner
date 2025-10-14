@@ -16,7 +16,7 @@ v0.3 は既存の栽培計画支援を拡張し、市場視点の切替とカテ
 - バックエンド: 市場クエリ（national, city）を受け取り既存レスポンス構造を維持。都市別データは既存 ETL で取得済みの `market_prices` を都市キーで参照。市場メタデータ API として `GET /api/markets` を追加し、`market_metadata` キャッシュを JSON で公開。
 - フロントエンド: 市場切替トグルとカテゴリタブ UI を追加し、Tailwind コンポーネントに置換。状態管理は既存 store を拡張し、副作用を actions 内へ限定。
 - データ/ETL: 都市一覧メタデータのメンテと欠損時フォールバック（全国平均）。既存スキーマ変更なし。
-- 品質保証: GitHub Actions CI は `push` / `pull_request` トリガーで `frontend`・`frontend-e2e`・`backend-lint`・`backend-test`・`frontend-lighthouse` ジョブを並列実行し、型/静的解析・E2E・パフォーマンス検証を網羅する。
+- 品質保証: GitHub Actions CI は `push` / `pull_request` トリガーで `frontend`・`frontend e2e (playwright)`・`backend-lint`・`backend-test`・`frontend-lighthouse` ジョブを並列実行し、型/静的解析・E2E・パフォーマンス検証を網羅する（Playwright 実行ジョブであることを表示名で明示するための改称）。Playwright 成果の集計スクリプトでは `python backend/app/ci/playwright_metrics.py --job-name "frontend e2e (playwright)" ...` のように `--job-name` を指定して CI 記録と整合させる。
 
 ## 非スコープ
 
