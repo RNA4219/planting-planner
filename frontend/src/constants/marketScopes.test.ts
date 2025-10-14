@@ -55,11 +55,18 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
 
     for (const definition of MARKET_SCOPE_FALLBACK_DEFINITIONS) {
       expect(definition).toHaveProperty('categories')
-      expect(Array.isArray(definition.categories)).toBe(true)
-      expect(definition.categories).toHaveLength(3)
+      expect(definition.categories).toBeDefined()
+
+      const categories = definition.categories
+      if (categories === undefined) {
+        throw new Error('categories must be defined')
+      }
+
+      expect(Array.isArray(categories)).toBe(true)
+      expect(categories).toHaveLength(3)
 
       const categoriesById = new Map(
-        definition.categories.map((category) => [category.category, category]),
+        categories.map((category) => [category.category, category]),
       )
 
       expect(categoriesById.has('leaf')).toBe(true)
