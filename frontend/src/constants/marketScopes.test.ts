@@ -50,6 +50,25 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
     }
   })
 
+  it('フォールバック定義に標準カテゴリを含める', () => {
+    const requiredCategories = ['leaf', 'root', 'flower']
+
+    for (const definition of MARKET_SCOPE_FALLBACK_DEFINITIONS) {
+      expect(definition.categories).toBeDefined()
+      expect(definition.categories).toEqual(
+        expect.arrayContaining(
+          requiredCategories.map((category) =>
+            expect.objectContaining({
+              category,
+              displayName: expect.any(String),
+              priority: expect.any(Number),
+            }),
+          ),
+        ),
+      )
+    }
+  })
+
   it('JSON 定義とフォールバック定義が 1 対 1 で一致する', () => {
     const jsonDefinitions = (marketScopeDataset as MarketScopeJsonEntry[]).map(
       (entry) => ({
