@@ -13,8 +13,9 @@
   - 添付物: `reports/release/v0.3/known-issues.md`
 
 ## フレーク率レポート
-- [ ] CI ダッシュボードから `frontend-e2e` のフレーク率を更新した。
+- [ ] CI ダッシュボードから `frontend e2e (playwright)` のフレーク率を更新した。
   - 添付物: [flake メトリクス集計](../../reports/ci/frontend-e2e-flake-rate.md)
+  - CLI でメトリクスを収集する場合は `python -m app.ci.playwright_metrics --workflow-file ci.yml --job-name "frontend e2e (playwright)"` のように `--job-name` 引数を指定する。
 - [ ] Playwright 実行結果 HTML をレビューし、主要シナリオのスクリーンショットを確認した。
   - 添付物: [最新レポート](../../frontend/tests/e2e/report/index.html)
 - [ ] Playwright トレースを検証した。
