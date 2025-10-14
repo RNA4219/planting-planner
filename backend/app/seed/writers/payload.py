@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterable, Mapping
-from typing import Any, Callable
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any
 
-from . import crops as crops_module, growth as growth_module, markets as markets_module
+from . import crops as crops_module
+from . import growth as growth_module
+from . import markets as markets_module
 
 WriterFn = Callable[[sqlite3.Connection, Iterable[Mapping[str, Any]]], None]
 

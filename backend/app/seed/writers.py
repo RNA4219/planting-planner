@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import importlib.util
 import sqlite3
-from importlib.machinery import ModuleSpec
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+from importlib.machinery import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 _T = TypeVar("_T")
 
