@@ -111,6 +111,12 @@ export const AppContent = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
+  const recommendationsTabpanelId = 'recommendations-tabpanel'
+  const activeCategoryTabId = useMemo(
+    () => `category-tab-${category}`,
+    [category],
+  )
+
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
   }, [category, marketScope, region, setSelectedCropId])
@@ -208,7 +214,15 @@ export const AppContent = () => {
             onToggleFavorite={toggleFavorite}
             isFavorite={isFavorite}
             marketScope={selectedMarket}
-            headerSlot={<CategoryTabs category={category} onChange={setCategory} />}
+            headerSlot={
+              <CategoryTabs
+                category={category}
+                onChange={setCategory}
+                tabpanelId={recommendationsTabpanelId}
+              />
+            }
+            tabpanelId={recommendationsTabpanelId}
+            labelledById={activeCategoryTabId}
           />
           <PriceChartSection
             selectedCropId={selectedCropId}

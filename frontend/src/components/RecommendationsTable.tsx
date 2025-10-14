@@ -37,6 +37,8 @@ interface RecommendationsTableProps {
   marketScope: MarketScope
   headerSlot?: ReactNode
   isLoading?: boolean
+  tabpanelId?: string
+  labelledById?: string
 }
 
 export const RecommendationsTable = ({
@@ -50,8 +52,12 @@ export const RecommendationsTable = ({
   marketScope,
   headerSlot,
   isLoading = false,
+  tabpanelId,
+  labelledById,
 }: RecommendationsTableProps) => {
   const listLabel = `${REGION_LABEL[region]}向けの推奨一覧（基準週: ${displayWeek}）`
+  const resolvedTabpanelId = tabpanelId ?? 'recommendations-tabpanel'
+  const resolvedLabelledById = labelledById ?? undefined
 
   const handleInteractiveKeyDown = (
     event: KeyboardEvent<HTMLElement>,
@@ -70,7 +76,13 @@ export const RecommendationsTable = ({
   }
 
   return (
-    <section className="space-y-4" aria-label={listLabel}>
+    <section
+      id={resolvedTabpanelId}
+      role="tabpanel"
+      aria-labelledby={resolvedLabelledById}
+      className="space-y-4"
+      aria-label={listLabel}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
           <span>対象地域: {REGION_LABEL[region]}</span>
