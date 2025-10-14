@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -26,6 +27,11 @@ class MetricsRetrievalError(RuntimeError):
 _RETRIABLE_STATUS = {502, 503, 504}
 
 
+DEFAULT_JOB_NAME = "frontend e2e (playwright)"
+
+_PAREN_PATTERN = re.compile(r"\s*\([^)]*\)")
+
+
 def collect_playwright_metrics(
     *,
     owner: str,
@@ -35,7 +41,7 @@ def collect_playwright_metrics(
     client: httpx.Client | None = None,
     token: str | None = None,
     max_runs: int = 20,
-    job_name: str = "frontend-e2e",
+    job_name: str = DEFAULT_JOB_NAME,
 ) -> PlaywrightMetrics:
     """Fetch the recent job results for the workflow and persist flaky statistics.
 
@@ -58,6 +64,7 @@ def collect_playwright_metrics(
         success = 0
         failure = 0
         flaky = 0
+        allowed_job_keys = _build_allowed_job_keys(job_name)
         for run in workflow_runs:
             run_id = run.get("id")
             if not isinstance(run_id, int):
@@ -65,7 +72,10 @@ def collect_playwright_metrics(
             jobs_url = f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
             jobs_payload = _request_json(session, url=jobs_url, params={"per_page": 100})
             for job in jobs_payload.get("jobs", []):
-                if job.get("name") != job_name:
+                job_name_value = job.get("name")
+                if not isinstance(job_name_value, str):
+                    continue
+                if _canonical_job_key(job_name_value) not in allowed_job_keys:
                     continue
                 conclusion = job.get("conclusion")
                 if conclusion == "success":
@@ -130,7 +140,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--workflow-file",
         required=True,
-        help="Workflow file name that defines the frontend-e2e job",
+        help="Workflow file name that defines the Playwright E2E job",
     )
     parser.add_argument(
         "--output",
@@ -138,6 +148,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Destination path for the JSON report",
     )
     parser.add_argument("--max-runs", type=int, default=20, help="Maximum runs to inspect")
+    parser.add_argument(
+        "--job-name",
+        default=DEFAULT_JOB_NAME,
+        help="GitHub Actions job name to inspect",
+    )
     args = parser.parse_args(argv)
 
     owner = args.owner
@@ -157,9 +172,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         output_path=Path(args.output),
         token=token,
         max_runs=args.max_runs,
+        job_name=args.job_name,
     )
     print(json.dumps(asdict(metrics), indent=2, sort_keys=True))
     return 0
+
+
+def _build_allowed_job_keys(job_name: str) -> set[str]:
+    aliases = {
+        job_name,
+        job_name.replace("-", " "),
+        job_name.replace(" ", "-"),
+    }
+    keys = {_canonical_job_key(alias) for alias in aliases if alias}
+    return {key for key in keys if key}
+
+
+def _canonical_job_key(name: str) -> str:
+    normalized = _PAREN_PATTERN.sub("", name.strip())
+    normalized = normalized.replace("-", " ")
+    tokens = normalized.split()
+    if not tokens:
+        return ""
+    return " ".join(tokens).casefold()
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
