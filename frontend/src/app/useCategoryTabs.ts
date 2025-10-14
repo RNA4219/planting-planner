@@ -45,16 +45,42 @@ const buildCategoryTabsFromMetadata = (
   if (!categories) {
     return DEFAULT_CATEGORY_TABS
   }
+  type CropCategoryEntry = {
+    category: NonNullable<MarketScopeOption['categories']>[number] & {
+      category: CropCategory
+    }
+    index: number
+  }
+
   const mapped = categories
-    .map((category) => {
-      if (!isCropCategory(category.category)) {
-        return null
-      }
-      return { key: category.category, label: category.displayName }
-    })
-    .filter((category): category is CategoryTabDefinition => category !== null)
+    .map((category, index) => ({ category, index }))
+    .filter((entry): entry is CropCategoryEntry =>
+      isCropCategory(entry.category.category),
+    )
+
   if (mapped.length > 0) {
-    return mapped
+    const sorted = [...mapped].sort((a, b) => {
+      const priorityA = a.category.priority
+      const priorityB = b.category.priority
+      if (priorityA == null && priorityB == null) {
+        return a.index - b.index
+      }
+      if (priorityA == null) {
+        return 1
+      }
+      if (priorityB == null) {
+        return -1
+      }
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB
+      }
+      return a.index - b.index
+    })
+
+    return sorted.map(({ category }) => ({
+      key: category.category,
+      label: category.displayName,
+    }))
   }
   return DEFAULT_CATEGORY_TABS
 }
