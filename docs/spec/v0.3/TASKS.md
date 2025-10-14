@@ -44,6 +44,8 @@
      - 完了理由: `.github/workflows/ci.yml` の `backend-lint` ジョブに合わせて `docs/spec/v0.3/CONTRIBUTING.md` へ `cd backend && ruff check .` / `cd backend && black --check .` の実行手順を追記し、必須チェックが揃ったことを記録した。
    - [x] 開発運用ドキュメントの監視方針を push/pull_request 実行へ更新。
      - 完了理由: `docs/spec/v0.3/DEVELOPMENT.md` の監視セクションで `pytest` / `mypy` を `push` / `pull_request` トリガーへ置き換え、nightly 記述を削除した。
+   - [x] API リファレンス `/api/recommend` フォールバックヘッダー追記。
+     - ヘッダー検証観点: 市場欠損フォールバックは 200 応答となるため、`fallback: true` と `access-control-expose-headers: fallback` の両方を確認して UI 側の警告や再計算抑止を行う。
    - [x] API リファレンス `/api/markets` に `timezone`・`priority`・`effective_from`・`categories` の説明とサンプル JSON を追記。
      - 完了理由: `docs/spec/v0.3/API_REFERENCE.md` に市場メタデータの追加フィールドを記述し、ETL の `_refresh_market_metadata_cache` で生成される構造と一致させた。
    - [x] Docs トップのリンクとバージョン表記を v0.3 に更新。
