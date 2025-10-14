@@ -72,11 +72,11 @@ export const useRecommendationLoader = ({
   const queryClient = useQueryClient()
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
+      currentWeekRef.current = weekValue
       flushSync(() => {
         setItems(nextItems)
         setActiveWeek(weekValue)
       })
-      currentWeekRef.current = weekValue
     },
     [],
   )

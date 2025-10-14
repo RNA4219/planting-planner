@@ -94,6 +94,7 @@ export const AppContent = () => {
     category,
     setMarketScope,
     selectedMarket,
+    selectedCategory,
     queryWeek,
     setQueryWeek,
     currentWeek,
@@ -204,6 +205,11 @@ export const AppContent = () => {
     })
   }, [normalizedSearchKeyword, sortedRows])
 
+  const activeCategoryTabId = useMemo(
+    () => `category-tab-${selectedCategory}`,
+    [selectedCategory],
+  )
+
   const recommendationsTabpanelId = 'recommendations-tabpanel'
   useEffect(() => {
     setSelectedCropId((prev) => (prev === null ? prev : null))
@@ -230,6 +236,9 @@ export const AppContent = () => {
 
   useEffect(() => {
     if (!isMarketFallback) {
+      if (marketFallbackToasts.length > 0) {
+        setMarketFallbackToasts([])
+      }
       return
     }
     const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
@@ -243,7 +252,7 @@ export const AppContent = () => {
         detail: null,
       },
     ])
-  }, [isMarketFallback])
+  }, [isMarketFallback, marketFallbackToasts.length])
 
   const handleToastDismiss = useCallback(
     (id: string) => {
@@ -263,8 +272,11 @@ export const AppContent = () => {
   )
 
   const combinedToasts = useMemo(
-    () => [...pendingToasts, ...marketFallbackToasts],
-    [marketFallbackToasts, pendingToasts],
+    () => [
+      ...pendingToasts,
+      ...(isMarketFallback ? [] : marketFallbackToasts),
+    ],
+    [isMarketFallback, marketFallbackToasts, pendingToasts],
   )
 
   return (
@@ -301,26 +313,26 @@ export const AppContent = () => {
               {TOAST_MESSAGES.recommendationFallbackWarning}
             </div>
           ) : null}
-          <div id={recommendationsTabpanelId} role="tabpanel">
-            <RecommendationsTable
-              region={region}
-              displayWeek={displayWeek}
-              rows={filteredRows}
-              selectedCropId={selectedCropId}
-              onSelect={setSelectedCropId}
-              onToggleFavorite={toggleFavorite}
-              isFavorite={isFavorite}
-              marketScope={selectedMarket}
-              headerSlot={(
-                <CategoryTabs
-                  category={category}
-                  categories={resolveCategoriesForScope(marketScope)}
-                  onChange={setCategory}
-                  controlsId={recommendationsTabpanelId}
-                />
-              )}
-            />
-          </div>
+          <RecommendationsTable
+            region={region}
+            displayWeek={displayWeek}
+            rows={filteredRows}
+            selectedCropId={selectedCropId}
+            onSelect={setSelectedCropId}
+            onToggleFavorite={toggleFavorite}
+            isFavorite={isFavorite}
+            marketScope={selectedMarket}
+            headerSlot={(
+              <CategoryTabs
+                category={category}
+                categories={resolveCategoriesForScope(marketScope)}
+                onChange={setCategory}
+                controlsId={recommendationsTabpanelId}
+              />
+            )}
+            tabpanelId={recommendationsTabpanelId}
+            labelledById={activeCategoryTabId}
+          />
           <PriceChartSection
             selectedCropId={selectedCropId}
             marketScope={selectedMarket}
