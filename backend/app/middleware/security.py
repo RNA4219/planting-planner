@@ -28,9 +28,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if headers:
             self._headers.update(headers)
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
         for header, value in self._headers.items():
             response.headers.setdefault(header, value)
