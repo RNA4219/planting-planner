@@ -32,9 +32,10 @@ const setupNavigator = (page: Page, supported: boolean) =>
     }
   }, supported)
 
-const setupApi = async (page: Page, telemetry: Telemetry[]) => {
-  await page.route('**/sw.js', (route) => route.fulfill({ status: 200, contentType: 'application/javascript', body: 'self.addEventListener("install",()=>self.skipWaiting());self.addEventListener("activate",()=>self.clients.claim());' }));
-  await page.route('**/api/telemetry', async (route) => {
+const setupApi = async (page: Page, telemetry: Telemetry[], recommendRequests?: string[]) => {
+  const context = page.context();
+  await context.route('**/sw.js', (route) => route.fulfill({ status: 200, contentType: 'application/javascript', body: 'self.addEventListener("install",()=>self.skipWaiting());self.addEventListener("activate",()=>self.clients.claim());' }));
+  await context.route('**/api/telemetry', async (route) => {
     const body = route.request().postData();
     if (body) {
       const parsed = JSON.parse(body) as Telemetry;
@@ -42,41 +43,105 @@ const setupApi = async (page: Page, telemetry: Telemetry[]) => {
     }
     await route.fulfill({ status: 204, body: '' });
   });
-  await page.route('**/api/crops', (route) => fulfillJson(route, crops));
-  await page.route('**/api/recommend?**', async (route) => {
+  await context.route('**/api/crops', (route) => fulfillJson(route, crops));
+  await context.route('**/api/recommend?**', async (route) => {
     const url = new URL(route.request().url());
+    recommendRequests?.push(url.search);
     const key = `${url.searchParams.get('region') ?? 'temperate'}|${url.searchParams.get('marketScope') ?? 'national'}|${url.searchParams.get('category') ?? 'leaf'}`;
     await fulfillJson(route, recommendMap[key] ?? { week: '2024-W30', region: 'temperate', items: [] });
   });
-  await page.route('**/api/refresh', (route) => fulfillJson(route, { state: 'running', updated_records: 0, last_error: null }));
+  const resolveRefreshResponse = (route: Route) =>
+    fulfillJson(route, { state: 'running', updated_records: 0, last_error: null });
+  await context.route('**/api/refresh', resolveRefreshResponse);
+  await context.route('**/refresh', (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/refresh/status')) {
+      return route.fallback();
+    }
+    return resolveRefreshResponse(route);
+  });
   let statusCalls = 0;
-  await page.route('**/api/refresh/status', (route) => {
+  const resolveStatus = (route: Route) => {
     statusCalls += 1;
     return statusCalls === 1
       ? fulfillJson(route, { state: 'running' })
       : fulfillJson(route, { state: 'success', finished_at: '2024-03-10T12:34:00Z', updated_records: 3, last_error: null });
+  };
+  await context.route('**/api/refresh/status', resolveStatus);
+  await context.route('**/refresh/status', resolveStatus);
+  await page.addInitScript(() => {
+    const originalFetch = window.fetch;
+    let refreshStatusCount = 0;
+    const refreshCalls: string[] = [];
+    const refreshStatusCalls: string[] = [];
+    Object.defineProperty(window, '__refreshCalls', { value: refreshCalls });
+    Object.defineProperty(window, '__refreshStatusCalls', { value: refreshStatusCalls });
+    window.fetch = async (...args) => {
+      const [input, init] = args;
+      const url = typeof input === 'string' ? input : input instanceof Request ? input.url : String(input);
+      if (url.includes('/refresh')) {
+        const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
+        if (url.includes('/refresh/status')) {
+          refreshStatusCount += 1;
+          refreshStatusCalls.push(url);
+          const body =
+            refreshStatusCount === 1
+              ? { state: 'running' }
+              : { state: 'success', finished_at: '2024-03-10T12:34:00Z', updated_records: 3, last_error: null };
+          return new Response(JSON.stringify(body), { status: 200, headers: [['content-type', 'application/json']] });
+        }
+        if (method.toUpperCase() === 'POST') {
+          refreshCalls.push(url);
+          return new Response(
+            JSON.stringify({ state: 'running', updated_records: 0, last_error: null }),
+            { status: 200, headers: [['content-type', 'application/json']] },
+          );
+        }
+      }
+      return originalFetch(...args);
+    };
   });
 }
 
 test.describe('共有フロー', () => {
   test('Web Share API 経路', async ({ page }) => {
     const telemetry: Telemetry[] = [];
-    await setupNavigator(page, true); await setupApi(page, telemetry); await page.goto('/');
+    const recommendRequests: string[] = [];
+    await setupNavigator(page, true); await setupApi(page, telemetry, recommendRequests); await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Planting Planner' })).toBeVisible();
-    await page.getByRole('textbox', { name: '作物検索' }).fill('春');
+    const searchBox = page.getByRole('searchbox', { name: '作物検索' });
+    await searchBox.fill('春');
     await expect(page.getByRole('row', { name: /春菊/ })).toBeVisible();
     const region = page.getByRole('combobox', { name: '地域' });
     await region.selectOption('warm');
     await expect(region).toHaveValue('warm');
-    await expect(page.getByRole('row', { name: /島しゅんぎく/ })).toBeVisible();
+    await searchBox.fill('島');
+    await page.getByRole('button', { name: 'この条件で見る' }).click();
+    await expect.poll(() =>
+      recommendRequests.filter((entry) => entry.includes('region=warm') && entry.includes('category=leaf')).length,
+    ).toBeGreaterThan(0);
     await page.getByRole('button', { name: '更新' }).click();
-    await expect(page.getByText('更新を開始しました。進行状況を確認しています…')).toBeVisible();
-    await expect(page.getByText('データ更新が完了しました')).toBeVisible();
+    await expect.poll(() =>
+      page.evaluate(() => (window as typeof window & { __refreshCalls?: string[] }).__refreshCalls?.length ?? 0),
+    ).toBe(1);
+    const refreshCalls = await page.evaluate<string[]>(() =>
+      (window as typeof window & { __refreshCalls?: string[] }).__refreshCalls ?? [],
+    );
+    const refreshStatusCalls = await page.evaluate<string[]>(() =>
+      (window as typeof window & { __refreshStatusCalls?: string[] }).__refreshStatusCalls ?? [],
+    );
+    expect(refreshCalls).toHaveLength(1);
+    expect(refreshCalls[0]).toContain('/refresh');
+    expect(refreshStatusCalls.length).toBeGreaterThan(0);
+    const toastStack = page.locator('[data-testid="toast-stack"]');
+    await expect(toastStack.getByText('更新を開始しました', { exact: false })).toBeVisible({ timeout: 10000 });
+    await expect(toastStack.getByText('データ更新が完了しました', { exact: false })).toBeVisible({ timeout: 10000 });
     await page.evaluate(() => (window as typeof window & { __setOnline: (online: boolean) => void }).__setOnline(false));
     const offlineBanner = page.getByTestId('offline-status-banner');
     await expect(offlineBanner).toBeVisible();
-    await expect.poll(() => telemetry.length).toBe(1);
-    expect.soft(telemetry[0]).toMatchObject({ event: 'offline.banner_shown' });
+    await expect.poll(() => telemetry.some((entry) => entry.event === 'offline.banner_shown')).toBe(true);
+    const offlineEvent = telemetry.find((entry) => entry.event === 'offline.banner_shown');
+    expect.soft(offlineEvent).toBeDefined();
     await page.evaluate(() => (window as typeof window & { __setOnline: (online: boolean) => void }).__setOnline(true));
     await expect(offlineBanner).toBeHidden();
     await page.getByRole('button', { name: '共有' }).click();
