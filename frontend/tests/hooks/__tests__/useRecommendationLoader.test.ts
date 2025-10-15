@@ -68,7 +68,7 @@ describe('hooks / useRecommendationLoader', () => {
     expect(result.current.currentWeek).toBe('2024-W24')
   })
 
-  it('falls back to empty items when fetcher rejects', async () => {
+  it('retains cached items when fetcher rejects', async () => {
     const initialItem: RecommendationItem = {
       crop: '春菊',
       sowing_week: '2024-W30',
@@ -94,8 +94,8 @@ describe('hooks / useRecommendationLoader', () => {
       await result.current.requestRecommendations('2024-W31')
     })
 
-    expect(result.current.items).toEqual([])
-    expect(result.current.activeWeek).toBe('2024-W31')
+    expect(result.current.items).toEqual([initialItem])
+    expect(result.current.activeWeek).toBe('2024-W30')
   })
 
   it('tracks selected market/category and uses them in the cache key', async () => {
