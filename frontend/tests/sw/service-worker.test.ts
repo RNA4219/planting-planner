@@ -155,9 +155,7 @@ describe('service worker', () => {
       mode: 'read',
     })
 
-    expect(key).toContain('schema=2024-04-01')
-    expect(key).toContain(`epoch=${encodeURIComponent('2024-04-15T12:00:00Z')}`)
-    expect(key).toContain('foo=bar')
+    expect(key).toBe('api:get:/api/list?foo=bar:v2024-04-01:e2024-04-15T12:00:00Z')
   })
 
   test('background sync plugin retries with telemetry', async () => {
@@ -210,7 +208,9 @@ describe('service worker', () => {
     const module = await import('../../src/sw')
     const { telemetryCachePlugin } = module
 
-    const request = new Request('https://example.test/api/list')
+    const request = new Request('https://example.test/api/list', {
+      headers: new Headers({ 'x-request-id': 'req-123' }),
+    })
     const cachedResponse = new Response('{}', { status: 200 })
 
     const response = await telemetryCachePlugin.cachedResponseWillBeUsed({
@@ -223,7 +223,7 @@ describe('service worker', () => {
     expect(sendTelemetryMock).toHaveBeenCalledWith('sw.fetch.cache_hit', {
       cacheName: 'api-cache',
       url: 'https://example.test/api/list',
-    })
+    }, 'req-123')
   })
 
   test('install handler emits telemetry', async () => {

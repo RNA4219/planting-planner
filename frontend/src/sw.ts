@@ -32,10 +32,10 @@ export const versionedCacheKeyPlugin = {
       return url.toString()
     }
 
-    url.searchParams.set('schema', SCHEMA_VERSION)
-    url.searchParams.set('epoch', DATA_EPOCH)
+    const method = request.method.toLowerCase()
+    const serializedQuery = url.search ? url.search : ''
 
-    return url.toString()
+    return `api:${method}:${url.pathname}${serializedQuery}:v${SCHEMA_VERSION}:e${DATA_EPOCH}`
   },
 }
 
@@ -50,10 +50,19 @@ export const telemetryCachePlugin = {
     cachedResponse?: Response | null
   }) {
     if (cachedResponse) {
-      await sendTelemetry('sw.fetch.cache_hit', {
-        cacheName,
-        url: request.url,
-      })
+      const requestId = request.headers.get('x-request-id') ?? undefined
+      const telemetryArgs: Parameters<typeof sendTelemetry> = [
+        'sw.fetch.cache_hit',
+        {
+          cacheName,
+          url: request.url,
+        },
+      ]
+      if (requestId) {
+        telemetryArgs.push(requestId)
+      }
+
+      await sendTelemetry(...telemetryArgs)
     }
 
     return cachedResponse ?? null
