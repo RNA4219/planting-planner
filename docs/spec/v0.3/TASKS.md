@@ -94,7 +94,7 @@
    - [x] QA サインオフ資料整備: [週5計画](./ROADMAP.md) に合わせて Go/No-Go 判定項目と最新 KPI を `docs/spec/v0.3/RELEASE_CHECKLIST.md` へ追記する。
      - 完了条件: KPI・残課題・ロールバック手順がチェックリスト化され、週次レビューで承認済みであること。
      - 完了理由: `docs/spec/v0.3/RELEASE_CHECKLIST.md` で KPI・未解決課題・ロールバック手順を網羅したチェックリストを整備済み。
-     - 進捗メモ: フレーク率レポート添付を `reports/ci/playwright-e2e-metrics.json` へ更新し、GitHub Actions / CLI の取得手順を追記した。CLI 例は `--workflow-file ci.yml` 指定と関連説明をファイル名ベースへ統一済み。
+     - 進捗メモ: フレーク率レポート添付を `reports/ci/playwright-e2e-metrics.json` へ更新し、GitHub Actions / CLI の取得手順を追記した。CLI 例は `--workflow-file ci.yml` 指定と関連説明をファイル名ベースへ統一済み。加えて CI 成功ランでも `playwright-report` / `frontend/test-results` アーティファクトが保存されるように更新し、リリースチェックリストの成果物取得手順を実行できることを確認した。
    - [x] UI 仕様のトースト記述を `ToastStack` と市場フォールバック警告の現仕様へ更新。
      - 検証観点: フォールバック検出時に `warning` variant を enqueue → ToastStack の `role="status"` / auto dismiss と手動 dismiss が両立すること。
    - [x] 型仕様との差分解消: `docs/spec/v0.3/TYPES.md` から `SelectedCategory` 追加記述を削除し、カテゴリ選択が `CropCategory` を共有する方針を明文化。
