@@ -62,7 +62,7 @@ jobs:
       - name: run e2e tests
         run: npm run test:e2e
       - name: upload playwright report
-        if: failure()
+        if: ${{ always() && hashFiles('frontend/playwright-report/**') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

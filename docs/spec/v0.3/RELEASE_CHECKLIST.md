@@ -29,13 +29,13 @@
   - 添付物: `frontend/playwright-report/index.html`（CI アーティファクト `playwright-report` の HTML レポートを保存する）
   - GitHub Actions から取得する場合:
     1. `ci.yml` ワークフローの最新成功ランから `frontend e2e (playwright)` ジョブを開く。
-    2. アーティファクト `playwright-report` をダウンロードし、展開して `frontend/playwright-report/index.html` を保存する。
-  - ローカルで再生成する場合は `cd frontend && npm install` を実行した後に `npm run test:e2e` を実行し、`frontend/playwright-report/index.html` が生成されることを確認する。
+    2. アーティファクト `playwright-report` をダウンロードし、展開して `frontend/playwright-report/index.html` を保存する（成功ランでも保存される）。
+  - アーティファクトが生成されていない場合はローカルで `cd frontend && npm install` を実行した後に `npm run test:e2e` を実行し、`frontend/playwright-report/index.html` を再生成する。
 - [ ] Playwright トレースを検証した。
   - 添付物: `frontend/test-results/trace.zip`（CI アーティファクト `frontend/test-results/trace.zip` を保存する）
   - GitHub Actions から取得する場合:
-    1. 上記と同じ `frontend e2e (playwright)` ジョブでアーティファクト `frontend/test-results/trace.zip` をダウンロードする。
-  - ローカルで再生成する場合は上記と同じく `cd frontend && npm run test:e2e` を実行し、`frontend/test-results/trace.zip` が生成されることを確認する。
+    1. 上記と同じ `frontend e2e (playwright)` ジョブでアーティファクト `frontend/test-results/trace.zip` をダウンロードする（成功ランでも保存される）。
+  - アーティファクトが生成されていない場合は上記と同じく `cd frontend && npm run test:e2e` を実行し、`frontend/test-results/trace.zip` を再生成する。
 
 ## ロールバック手順
 - [ ] `docs/spec/v0.3/DEVELOPMENT.md` のロールバック手順に沿ってチェックポイントを作成し、緊急対応の連絡体制を確認した。
