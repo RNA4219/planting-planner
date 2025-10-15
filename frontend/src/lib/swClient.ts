@@ -1,7 +1,11 @@
 import { track } from './telemetry'
 
 export type ServiceWorkerClientEvent =
-  | { readonly type: 'waiting'; readonly registration: ServiceWorkerRegistration }
+  | {
+      readonly type: 'waiting'
+      readonly registration: ServiceWorkerRegistration
+      readonly forceUpdate: boolean
+    }
   | { readonly type: 'waiting-cleared' }
   | { readonly type: 'offline'; readonly isOffline: boolean }
   | { readonly type: 'last-sync'; readonly lastSyncAt: string | null }
@@ -38,7 +42,7 @@ const notify = (event: ServiceWorkerClientEvent) => {
   })
 }
 
-const forceUpdateEnabled = () => {
+export const isForceUpdateEnabled = () => {
   const envValue = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SW_FORCE_UPDATE : undefined
   if (typeof envValue === 'string') {
     return envValue === 'true'
@@ -52,10 +56,7 @@ const forceUpdateEnabled = () => {
 const attachRegistrationListeners = (registration: ServiceWorkerRegistration) => {
   if (registration.waiting) {
     state.waiting = registration.waiting
-    notify({ type: 'waiting', registration })
-    if (forceUpdateEnabled()) {
-      skipWaiting()
-    }
+    notify({ type: 'waiting', registration, forceUpdate: isForceUpdateEnabled() })
   }
   registration.addEventListener('updatefound', () => {
     const installing = registration.installing
@@ -65,10 +66,7 @@ const attachRegistrationListeners = (registration: ServiceWorkerRegistration) =>
     installing.addEventListener('statechange', () => {
       if (installing.state === 'installed' && navigator.serviceWorker.controller) {
         state.waiting = installing
-        notify({ type: 'waiting', registration })
-        if (forceUpdateEnabled()) {
-          skipWaiting()
-        }
+        notify({ type: 'waiting', registration, forceUpdate: isForceUpdateEnabled() })
       }
     })
   })
@@ -98,6 +96,7 @@ const handleMessage = (event: MessageEvent) => {
       notify({
         type: 'waiting',
         registration: { waiting: state.waiting } as ServiceWorkerRegistration,
+        forceUpdate: isForceUpdateEnabled(),
       })
     }
     return

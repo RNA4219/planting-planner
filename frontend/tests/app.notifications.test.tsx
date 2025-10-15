@@ -14,6 +14,7 @@ let mockSnapshot = {
   isOffline: false,
   lastSyncAt: null as string | null,
 }
+let mockForceUpdateEnabled = false
 
 vi.mock('../src/lib/swClient', () => ({
   subscribe: vi.fn((listener: (event: ServiceWorkerClientEvent) => void) => {
@@ -27,6 +28,7 @@ vi.mock('../src/lib/swClient', () => ({
     mockSkipWaiting(...args)
   },
   registerServiceWorker: vi.fn(),
+  isForceUpdateEnabled: vi.fn(() => mockForceUpdateEnabled),
   setLastSync: vi.fn((value: string | null) => {
     mockSnapshot = { ...mockSnapshot, lastSyncAt: value }
     listeners.forEach((listener) =>
@@ -74,6 +76,7 @@ describe('useAppNotifications', () => {
       isOffline: false,
       lastSyncAt: null,
     }
+    mockForceUpdateEnabled = false
     subscribeMock.mockClear()
   })
 
@@ -205,6 +208,52 @@ describe('useAppNotifications', () => {
     expect(mockSkipWaiting).toHaveBeenCalledWith()
     expect(waitingWorker.postMessage).not.toHaveBeenCalled()
 
+    expect(result.current.combinedToasts).toHaveLength(0)
+  })
+
+  test('SW_FORCE_UPDATE が有効な場合に更新トーストを強制表示し「今すぐ更新」でのみ閉じられる', async () => {
+    const waitingWorker = {
+      postMessage: vi.fn(),
+    } as unknown as ServiceWorker
+    mockForceUpdateEnabled = true
+    mockSnapshot = {
+      ...mockSnapshot,
+      waiting: waitingWorker,
+    }
+
+    useRefreshStatusControllerMock.mockReturnValue({
+      isRefreshing: false,
+      startRefresh: vi.fn(),
+      pendingToasts: [],
+      dismissToast: vi.fn(),
+    })
+
+    const { result } = renderHook(() =>
+      useAppNotifications({ reloadCurrentWeek: vi.fn(), isMarketFallback: false }),
+    )
+
+    expect(mockSkipWaiting).not.toHaveBeenCalled()
+    expect(result.current.combinedToasts).toHaveLength(1)
+    const [forceUpdateToast] = result.current.combinedToasts
+    expect(forceUpdateToast.actions).toEqual([
+      { id: 'update-now', label: TOAST_MESSAGES.serviceWorkerUpdateNow },
+    ])
+    expect(forceUpdateToast.sticky).toBe(true)
+
+    await act(async () => {
+      result.current.handleToastDismiss(forceUpdateToast.id)
+    })
+
+    expect(result.current.combinedToasts).toHaveLength(1)
+    const [toastAfterDismissAttempt] = result.current.combinedToasts
+    expect(toastAfterDismissAttempt.id).toBe(forceUpdateToast.id)
+
+    await act(async () => {
+      result.current.handleToastAction(forceUpdateToast.id, 'update-now')
+    })
+
+    expect(mockSkipWaiting).toHaveBeenCalledTimes(1)
+    expect(mockSkipWaiting).toHaveBeenCalledWith()
     expect(result.current.combinedToasts).toHaveLength(0)
   })
 
