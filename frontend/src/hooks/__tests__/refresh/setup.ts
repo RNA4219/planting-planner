@@ -16,6 +16,10 @@ type PostRefreshMock = () => Promise<PostRefreshImmediate>
 
 type FetchRefreshStatusMock = () => Promise<RefreshStatusResponse>
 
+const swClientMocks = vi.hoisted(() => ({
+  setLastSync: vi.fn(),
+}))
+
 const apiMocks = vi.hoisted(() => {
   const postRefreshMock = vi.fn<PostRefreshMock>()
   const fetchRefreshStatusMock = vi.fn<FetchRefreshStatusMock>()
@@ -32,6 +36,7 @@ const apiMocks = vi.hoisted(() => {
 export const capturedOptions = capturedOptionsRef
 export const postRefreshMock = apiMocks.postRefreshMock
 export const fetchRefreshStatusMock = apiMocks.fetchRefreshStatusMock
+export const setLastSyncMock = swClientMocks.setLastSync
 
 vi.mock('../../refresh/poller', async () => {
   const actual = await vi.importActual<typeof import('../../refresh/poller')>('../../refresh/poller')
@@ -47,6 +52,15 @@ vi.mock('../../refresh/poller', async () => {
 })
 
 vi.mock('../../../lib/api', () => apiMocks.module)
+vi.mock('../../../lib/swClient', async () => {
+  const actual = await vi.importActual<typeof import('../../../lib/swClient')>(
+    '../../../lib/swClient',
+  )
+  return {
+    ...actual,
+    setLastSync: swClientMocks.setLastSync,
+  }
+})
 
 export const createStatus = (
   state: RefreshStatusResponse['state'],
@@ -74,6 +88,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   postRefreshMock.mockReset()
   fetchRefreshStatusMock.mockReset()
+  setLastSyncMock.mockReset()
   capturedOptions.length = 0
 })
 
