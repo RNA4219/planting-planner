@@ -3,7 +3,9 @@ from __future__ import annotations
 import os
 import sqlite3
 from contextlib import closing
-from typing import Final, TypedDict
+from typing import Final
+
+from typing_extensions import TypedDict
 
 from ..db.connection import get_conn
 from ..etl_runner import metadata as etl_metadata
