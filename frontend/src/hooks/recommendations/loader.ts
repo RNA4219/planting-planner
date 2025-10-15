@@ -41,11 +41,14 @@ export interface UseRecommendationLoaderResult {
   selectedMarket: MarketScope
   selectedCategory: CropCategory
   isMarketFallback: boolean
+  loadError: RecommendationLoadError | null
   requestRecommendations: (
     inputWeek: string,
     options?: RequestOptions,
   ) => Promise<void>
 }
+
+export type RecommendationLoadError = 'recommendations-unavailable'
 
 export const useRecommendationLoader = ({
   region,
@@ -58,6 +61,7 @@ export const useRecommendationLoader = ({
   const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
   const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
   const [isMarketFallback, setIsMarketFallback] = useState(false)
+  const [loadError, setLoadError] = useState<RecommendationLoadError | null>(null)
   const currentWeekRef = useRef<string>(DEFAULT_WEEK)
   const initialFetchRef = useRef(false)
   const trackerRef = useRef<RequestMeta>({
@@ -70,6 +74,7 @@ export const useRecommendationLoader = ({
   const settledRef = useRef<RequestMeta>(trackerRef.current)
   const fetchRecommendations = useRecommendationFetcher()
   const queryClient = useQueryClient()
+  const lastSuccessfulResultRef = useRef<RecommendationFetchResult | null>(null)
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
       currentWeekRef.current = weekValue
@@ -104,14 +109,15 @@ export const useRecommendationLoader = ({
         category: targetCategory,
       }
       trackerRef.current = requestMeta
+      const queryKey = [
+        'recommendations',
+        targetRegion,
+        targetMarketScope,
+        targetCategory,
+        normalizedWeek,
+      ] as const
+      const previousResult = queryClient.getQueryData<RecommendationFetchResult>(queryKey)
       try {
-        const queryKey = [
-          'recommendations',
-          targetRegion,
-          targetMarketScope,
-          targetCategory,
-          normalizedWeek,
-        ] as const
         const result = await queryClient.fetchQuery<RecommendationFetchResult>({
           queryKey,
           queryFn: () =>
@@ -127,19 +133,35 @@ export const useRecommendationLoader = ({
           return
         }
         setIsMarketFallback(result.isMarketFallback)
+        setLoadError(null)
         if (!result.result) {
+          lastSuccessfulResultRef.current = result
           applyWeek(normalizedWeek, [])
           settledRef.current = requestMeta
           return
         }
         const resolvedWeek = normalizeIsoWeek(result.result.week, normalizedWeek)
         applyWeek(resolvedWeek, result.result.items)
+        lastSuccessfulResultRef.current = result
         settledRef.current = requestMeta
       } catch {
         if (requestMeta.id < settledRef.current.id) {
           return
         }
+        const cached =
+          queryClient.getQueryData<RecommendationFetchResult>(queryKey) ??
+          previousResult ??
+          lastSuccessfulResultRef.current
+        if (cached?.result) {
+          setIsMarketFallback(cached.isMarketFallback)
+          setLoadError(null)
+          const resolvedWeek = normalizeIsoWeek(cached.result.week, normalizedWeek)
+          applyWeek(resolvedWeek, cached.result.items)
+          settledRef.current = requestMeta
+          return
+        }
         setIsMarketFallback(false)
+        setLoadError('recommendations-unavailable')
         applyWeek(normalizedWeek, [])
         settledRef.current = requestMeta
       }
@@ -172,6 +194,7 @@ export const useRecommendationLoader = ({
     selectedMarket,
     selectedCategory,
     isMarketFallback,
+    loadError,
     requestRecommendations,
   }
 }

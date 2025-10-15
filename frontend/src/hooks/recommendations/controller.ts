@@ -8,7 +8,7 @@ import {
   isCropCategory,
 } from '../../utils/recommendations'
 
-import { useRecommendationLoader } from './loader'
+import { useRecommendationLoader, type RecommendationLoadError } from './loader'
 import { useCropCatalog } from '../useCropCatalog'
 import { useRecommendationsControllerStore } from './controllerStore'
 
@@ -36,6 +36,7 @@ export interface UseRecommendationsResult {
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void
   reloadCurrentWeek: () => Promise<void>
   isMarketFallback: boolean
+  recommendationError: RecommendationLoadError | null
 }
 
 export const useRecommendations = ({
@@ -92,6 +93,7 @@ export const useRecommendations = ({
     selectedCategory,
     requestRecommendations,
     isMarketFallback,
+    loadError,
   } = useRecommendationLoader({ region, marketScope, category })
   useEffect(() => {
     syncInitialRegion(initialRegion)
@@ -226,6 +228,7 @@ export const useRecommendations = ({
     handleSubmit,
     reloadCurrentWeek,
     isMarketFallback,
+    recommendationError: loadError,
   }
 }
 
