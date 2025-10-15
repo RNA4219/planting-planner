@@ -44,9 +44,14 @@ describe('fetchMarkets', () => {
     await loadFetchMarkets()
     const result = await fetchMarkets()
 
-    expect(context.fetchMock).toHaveBeenCalledWith('/api/markets', {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    expect(context.fetchMock).toHaveBeenCalledTimes(1)
+    const call = context.fetchMock.mock.calls[0]
+    if (!call) {
+      throw new Error('fetch が呼び出されていません')
+    }
+    const headers = new Headers(call[1]?.headers as HeadersInit)
+    expect(headers.get('Content-Type')).toBe('application/json')
+    expect(headers.get('x-request-id')).toBeTruthy()
     expect(result).toEqual({
       generated_at: payload.generated_at,
       markets: payload.markets

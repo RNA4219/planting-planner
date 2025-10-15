@@ -30,6 +30,12 @@ const API_ENDPOINT_PREFIX = API_ENDPOINT_URL
   ? `${API_ENDPOINT_ORIGIN}${API_ENDPOINT_URL.pathname.replace(/\/$/, '')}`
   : API_ENDPOINT
 
+const REQUEST_ID_HEADER = 'x-request-id'
+const IDEMPOTENCY_KEY_HEADER = 'Idempotency-Key'
+const REFRESH_IDEMPOTENCY_STORAGE_KEY = 'planting-planner:refresh-idempotency-key'
+
+let refreshIdempotencyKey: string | undefined
+
 type BuildUrlOptions = {
   readonly includePrefix?: boolean
 }
@@ -79,22 +85,65 @@ const parseResponse = async <T>(response: Response): Promise<T> => {
   return (await response.json()) as T
 }
 
-const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+const randomUUID = (): string => {
+  const globalCrypto = globalThis.crypto
+  if (globalCrypto && typeof globalCrypto.randomUUID === 'function') {
+    return globalCrypto.randomUUID()
+  }
+  const random = Math.random().toString(16).slice(2)
+  return `${Date.now().toString(16)}-${random}`
+}
+
+type RequestResult<T> = {
+  readonly data: T
+  readonly requestId: string
+  readonly response: Response
+}
+
+const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<RequestResult<T>> => {
+  const requestId = randomUUID()
+  const headers = new Headers(init?.headers ?? {})
+  headers.set('Content-Type', 'application/json')
+  headers.set(REQUEST_ID_HEADER, requestId)
+
   const response = await fetch(input, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
     ...init,
+    headers,
   })
 
-  return parseResponse<T>(response)
+  const data = await parseResponse<T>(response)
+  return { data, requestId, response }
 }
 
 const MARKET_FALLBACK_HEADER = 'fallback'
 
+const resolveRefreshIdempotencyKey = (): string => {
+  if (refreshIdempotencyKey) {
+    return refreshIdempotencyKey
+  }
+  try {
+    const storage = globalThis.localStorage
+    const stored = storage?.getItem(REFRESH_IDEMPOTENCY_STORAGE_KEY) ?? undefined
+    if (stored) {
+      refreshIdempotencyKey = stored
+      return stored
+    }
+    const generated = randomUUID()
+    storage?.setItem(REFRESH_IDEMPOTENCY_STORAGE_KEY, generated)
+    refreshIdempotencyKey = generated
+    return generated
+  } catch {
+    if (!refreshIdempotencyKey) {
+      refreshIdempotencyKey = randomUUID()
+    }
+    return refreshIdempotencyKey
+  }
+}
+
 export const fetchCrops = async (): Promise<Crop[]> => {
   const url = buildUrl('/crops')
-  return request<Crop[]>(url)
+  const { data } = await request<Crop[]>(url)
+  return data
 }
 
 export interface MarketsResponse {
@@ -110,7 +159,7 @@ type MarketsApiResponse = {
 export const fetchMarkets = async (): Promise<MarketsResponse> => {
   const url = buildUrl('/markets')
   try {
-    const payload = await request<MarketsApiResponse>(url)
+    const { data: payload } = await request<MarketsApiResponse>(url)
     return {
       generated_at: payload.generated_at,
       markets: payload.markets
@@ -141,15 +190,10 @@ export const fetchRecommendations = async (
     params.set('week', week)
   }
   const url = buildUrl('/recommend', params)
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  const payload = await parseResponse<RecommendResponse>(response)
+  const { data, response } = await request<RecommendResponse>(url)
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
   const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
-  return { ...payload, isMarketFallback }
+  return { ...data, isMarketFallback }
 }
 
 export const fetchRecommend = async ({
@@ -164,21 +208,29 @@ export const fetchRecommend = async ({
     params.set('week', week)
   }
   const url = buildUrl('/recommend', params, { includePrefix: false })
-  return request<RecommendResponse>(url)
+  const { data } = await request<RecommendResponse>(url)
+  return data
 }
 
 export const postRefresh = async (body?: unknown): Promise<RefreshResponse> => {
   const url = buildUrl('/refresh')
-  const init: RequestInit = { method: 'POST' }
+  const init: RequestInit = {
+    method: 'POST',
+    headers: {
+      [IDEMPOTENCY_KEY_HEADER]: resolveRefreshIdempotencyKey(),
+    },
+  }
   if (body !== undefined) {
     init.body = JSON.stringify(body)
   }
-  return request<RefreshResponse>(url, init)
+  const { data } = await request<RefreshResponse>(url, init)
+  return data
 }
 
 export const fetchRefreshStatus = async (): Promise<RefreshStatusResponse> => {
   const url = buildUrl('/refresh/status')
-  return request<RefreshStatusResponse>(url)
+  const { data } = await request<RefreshStatusResponse>(url)
+  return data
 }
 
 export interface PriceSeriesResponse {
@@ -197,12 +249,7 @@ export const fetchPrice = async (
   if (to) params.set('to', to)
   if (marketScope) params.set('marketScope', marketScope)
   const url = buildUrl('/price', params)
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  const series = await parseResponse<PriceSeries>(response)
+  const { data: series, response } = await request<PriceSeries>(url)
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
   const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
   return { series, isMarketFallback }

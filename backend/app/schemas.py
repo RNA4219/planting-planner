@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal, NotRequired, cast, get_args
+from typing import Annotated, Any, Literal, NotRequired, cast, get_args
 
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator, BaseModel, ConfigDict, model_validator
 from typing_extensions import TypedDict
 
 Region = Literal["cold", "temperate", "warm"]
@@ -51,6 +51,18 @@ def parse_market_scope(value: str) -> MarketScope:
 
 
 DEFAULT_MARKET_SCOPE: MarketScope = "national"
+
+
+def _to_snake(value: str) -> str:
+    result: list[str] = []
+    for index, char in enumerate(value):
+        if char == "-":
+            result.append("_")
+            continue
+        if char.isupper() and index > 0 and result and result[-1] != "_":
+            result.append("_")
+        result.append(char.lower())
+    return "".join(result)
 
 
 class Crop(BaseModel):
@@ -111,3 +123,22 @@ class PriceSeries(BaseModel):
     unit: str
     source: str
     prices: list[PricePoint]
+
+
+class TelemetryEvent(BaseModel):
+    event: str
+    request_id: str | None = None
+    app_version: str
+    schema_version: str
+    data_epoch: str
+    payload: dict[str, Any] | None = None
+    timestamp: str | None = None
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_keys(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return {_to_snake(key): value for key, value in data.items()}
+        return data
