@@ -25,6 +25,8 @@ interface SearchControlsProps {
   onRefresh: () => void | Promise<void>
   refreshing: boolean
   onMarketsUpdate?: (markets: readonly MarketScopeOption[]) => void
+  onShare?: () => void | Promise<void>
+  isShareSupported?: boolean
 }
 
 const MARKET_THEME_BACKGROUND_CLASSES: Record<string, string> = {
@@ -116,6 +118,8 @@ export const SearchControls = ({
   onRefresh,
   refreshing,
   onMarketsUpdate,
+  onShare,
+  isShareSupported = false,
 }: SearchControlsProps) => {
   const { data: marketsResponse, isSuccess } = useQuery({
     queryKey: ['markets'],
@@ -132,9 +136,19 @@ export const SearchControls = ({
   const { fallbackTheme, optionTheme } = resolveMarketTheme(marketScope, marketOptions)
   const marketTheme = getMarketSelectTheme(marketScope, optionTheme, fallbackTheme)
 
+  const isClipboardSupported =
+    typeof navigator !== 'undefined' &&
+    !!navigator.clipboard &&
+    typeof navigator.clipboard.writeText === 'function'
+
+  const isShareButtonDisabled = !isShareSupported && !isClipboardSupported
+
   const refreshButtonClassName = refreshing
     ? 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-market-accent/10 px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
     : 'inline-flex items-center justify-center rounded-lg border border-market-accent/50 bg-transparent px-3 py-2 text-sm font-semibold text-market-accent shadow-sm transition hover:bg-market-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70'
+
+  const shareButtonClassName =
+    'inline-flex items-center justify-center rounded-lg border border-market-info/50 bg-transparent px-3 py-2 text-sm font-semibold text-market-info shadow-sm transition hover:bg-market-info/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-info disabled:cursor-not-allowed disabled:opacity-70'
 
   return (
     <form
@@ -197,6 +211,19 @@ export const SearchControls = ({
             className="inline-flex items-center justify-center rounded-lg bg-market-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-market-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent disabled:cursor-not-allowed disabled:opacity-70"
           >
             {SEARCH_CONTROLS_TEXT.submitButton}
+          </button>
+          <button
+            type="button"
+            className={shareButtonClassName}
+            onClick={async () => {
+              if (!onShare) {
+                return
+              }
+              await onShare()
+            }}
+            disabled={isShareButtonDisabled}
+          >
+            {SEARCH_CONTROLS_TEXT.shareButton}
           </button>
           <button
             className={refreshButtonClassName}

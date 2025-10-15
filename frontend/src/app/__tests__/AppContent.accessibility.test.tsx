@@ -55,6 +55,7 @@ describe('AppContent accessibility', () => {
       offlineBanner: null,
       isOffline: false,
       lastSync: null,
+      notifyShareResult: vi.fn(),
     }
 
     mockUseRecommendations.mockReturnValue(recommendationsResult)

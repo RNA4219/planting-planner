@@ -12,6 +12,7 @@ import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
+import { isShareSupported, shareCurrentView } from './lib/share'
 import { useRecommendations } from './hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
@@ -72,6 +73,7 @@ export const AppContent = () => {
     offlineBanner,
     isOffline,
     lastSync,
+    notifyShareResult,
   } = useAppNotifications({
     reloadCurrentWeek,
     isMarketFallback,
@@ -163,6 +165,21 @@ export const AppContent = () => {
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
 
+  const handleShare = useCallback(async () => {
+    const targetWeek = queryWeek || currentWeek
+    try {
+      const result = await shareCurrentView({
+        region,
+        marketScope,
+        category,
+        week: targetWeek,
+      })
+      notifyShareResult(result)
+    } catch {
+      notifyShareResult('error')
+    }
+  }, [category, currentWeek, marketScope, notifyShareResult, queryWeek, region])
+
   return (
     <AppScreen
       title={APP_TEXT.title}
@@ -181,6 +198,8 @@ export const AppContent = () => {
           onRefresh={startRefresh}
           refreshing={isRefreshing}
           onMarketsUpdate={handleMarketsUpdate}
+          onShare={handleShare}
+          isShareSupported={isShareSupported()}
         />
       }
       toastStack={

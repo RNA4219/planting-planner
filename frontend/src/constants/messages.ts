@@ -7,6 +7,7 @@ export const SEARCH_CONTROLS_TEXT = {
   searchAriaLabel: '作物検索',
   weekLabel: '週',
   submitButton: 'この条件で見る',
+  shareButton: '共有',
   refreshButton: '更新',
   refreshingButton: '更新中...',
 } as const
@@ -31,6 +32,9 @@ export const TOAST_MESSAGES = {
   serviceWorkerUpdateDetail: '最新の変更を反映するには更新してください。',
   serviceWorkerUpdateNow: '今すぐ更新',
   serviceWorkerUpdateLater: 'あとで',
+  shareSuccess: '共有リンクを送信しました',
+  shareCopied: '共有リンクをコピーしました',
+  shareError: '共有に失敗しました',
 } as const
 
 export const APP_STATUS_MESSAGES = {

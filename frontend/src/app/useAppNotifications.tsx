@@ -12,6 +12,7 @@ import {
 } from '../lib/swClient'
 import { sendTelemetry } from '../lib/telemetry'
 import { formatLastSync } from '../utils/formatLastSync'
+import { SHARE_TOAST_MESSAGE_MAP, type ShareResult } from '../lib/share'
 
 type UseAppNotificationsArgs = {
   reloadCurrentWeek: () => void | Promise<void>
@@ -29,6 +30,7 @@ type UseAppNotificationsResult = {
   readonly offlineBanner: ReactNode | null
   readonly isOffline: boolean
   readonly lastSync: Date | null
+  readonly notifyShareResult: (result: ShareResult) => void
 }
 
 export const useAppNotifications = ({
@@ -42,6 +44,8 @@ export const useAppNotifications = ({
   const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
   const recommendationErrorToastSeqRef = useRef(0)
   const [recommendationErrorToasts, setRecommendationErrorToasts] = useState<ToastStackItem[]>([])
+  const shareToastSeqRef = useRef(0)
+  const [shareToasts, setShareToasts] = useState<ToastStackItem[]>([])
   const initialSnapshot = useMemo(() => getSnapshot(), [])
   const [{ waiting, isOffline, lastSyncAt }, setSwState] = useState(initialSnapshot)
   const [updateToast, setUpdateToast] = useState<ToastStackItem | null>(null)
@@ -213,6 +217,13 @@ export const useAppNotifications = ({
         removed = true
         return prev.filter((toast) => toast.id !== id)
       })
+      setShareToasts((prev) => {
+        if (!prev.some((toast) => toast.id === id)) {
+          return prev
+        }
+        removed = true
+        return prev.filter((toast) => toast.id !== id)
+      })
       const isUpdateToast = updateToast?.id === id
       if (!removed && !isUpdateToast) {
         dismissToast(id)
@@ -230,14 +241,34 @@ export const useAppNotifications = ({
 
   const combinedToasts = useMemo(
     () => {
-      const base = [...pendingToasts, ...recommendationErrorToasts, ...marketFallbackToasts]
+      const base = [
+        ...pendingToasts,
+        ...recommendationErrorToasts,
+        ...marketFallbackToasts,
+        ...shareToasts,
+      ]
       if (updateToast) {
         return [updateToast, ...base]
       }
       return base
     },
-    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, updateToast],
+    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, shareToasts, updateToast],
   )
+
+  const notifyShareResult = useCallback((result: ShareResult) => {
+    shareToastSeqRef.current += 1
+    const id = `share-${shareToastSeqRef.current}`
+    const variant = result === 'error' ? 'error' : 'info'
+    setShareToasts((prev) => [
+      ...prev,
+      {
+        id,
+        variant,
+        message: SHARE_TOAST_MESSAGE_MAP[result],
+        detail: null,
+      },
+    ])
+  }, [])
 
   const fallbackNotice = useMemo(() => {
     if (!isMarketFallback) {
@@ -282,5 +313,6 @@ export const useAppNotifications = ({
     offlineBanner,
     isOffline,
     lastSync: lastSyncDate,
+    notifyShareResult,
   }
 }
