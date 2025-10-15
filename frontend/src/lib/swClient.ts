@@ -1,3 +1,5 @@
+import { track } from './telemetry'
+
 export type ServiceWorkerClientEvent =
   | { readonly type: 'waiting'; readonly registration: ServiceWorkerRegistration }
   | { readonly type: 'waiting-cleared' }
@@ -86,8 +88,23 @@ const handleMessage = (event: MessageEvent) => {
   if (!data || typeof data !== 'object') {
     return
   }
-  if ('type' in data && data.type === 'LAST_SYNC' && 'lastSyncAt' in data) {
-    const value = typeof data.lastSyncAt === 'string' ? data.lastSyncAt : null
+  const record = data as Record<string, unknown>
+  const type = record.type
+
+  if (type === 'SW_WAITING') {
+    const version = typeof record.version === 'string' ? record.version : undefined
+    void track('sw.waiting', version ? { version } : {})
+    if (state.waiting) {
+      notify({
+        type: 'waiting',
+        registration: { waiting: state.waiting } as ServiceWorkerRegistration,
+      })
+    }
+    return
+  }
+
+  if (type === 'LAST_SYNC' && 'lastSyncAt' in record) {
+    const value = typeof record.lastSyncAt === 'string' ? record.lastSyncAt : null
     state.lastSyncAt = value
     notify({ type: 'last-sync', lastSyncAt: value })
   }
