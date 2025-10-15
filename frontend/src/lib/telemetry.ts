@@ -63,3 +63,5 @@ export const sendTelemetry = async (
 }
 
 export const track = sendTelemetry
+
+export type { TelemetryPayload }
