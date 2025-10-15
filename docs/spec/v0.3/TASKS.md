@@ -1,5 +1,7 @@
 # タスク分解 — v0.3
 
+> ⚠️ PNG アセットに関する PR は CI 制約により作成できません。該当タスクはアサインしないでください。
+
 1. API 層: `marketScope` 受理ロジックと単体テスト追加。
    - [x] MarketScopeQuery の入力正規化と市場別フォールバック検証を完了する。
      - 完了理由: `backend/app/dependencies.py` の `_market_scope_query` / `MarketScopeQuery` が `national`→デフォルト化、空文字・`all` 無視、`city:<id>` を `schemas.parse_market_scope` で検証し 422 を返す実装になっており、`backend/tests/test_recommend.py` のパラメタイズ検証・都市価格優先・フォールバックヘッダー網羅テストで全市場スコープ分岐をカバーしている。

@@ -1,5 +1,7 @@
 # v0.2 タスクメモ
 
+> ⚠️ PNG アセットに関する PR は CI 制約により作成できません。該当タスクはアサインしないでください。
+
 > スコープ: 各タスクは 1 ファイルあたり 1 回のみ指定。テスト追加→実装修正の順。
 
 ## frontend/src/hooks/__tests__/useRefreshStatus.controller.test.ts
