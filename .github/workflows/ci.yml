@@ -156,12 +156,7 @@ jobs:
       - name: lighthouse smoke test
         run: |
           lhci autorun \
-            --collect.staticDistDir=frontend/dist \
-            --collect.numberOfRuns=1 \
-            --assert.assertions."categories:performance"=informational \
-            --assert.assertions."categories:pwa"=off \
-            --upload.target=filesystem \
-            --upload.outputDir=./lhci-report
+            --config=frontend/lighthouserc.json
       - name: upload lighthouse report
         if: failure()
         uses: actions/upload-artifact@v4
