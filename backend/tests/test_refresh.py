@@ -15,6 +15,7 @@ client = TestClient(app)
 
 REFRESH_ENDPOINT = "/api/refresh"
 REFRESH_STATUS_ENDPOINT = f"{REFRESH_ENDPOINT}/status"
+DEFAULT_HEADERS = {"Idempotency-Key": "test-refresh"}
 
 MARKET_CACHE_LOG = "market_metadata cache refresh confirmed"
 
@@ -77,7 +78,7 @@ def test_refresh_status_returns_default_payload() -> None:
 
 
 def test_refresh_triggers_background_job_and_updates_status() -> None:
-    response = client.post(REFRESH_ENDPOINT)
+    response = client.post(REFRESH_ENDPOINT, headers=DEFAULT_HEADERS)
     assert response.status_code == 200
     assert response.json() == {"state": "running"}
 
@@ -102,7 +103,11 @@ def test_refresh_triggers_background_job_and_updates_status() -> None:
 
 
 def test_refresh_with_force_flag_returns_error() -> None:
-    response = client.post(REFRESH_ENDPOINT, json={"force": True})
+    response = client.post(
+        REFRESH_ENDPOINT,
+        json={"force": True},
+        headers=DEFAULT_HEADERS,
+    )
 
     assert response.status_code == 400
     assert response.json() == {"detail": "force refresh is not supported"}
@@ -113,7 +118,7 @@ def test_refresh_emits_cache_update_log_on_success(
 ) -> None:
     caplog.set_level(logging.INFO)
 
-    response = client.post(REFRESH_ENDPOINT)
+    response = client.post(REFRESH_ENDPOINT, headers=DEFAULT_HEADERS)
     assert response.status_code == 200
 
     payload = _wait_for_refresh_success()
