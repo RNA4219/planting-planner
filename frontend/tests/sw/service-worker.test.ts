@@ -92,6 +92,9 @@ vi.mock('workbox-expiration', () => ({
 }))
 
 let installHandler: ((event: ExtendableEvent) => void) | undefined
+let messageHandler: ((event: MessageEvent) => void) | undefined
+let matchAllMock: ReturnType<typeof vi.fn>
+let skipWaitingMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.resetModules()
@@ -106,18 +109,28 @@ beforeEach(() => {
   networkOnlyCalls.length = 0
 
   installHandler = undefined
+  messageHandler = undefined
+  matchAllMock = vi.fn()
+  skipWaitingMock = vi.fn()
   globalThis.self = {
     addEventListener: vi.fn((event, handler) => {
       if (event === 'install') {
         installHandler = handler as (event: ExtendableEvent) => void
       }
+      if (event === 'message') {
+        messageHandler = handler as (event: MessageEvent) => void
+      }
     }),
-    skipWaiting: vi.fn(),
-    clients: { claim: vi.fn() },
+    skipWaiting: skipWaitingMock,
+    clients: {
+      claim: vi.fn(),
+      matchAll: matchAllMock,
+    },
     registration: {
       sync: {
         register: vi.fn(),
       },
+      waiting: null,
     },
     location: {
       origin: 'https://example.test',
@@ -142,9 +155,7 @@ describe('service worker', () => {
       mode: 'read',
     })
 
-    expect(key).toContain('schema=2024-04-01')
-    expect(key).toContain(`epoch=${encodeURIComponent('2024-04-15T12:00:00Z')}`)
-    expect(key).toContain('foo=bar')
+    expect(key).toBe('api:get:/api/list?foo=bar:v2024-04-01:e2024-04-15T12:00:00Z')
   })
 
   test('background sync plugin retries with telemetry', async () => {
@@ -156,7 +167,7 @@ describe('service worker', () => {
       name: string
       config: { maxRetentionTime?: number }
     }>
-    expect(plugin.name).toBe('refresh-api')
+    expect(plugin.name).toBe('refresh-queue')
     expect(plugin.config).toMatchObject({ maxRetentionTime: 60 * 24 })
 
     const failedRequest = new Request('https://example.test/api/refresh', {
@@ -197,7 +208,9 @@ describe('service worker', () => {
     const module = await import('../../src/sw')
     const { telemetryCachePlugin } = module
 
-    const request = new Request('https://example.test/api/list')
+    const request = new Request('https://example.test/api/list', {
+      headers: new Headers({ 'x-request-id': 'req-123' }),
+    })
     const cachedResponse = new Response('{}', { status: 200 })
 
     const response = await telemetryCachePlugin.cachedResponseWillBeUsed({
@@ -210,7 +223,7 @@ describe('service worker', () => {
     expect(sendTelemetryMock).toHaveBeenCalledWith('sw.fetch.cache_hit', {
       cacheName: 'api-cache',
       url: 'https://example.test/api/list',
-    })
+    }, 'req-123')
   })
 
   test('install handler emits telemetry', async () => {
@@ -223,8 +236,49 @@ describe('service worker', () => {
       waitUntil,
     } as unknown as ExtendableEvent)
 
+    const installTask = waitUntil.mock.calls.at(-1)?.[0]
+    if (installTask && installTask instanceof Promise) {
+      await installTask
+    }
+
     expect(sendTelemetryMock).toHaveBeenCalledWith('sw.install', {
       appVersion: '1.2.3',
     })
+  })
+
+  test('install handler notifies existing clients about waiting version', async () => {
+    await import('../../src/sw')
+
+    expect(installHandler).toBeDefined()
+
+    const postMessageMock = vi.fn()
+    matchAllMock.mockResolvedValue([{ postMessage: postMessageMock }])
+    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting =
+      { state: 'installed' } as ServiceWorker
+
+    const waitUntil = vi.fn(async (promise: Promise<unknown>) => promise)
+    await installHandler?.({
+      waitUntil,
+    } as unknown as ExtendableEvent)
+
+    const installTask = waitUntil.mock.calls.at(-1)?.[0]
+    if (installTask && installTask instanceof Promise) {
+      await installTask
+    }
+
+    expect(matchAllMock).toHaveBeenCalledWith({ includeUncontrolled: true, type: 'window' })
+    expect(postMessageMock).toHaveBeenCalledWith({ type: 'SW_WAITING', version: '1.2.3' })
+  })
+
+  test('skipWaiting is triggered when SKIP_WAITING message is received', async () => {
+    await import('../../src/sw')
+
+    expect(messageHandler).toBeDefined()
+
+    await messageHandler?.({
+      data: { type: 'SKIP_WAITING' },
+    } as unknown as MessageEvent)
+
+    expect(skipWaitingMock).toHaveBeenCalledTimes(1)
   })
 })

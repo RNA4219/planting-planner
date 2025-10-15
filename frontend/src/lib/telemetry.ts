@@ -61,3 +61,7 @@ export const sendTelemetry = async (
     // Telemetry failures should not break the main flow.
   }
 }
+
+export const track = sendTelemetry
+
+export type { TelemetryPayload }

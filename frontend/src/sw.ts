@@ -32,10 +32,10 @@ export const versionedCacheKeyPlugin = {
       return url.toString()
     }
 
-    url.searchParams.set('schema', SCHEMA_VERSION)
-    url.searchParams.set('epoch', DATA_EPOCH)
+    const method = request.method.toLowerCase()
+    const serializedQuery = url.search ? url.search : ''
 
-    return url.toString()
+    return `api:${method}:${url.pathname}${serializedQuery}:v${SCHEMA_VERSION}:e${DATA_EPOCH}`
   },
 }
 
@@ -50,10 +50,19 @@ export const telemetryCachePlugin = {
     cachedResponse?: Response | null
   }) {
     if (cachedResponse) {
-      await sendTelemetry('sw.fetch.cache_hit', {
-        cacheName,
-        url: request.url,
-      })
+      const requestId = request.headers.get('x-request-id') ?? undefined
+      const telemetryArgs: Parameters<typeof sendTelemetry> = [
+        'sw.fetch.cache_hit',
+        {
+          cacheName,
+          url: request.url,
+        },
+      ]
+      if (requestId) {
+        telemetryArgs.push(requestId)
+      }
+
+      await sendTelemetry(...telemetryArgs)
     }
 
     return cachedResponse ?? null
@@ -96,7 +105,25 @@ export const processRefreshQueue = async (queue: Queue) => {
   }
 }
 
-const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-api', {
+const notifyWaitingClients = async () => {
+  const waiting = self.registration.waiting
+  if (!waiting || waiting.state !== 'installed') {
+    return
+  }
+
+  const windowClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  })
+
+  for (const client of windowClients) {
+    if ('postMessage' in client && typeof client.postMessage === 'function') {
+      client.postMessage({ type: 'SW_WAITING', version: APP_VERSION })
+    }
+  }
+}
+
+const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-queue', {
   maxRetentionTime: 60 * 24,
   onSync: ({ queue }) => processRefreshQueue(queue),
 })
@@ -115,8 +142,21 @@ self.addEventListener('install', (event) => {
       await sendTelemetry('sw.install', {
         appVersion: APP_VERSION,
       })
+
+      await notifyWaitingClients()
     })(),
   )
+})
+
+self.addEventListener('message', (event) => {
+  const data = event.data
+  if (!data || typeof data !== 'object') {
+    return
+  }
+
+  if ('type' in data && data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 registerRoute(
