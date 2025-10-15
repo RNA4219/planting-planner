@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
+import { startWebVitalsTracking } from './lib/webVitals'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,4 +29,5 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
+startWebVitalsTracking()
 void registerServiceWorker()
