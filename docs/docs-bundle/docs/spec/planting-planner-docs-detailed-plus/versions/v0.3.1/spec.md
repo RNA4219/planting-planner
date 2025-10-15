@@ -1,0 +1,28 @@
+# v0.3.1 PWA 基盤 – 仕様
+
+## 1. Manifest
+- name, short_name, start_url="/", display="standalone", background_color, theme_color
+- icons: 192 / 512 / maskable PNG
+
+## 2. Service Worker / Caching
+### 2.1 Precache
+- ビルド生成物（`*.js`, `*.css`, フォント/ロゴ）を manifest に含める
+### 2.2 Runtime Cache
+- 静的資産: Stale-While-Revalidate
+- `GET /api/*`: Network-First（失敗時 `cache.match` フォールバック）
+- キャッシュキー: `api:{method}:{url}:{query}:v{schemaVersion}:e{dataEpoch}`
+### 2.3 Background Sync（`POST /api/refresh`）
+- 失敗時 payload を IndexedDB('sync-queue') に保存、`tag='refresh-queue'`
+- `sync` イベントで再送、指数バックオフ（最大 3 回）
+
+## 3. 冪等性 / 更新通知
+- **Idempotency-Key**: `/api/refresh` に必須（再送時に同一値）
+- **SW 更新**: `waiting` → `postMessage({type:'SW_WAITING', version})` → UI トースト → `postMessage({type:'SKIP_WAITING'})`
+
+## 4. テレメトリ
+- `sw.install` / `sw.fetch.cache_hit` / `bg.sync.retry` / `offline.banner_shown`
+- すべて `x-request-id` をヘッダから受け取り、ログ相関
+
+## 5. エラー
+- `fetch` 失敗: キャッシュ有→表示 / 無→「取得不可」トースト
+- BG Sync 不可: 再試行ボタンを表示

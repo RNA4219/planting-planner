@@ -1,0 +1,24 @@
+services:
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+    ports: [ "8080:80" ]
+  api:
+    build: ./api
+    environment:
+      - DB_URL=${DB_URL}
+    ports: [ "8000:8000" ]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

@@ -1,0 +1,14 @@
+[
+  { "crop_id": 1, "region": "cold", "days": 70 },
+  { "crop_id": 1, "region": "temperate", "days": 56 },
+  { "crop_id": 1, "region": "warm", "days": 49 },
+  { "crop_id": 2, "region": "cold", "days": 90 },
+  { "crop_id": 2, "region": "temperate", "days": 80 },
+  { "crop_id": 2, "region": "warm", "days": 75 },
+  { "crop_id": 3, "region": "cold", "days": 120 },
+  { "crop_id": 3, "region": "temperate", "days": 110 },
+  { "crop_id": 3, "region": "warm", "days": 100 },
+  { "crop_id": 4, "region": "cold", "days": 85 },
+  { "crop_id": 4, "region": "temperate", "days": 70 },
+  { "crop_id": 4, "region": "warm", "days": 60 }
+]
