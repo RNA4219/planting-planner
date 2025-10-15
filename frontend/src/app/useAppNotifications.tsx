@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { ToastStackItem } from '../components/ToastStack'
 import { APP_STATUS_MESSAGES, TOAST_MESSAGES } from '../constants/messages'
 import { useRefreshStatusController } from '../hooks/refresh/controller'
+import type { RecommendationLoadError } from '../hooks/recommendations/loader'
 import { getSnapshot, subscribe, skipWaiting } from '../lib/swClient'
 import { sendTelemetry } from '../lib/telemetry'
 import { formatLastSync } from '../utils/formatLastSync'
@@ -10,6 +11,7 @@ import { formatLastSync } from '../utils/formatLastSync'
 type UseAppNotificationsArgs = {
   reloadCurrentWeek: () => void | Promise<void>
   isMarketFallback: boolean
+  recommendationError: RecommendationLoadError | null
 }
 
 type UseAppNotificationsResult = {
@@ -27,11 +29,14 @@ type UseAppNotificationsResult = {
 export const useAppNotifications = ({
   reloadCurrentWeek,
   isMarketFallback,
+  recommendationError,
 }: UseAppNotificationsArgs): UseAppNotificationsResult => {
   const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController()
   const lastSuccessToastIdRef = useRef<string | null>(null)
   const marketFallbackToastSeqRef = useRef(0)
   const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
+  const recommendationErrorToastSeqRef = useRef(0)
+  const [recommendationErrorToasts, setRecommendationErrorToasts] = useState<ToastStackItem[]>([])
   const [{ waiting, isOffline, lastSyncAt }, setSwState] = useState(() => getSnapshot())
   const [updateToast, setUpdateToast] = useState<ToastStackItem | null>(null)
   const [suppressUpdateToast, setSuppressUpdateToast] = useState(false)
@@ -75,6 +80,29 @@ export const useAppNotifications = ({
       ]
     })
   }, [isMarketFallback, marketFallbackToasts.length])
+
+  useEffect(() => {
+    if (!recommendationError) {
+      setRecommendationErrorToasts((prev) => (prev.length > 0 ? [] : prev))
+      return
+    }
+    if (recommendationError === 'recommendations-unavailable') {
+      setRecommendationErrorToasts((prev) => {
+        if (prev.length > 0) {
+          return prev
+        }
+        recommendationErrorToastSeqRef.current += 1
+        return [
+          {
+            id: `recommendation-unavailable-${recommendationErrorToastSeqRef.current}`,
+            variant: 'error',
+            message: TOAST_MESSAGES.recommendationUnavailable,
+            detail: null,
+          },
+        ]
+      })
+    }
+  }, [recommendationError])
 
   useEffect(() => {
     return subscribe((event) => {
@@ -157,6 +185,13 @@ export const useAppNotifications = ({
   const handleToastDismiss = useCallback(
     (id: string) => {
       let removed = false
+      setRecommendationErrorToasts((prev) => {
+        if (!prev.some((toast) => toast.id === id)) {
+          return prev
+        }
+        removed = true
+        return prev.filter((toast) => toast.id !== id)
+      })
       setMarketFallbackToasts((prev) => {
         if (!prev.some((toast) => toast.id === id)) {
           return prev
@@ -177,13 +212,13 @@ export const useAppNotifications = ({
 
   const combinedToasts = useMemo(
     () => {
-      const base = [...pendingToasts, ...marketFallbackToasts]
+      const base = [...pendingToasts, ...recommendationErrorToasts, ...marketFallbackToasts]
       if (updateToast) {
         return [updateToast, ...base]
       }
       return base
     },
-    [marketFallbackToasts, pendingToasts, updateToast],
+    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, updateToast],
   )
 
   const fallbackNotice = useMemo(() => {

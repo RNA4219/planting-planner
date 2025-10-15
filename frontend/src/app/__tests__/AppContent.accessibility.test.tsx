@@ -42,6 +42,7 @@ describe('AppContent accessibility', () => {
       handleSubmit: vi.fn(),
       reloadCurrentWeek: vi.fn(),
       isMarketFallback: false,
+      recommendationError: null,
     }
 
     const notificationsResult: UseAppNotificationsResult = {

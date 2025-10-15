@@ -41,6 +41,7 @@ const createLoaderResult = (): UseRecommendationLoaderResult => ({
     .fn<UseRecommendationLoaderResult['requestRecommendations']>()
     .mockResolvedValue(undefined),
   isMarketFallback: false,
+  loadError: null,
 })
 
 describe('useRecommendations store behaviour', () => {

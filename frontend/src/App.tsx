@@ -53,6 +53,7 @@ export const AppContent = () => {
     handleSubmit,
     reloadCurrentWeek,
     isMarketFallback,
+    recommendationError,
   } = useRecommendations({
     favorites,
     initialRegion: initialRegionRef.current,
@@ -71,7 +72,11 @@ export const AppContent = () => {
     offlineBanner,
     isOffline,
     lastSync,
-  } = useAppNotifications({ reloadCurrentWeek, isMarketFallback })
+  } = useAppNotifications({
+    reloadCurrentWeek,
+    isMarketFallback,
+    recommendationError,
+  })
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
