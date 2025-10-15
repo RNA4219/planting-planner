@@ -117,7 +117,7 @@ declare global {
 }
 
 const isEnglishEnabled = (): boolean => {
-  if (Boolean(globalThis.FEATURE_FLAGS?.I18N_EN)) {
+  if (globalThis.FEATURE_FLAGS?.I18N_EN === true) {
     return true
   }
   const envFlagRaw = import.meta.env?.VITE_I18N_EN
