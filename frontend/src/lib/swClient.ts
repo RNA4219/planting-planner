@@ -118,6 +118,9 @@ export const registerServiceWorker = async () => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return
   }
+  if ('webdriver' in navigator && navigator.webdriver) {
+    return
+  }
   try {
     const registration = await navigator.serviceWorker.register('/sw.js')
     attachRegistrationListeners(registration)
