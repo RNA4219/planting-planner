@@ -10,7 +10,7 @@ const capturedOptionsRef = vi.hoisted<RefreshStatusPollerOptions[]>(() => [])
 
 type PostRefreshImmediate =
   Pick<RefreshStatusResponse, 'state'> &
-  Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error'>>
+  Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error' | 'finished_at'>>
 
 type PostRefreshMock = () => Promise<PostRefreshImmediate>
 
