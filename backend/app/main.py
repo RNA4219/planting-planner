@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from .middleware.security import SecurityHeadersMiddleware
-
 from .dependencies import prepare_database
+from .middleware.security import SecurityHeadersMiddleware
 from .routes import api_router
 from .routes.telemetry import router as telemetry_router
 
