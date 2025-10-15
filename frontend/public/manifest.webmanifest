@@ -1,0 +1,27 @@
+{
+  "name": "Planting Planner",
+  "short_name": "Planner",
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "background_color": "#f9fbf7",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
