@@ -60,6 +60,42 @@ describe('useRefreshStatusController / success toasts', () => {
     })
   })
 
+  it('localStorage が利用できない環境でも最新 lastSync を返す', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(
+      createStatus('success', { finished_at: '2024-01-02T00:00:00Z', updated_records: 9 }),
+    )
+
+    const { result, unmount } = renderController()
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
+    })
+
+    const snapshot = result.current.lastSync
+    expect(snapshot).toEqual({
+      finished_at: '2024-01-02T00:00:00Z',
+      updated_records: 9,
+    })
+
+    unmount()
+
+    const originalStorage = window.localStorage
+    Object.defineProperty(window, 'localStorage', { value: undefined, configurable: true })
+
+    try {
+      const offline = renderController()
+      expect(offline.result.current.lastSync).toEqual(snapshot)
+      offline.unmount()
+    } finally {
+      Object.defineProperty(window, 'localStorage', { value: originalStorage, configurable: true })
+    }
+  })
+
   it('成功時にトーストを表示し onSuccess を呼び出す', async () => {
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
     fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))

@@ -38,9 +38,15 @@ const readLastSyncFromStorage = (): RefreshLastSyncSnapshot | null => {
 let cachedLastSync: RefreshLastSyncSnapshot | null | undefined
 
 const getCachedLastSync = (): RefreshLastSyncSnapshot | null => {
-  const snapshot = readLastSyncFromStorage()
-  cachedLastSync = snapshot
-  return snapshot
+  if (canUseStorage()) {
+    const snapshot = readLastSyncFromStorage()
+    cachedLastSync = snapshot
+    return snapshot
+  }
+  if (cachedLastSync === undefined) {
+    cachedLastSync = null
+  }
+  return cachedLastSync
 }
 
 const persistLastSync = (snapshot: RefreshLastSyncSnapshot | null): void => {
