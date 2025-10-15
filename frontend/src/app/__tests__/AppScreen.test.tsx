@@ -12,15 +12,21 @@ describe('AppScreen', () => {
         searchControls={<div data-testid="search-controls">search</div>}
         toastStack={<div data-testid="toast-stack">toast</div>}
         fallbackNotice={<div data-testid="fallback-notice">notice</div>}
+        offlineBanner={<div data-testid="offline-banner">offline</div>}
         recommendationsTable={<div data-testid="recommendations-table">table</div>}
         priceChartSection={<div data-testid="price-chart-section">chart</div>}
+        status={{ isOffline: false, lastSync: null }}
+        appVersion="test"
       />,
     )
 
     expect(screen.getByRole('heading', { name: 'テストタイトル' })).toBeInTheDocument()
     expect(screen.getByTestId('search-controls')).toBeInTheDocument()
     expect(screen.getByTestId('toast-stack')).toBeInTheDocument()
+    expect(screen.getByTestId('app-status-bar')).toHaveTextContent('オンライン')
+    expect(screen.getByTestId('app-version-footer')).toHaveTextContent('バージョン: test')
     expect(screen.getByTestId('fallback-notice')).toBeInTheDocument()
+    expect(screen.getByTestId('offline-banner')).toBeInTheDocument()
     expect(screen.getByTestId('recommendations-table')).toBeInTheDocument()
     expect(screen.getByTestId('price-chart-section')).toBeInTheDocument()
   })
