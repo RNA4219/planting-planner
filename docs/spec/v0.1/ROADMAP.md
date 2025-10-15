@@ -1,5 +1,7 @@
 # ロードマップ - planting-planner v0.1
 
+> ⚠️ PNG アセットに関する PR は CI 制約により作成できません。該当項目は計画に含めないでください。
+
 ## 進捗メモ (2025-10-05)
 - ✅ FastAPIバックエンド: `/api/health`, `/api/crops`, `/api/recommend`, `/api/refresh`, `/api/refresh/status`, `/api/price` を確認。ETLは直近3件平均で欠損補完済み。
 - ✅ Reactフロント: 地域・週選択フォーム、推薦テーブル、価格チャート、☆お気に入り保存が動作。
