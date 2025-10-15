@@ -114,6 +114,10 @@ describe('App snapshot', () => {
     expect(container).not.toBeNull()
     expect(container?.querySelector('[class*="app__"]')).toBeNull()
 
+    const statusBar = screen.getByTestId('app-status-bar')
+    expect(statusBar).toHaveTextContent('オンライン')
+    expect(statusBar).toHaveTextContent('最終同期: 未同期')
+
     const tablist = screen.getByRole('tablist', { name: 'カテゴリ' })
     expect(tablist).toHaveClass('bg-market-neutral-container')
     expect(tablist).toHaveClass('rounded-full')
@@ -127,5 +131,8 @@ describe('App snapshot', () => {
       expect(tab).toHaveClass('aria-selected:text-white')
     })
     expect(useRecommendationsSpy).toHaveBeenCalled()
+
+    const versionFooter = screen.getByTestId('app-version-footer')
+    expect(versionFooter).toHaveTextContent('バージョン:')
   })
 })

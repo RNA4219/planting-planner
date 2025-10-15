@@ -26,4 +26,20 @@ export const TOAST_MESSAGES = {
   refreshRequestFailureWithDetail: (detail: string) =>
     `更新リクエストに失敗しました: ${detail}`,
   recommendationFallbackWarning: '市場データが一時的に利用できないため、推定値を表示しています。',
+  serviceWorkerUpdateAvailable: '新しいバージョンが利用可能です。',
+  serviceWorkerUpdateDetail: '最新の変更を反映するには更新してください。',
+  serviceWorkerUpdateNow: '今すぐ更新',
+  serviceWorkerUpdateLater: 'あとで',
+} as const
+
+export const APP_STATUS_MESSAGES = {
+  offlineBannerTitle: 'オフラインで表示しています',
+  offlineBannerDetail: '最新データはオンライン復帰後に自動で同期されます。',
+  offlineBannerLastSync: (value: string) => `最終同期: ${value}`,
+  offlineBannerLastSyncUnknown: '最終同期: 未同期',
+  statusOnline: 'オンライン',
+  statusOffline: 'オフライン',
+  statusLastSyncPrefix: '最終同期: ',
+  statusLastSyncUnknown: '未同期',
+  versionLabel: (version: string) => `バージョン: ${version}`,
 } as const

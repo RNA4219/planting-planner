@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 
 import App from './App'
 import './index.css'
+import { registerServiceWorker } from './lib/swClient'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,3 +27,5 @@ createRoot(container).render(
     </QueryClientProvider>
   </React.StrictMode>,
 )
+
+void registerServiceWorker()

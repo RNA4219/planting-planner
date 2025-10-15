@@ -61,8 +61,17 @@ export const AppContent = () => {
   })
   const { resolveCategoriesForScope, ensureValidCategory, handleMarketsUpdate } =
     useCategoryTabs()
-  const { isRefreshing, startRefresh, combinedToasts, handleToastDismiss, fallbackNotice } =
-    useAppNotifications({ reloadCurrentWeek, isMarketFallback })
+  const {
+    isRefreshing,
+    startRefresh,
+    combinedToasts,
+    handleToastDismiss,
+    handleToastAction,
+    fallbackNotice,
+    offlineBanner,
+    isOffline,
+    lastSync,
+  } = useAppNotifications({ reloadCurrentWeek, isMarketFallback })
 
   const handleWeekChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -147,9 +156,12 @@ export const AppContent = () => {
         )
       : null)
 
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
+
   return (
     <AppScreen
       title={APP_TEXT.title}
+      status={{ isOffline, lastSync }}
       searchControls={
         <SearchControls
           queryWeek={queryWeek}
@@ -166,8 +178,15 @@ export const AppContent = () => {
           onMarketsUpdate={handleMarketsUpdate}
         />
       }
-      toastStack={<ToastStack toasts={combinedToasts} onDismiss={handleToastDismiss} />}
+      toastStack={
+        <ToastStack
+          toasts={combinedToasts}
+          onDismiss={handleToastDismiss}
+          onAction={handleToastAction}
+        />
+      }
       fallbackNotice={fallbackNoticeContent}
+      offlineBanner={offlineBanner}
       recommendationsTable={
         <RecommendationsTable
           region={region}
@@ -193,6 +212,7 @@ export const AppContent = () => {
       priceChartSection={
         <PriceChartSection selectedCropId={selectedCropId} marketScope={selectedMarket} />
       }
+      appVersion={appVersion}
     />
   )
 }

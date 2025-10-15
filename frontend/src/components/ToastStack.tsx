@@ -4,17 +4,25 @@ import { TOAST_AUTO_DISMISS_MS } from '../constants/toast'
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
 
+export interface ToastAction {
+  readonly id: string
+  readonly label: string
+}
+
 export interface ToastStackItem {
   readonly id: string
   readonly variant: ToastVariant
   readonly message: string
   readonly detail?: string | null
+  readonly actions?: readonly ToastAction[]
+  readonly sticky?: boolean
 }
 
 export interface ToastStackProps {
   readonly toasts: ReadonlyArray<ToastStackItem>
   readonly onDismiss?: (id: string) => void
   readonly autoCloseDurationMs?: number
+  readonly onAction?: (toastId: string, actionId: string) => void
 }
 
 const VARIANT_STYLES: Record<ToastVariant, string> = {
@@ -28,6 +36,7 @@ export const ToastStack = ({
   toasts,
   onDismiss,
   autoCloseDurationMs = TOAST_AUTO_DISMISS_MS,
+  onAction,
 }: ToastStackProps) => {
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const prevDuration = useRef<number | undefined>(autoCloseDurationMs)
@@ -75,6 +84,9 @@ export const ToastStack = ({
 
     toasts.forEach((toast) => {
       if (!timers.has(toast.id)) {
+        if (toast.sticky || (toast.actions && toast.actions.length > 0)) {
+          return
+        }
         const timer = setTimeout(() => {
           timers.delete(toast.id)
           onDismiss(toast.id)
@@ -113,6 +125,20 @@ export const ToastStack = ({
             <p>{toast.message}</p>
             {toast.detail ? <p className="text-sm font-normal text-white/80">{toast.detail}</p> : null}
           </div>
+          {toast.actions && toast.actions.length > 0 ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              {toast.actions.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  className="rounded-full border border-white/30 px-3 py-1 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+                  onClick={() => onAction?.(toast.id, action.id)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {onDismiss ? (
             <button
               type="button"
