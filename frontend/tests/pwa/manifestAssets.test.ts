@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 describe('PWA manifest assets', () => {
@@ -28,6 +28,10 @@ describe('PWA manifest assets', () => {
       expect(icon.src?.startsWith('/icons/')).toBe(true)
       expect(icon.type).toBe('image/png')
       expect(icon.sizes).toBeDefined()
+      if (icon.src) {
+        const absolutePath = resolve(__dirname, `../../public${icon.src}`)
+        expect(existsSync(absolutePath)).toBe(true)
+      }
     })
 
     for (const requirement of requiredIcons) {
