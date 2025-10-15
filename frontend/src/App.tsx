@@ -12,6 +12,7 @@ import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
+import { isShareSupported, shareCurrentView } from './lib/share'
 import { useRecommendations } from './hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
@@ -72,6 +73,7 @@ export const AppContent = () => {
     offlineBanner,
     isOffline,
     lastSync,
+    notifyShareResult,
   } = useAppNotifications({
     reloadCurrentWeek,
     isMarketFallback,
@@ -116,6 +118,26 @@ export const AppContent = () => {
     () => searchKeyword.normalize('NFKC').trim().toLowerCase(),
     [searchKeyword],
   )
+
+  const canUseShare = useMemo(() => {
+    if (typeof navigator === 'undefined') {
+      return false
+    }
+    if (isShareSupported()) {
+      return true
+    }
+    return typeof navigator.clipboard?.writeText === 'function'
+  }, [])
+
+  const handleShare = useCallback(async () => {
+    const result = await shareCurrentView({
+      region,
+      marketScope: selectedMarket,
+      category,
+      week: queryWeek || currentWeek,
+    })
+    notifyShareResult(result)
+  }, [category, currentWeek, notifyShareResult, queryWeek, region, selectedMarket])
 
   const recommendationsTabpanelId = useId()
 
@@ -181,6 +203,8 @@ export const AppContent = () => {
           onRefresh={startRefresh}
           refreshing={isRefreshing}
           onMarketsUpdate={handleMarketsUpdate}
+          onShare={handleShare}
+          isShareSupported={canUseShare}
         />
       }
       toastStack={

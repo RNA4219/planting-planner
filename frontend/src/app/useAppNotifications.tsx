@@ -29,6 +29,7 @@ type UseAppNotificationsResult = {
   readonly offlineBanner: ReactNode | null
   readonly isOffline: boolean
   readonly lastSync: Date | null
+  readonly notifyShareResult: (result: 'success' | 'copied' | 'error') => void
 }
 
 export const useAppNotifications = ({
@@ -42,6 +43,8 @@ export const useAppNotifications = ({
   const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
   const recommendationErrorToastSeqRef = useRef(0)
   const [recommendationErrorToasts, setRecommendationErrorToasts] = useState<ToastStackItem[]>([])
+  const shareToastSeqRef = useRef(0)
+  const [shareToasts, setShareToasts] = useState<ToastStackItem[]>([])
   const initialSnapshot = useMemo(() => getSnapshot(), [])
   const [{ waiting, isOffline, lastSyncAt }, setSwState] = useState(initialSnapshot)
   const [updateToast, setUpdateToast] = useState<ToastStackItem | null>(null)
@@ -213,6 +216,13 @@ export const useAppNotifications = ({
         removed = true
         return prev.filter((toast) => toast.id !== id)
       })
+      setShareToasts((prev) => {
+        if (!prev.some((toast) => toast.id === id)) {
+          return prev
+        }
+        removed = true
+        return prev.filter((toast) => toast.id !== id)
+      })
       const isUpdateToast = updateToast?.id === id
       if (!removed && !isUpdateToast) {
         dismissToast(id)
@@ -230,13 +240,18 @@ export const useAppNotifications = ({
 
   const combinedToasts = useMemo(
     () => {
-      const base = [...pendingToasts, ...recommendationErrorToasts, ...marketFallbackToasts]
+      const base = [
+        ...pendingToasts,
+        ...recommendationErrorToasts,
+        ...marketFallbackToasts,
+        ...shareToasts,
+      ]
       if (updateToast) {
         return [updateToast, ...base]
       }
       return base
     },
-    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, updateToast],
+    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, shareToasts, updateToast],
   )
 
   const fallbackNotice = useMemo(() => {
@@ -272,6 +287,29 @@ export const useAppNotifications = ({
     [forceUpdateRequired, updateToast],
   )
 
+  const notifyShareResult = useCallback(
+    (result: 'success' | 'copied' | 'error') => {
+      const id = `share-${shareToastSeqRef.current + 1}`
+      shareToastSeqRef.current += 1
+      const message =
+        result === 'success'
+          ? TOAST_MESSAGES.shareSuccess
+          : result === 'copied'
+            ? TOAST_MESSAGES.shareCopied
+            : TOAST_MESSAGES.shareError
+      const variant = result === 'error' ? 'error' : 'info'
+      setShareToasts([
+        {
+          id,
+          variant,
+          message,
+          detail: null,
+        },
+      ])
+    },
+    [],
+  )
+
   return {
     isRefreshing,
     startRefresh,
@@ -282,5 +320,6 @@ export const useAppNotifications = ({
     offlineBanner,
     isOffline,
     lastSync: lastSyncDate,
+    notifyShareResult,
   }
 }
