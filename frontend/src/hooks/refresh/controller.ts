@@ -4,7 +4,7 @@ import { TOAST_AUTO_DISMISS_MS } from '../../constants/toast'
 import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
 import type { RefreshStatusResponse } from '../../types'
-import { setLastSync } from '../../lib/swClient'
+import { setLastSync as setServiceWorkerLastSync } from '../../lib/swClient'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
@@ -141,7 +141,7 @@ export const useRefreshStatusController = (
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [pendingToasts, setPendingToasts] = useState<RefreshToast[]>([])
-  const [lastSync, setLastSync] = useState<RefreshLastSyncSnapshot | null>(() => getCachedLastSync())
+  const [lastSync, setLastSyncState] = useState<RefreshLastSyncSnapshot | null>(() => getCachedLastSync())
   const active = useRef(false)
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completion = useRef<(() => void) | null>(null)
@@ -202,12 +202,12 @@ export const useRefreshStatusController = (
         const snapshot = extractLastSync(status)
         if (snapshot) {
           persistLastSync(snapshot)
-          setLastSync(snapshot)
+          setLastSyncState(snapshot)
+          setServiceWorkerLastSync(snapshot.finished_at)
         }
       }
       if (toast) {
         if (toast.variant === 'success') {
-          setLastSync(new Date().toISOString())
           void Promise.resolve(options?.onSuccess?.()).catch(() => undefined)
         }
         enqueue(toast)
