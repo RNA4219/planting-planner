@@ -96,7 +96,25 @@ export const processRefreshQueue = async (queue: Queue) => {
   }
 }
 
-const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-api', {
+const notifyWaitingClients = async () => {
+  const waiting = self.registration.waiting
+  if (!waiting || waiting.state !== 'installed') {
+    return
+  }
+
+  const windowClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  })
+
+  for (const client of windowClients) {
+    if ('postMessage' in client && typeof client.postMessage === 'function') {
+      client.postMessage({ type: 'SW_WAITING', version: APP_VERSION })
+    }
+  }
+}
+
+const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-queue', {
   maxRetentionTime: 60 * 24,
   onSync: ({ queue }) => processRefreshQueue(queue),
 })
@@ -115,8 +133,21 @@ self.addEventListener('install', (event) => {
       await sendTelemetry('sw.install', {
         appVersion: APP_VERSION,
       })
+
+      await notifyWaitingClients()
     })(),
   )
+})
+
+self.addEventListener('message', (event) => {
+  const data = event.data
+  if (!data || typeof data !== 'object') {
+    return
+  }
+
+  if ('type' in data && data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 registerRoute(
