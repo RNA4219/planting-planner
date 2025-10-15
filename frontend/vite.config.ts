@@ -1,5 +1,30 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectRegister: false,
+      registerType: 'prompt',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        navigateFallback: '/index.html',
+      },
+      manifest: {
+        id: '/',
+        name: 'Planting Planner',
+        short_name: 'Planner',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#14532d',
+        icons: [],
+      },
+    }),
+  ],
 })
