@@ -39,9 +39,5 @@ def refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
 def log_telemetry_event(event: schemas.TelemetryEvent) -> None:
     logger.info(
         "telemetry event received",
-        extra={
-            "event": event.event,
-            "request_id": event.request_id,
-            "payload": event.payload,
-        },
+        extra=event.model_dump(),
     )
