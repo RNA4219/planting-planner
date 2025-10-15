@@ -61,3 +61,11 @@ export const sendTelemetry = async (
     // Telemetry failures should not break the main flow.
   }
 }
+
+export const track = (
+  event: string,
+  payload: TelemetryPayload = {},
+  requestId?: string,
+): void => {
+  void sendTelemetry(event, payload, requestId)
+}

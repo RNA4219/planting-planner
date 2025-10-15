@@ -4,7 +4,7 @@ import { TOAST_AUTO_DISMISS_MS } from '../../constants/toast'
 import { TOAST_MESSAGES } from '../../constants/messages'
 import { fetchRefreshStatus, postRefresh } from '../../lib/api'
 import type { RefreshStatusResponse } from '../../types'
-import { setLastSync } from '../../lib/swClient'
+import { setLastSync as setSwLastSync } from '../../lib/swClient'
 
 import { createRefreshStatusPoller, isTerminalState } from './poller'
 
@@ -207,7 +207,16 @@ export const useRefreshStatusController = (
       }
       if (toast) {
         if (toast.variant === 'success') {
-          setLastSync(new Date().toISOString())
+          const finishedAt = new Date().toISOString()
+          setSwLastSync(finishedAt)
+          setLastSync((prev) => {
+            const snapshot: RefreshLastSyncSnapshot = {
+              finished_at: finishedAt,
+              updated_records: prev?.updated_records ?? 0,
+            }
+            persistLastSync(snapshot)
+            return snapshot
+          })
           void Promise.resolve(options?.onSuccess?.()).catch(() => undefined)
         }
         enqueue(toast)
