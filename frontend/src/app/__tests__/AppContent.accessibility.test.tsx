@@ -49,7 +49,11 @@ describe('AppContent accessibility', () => {
       startRefresh: vi.fn(),
       combinedToasts: [],
       handleToastDismiss: vi.fn(),
+      handleToastAction: vi.fn(),
       fallbackNotice: null,
+      offlineBanner: null,
+      isOffline: false,
+      lastSync: null,
     }
 
     mockUseRecommendations.mockReturnValue(recommendationsResult)

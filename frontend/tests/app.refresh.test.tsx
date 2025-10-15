@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -11,10 +11,67 @@ import {
   resetAppSpies,
   renderApp,
 } from './utils/renderApp'
+import { TOAST_MESSAGES } from '../src/constants/messages'
+import type { ServiceWorkerClientEvent } from '../src/lib/swClient'
+
+const swListeners = new Set<(event: ServiceWorkerClientEvent) => void>()
+let swSnapshot = {
+  waiting: null as ServiceWorker | null,
+  isOffline: false,
+  lastSyncAt: null as string | null,
+}
+const skipWaitingMock = vi.fn()
+
+vi.mock('../src/lib/swClient', () => ({
+  registerServiceWorker: vi.fn(),
+  subscribe: vi.fn((listener: (event: ServiceWorkerClientEvent) => void) => {
+    swListeners.add(listener)
+    return () => {
+      swListeners.delete(listener)
+    }
+  }),
+  getSnapshot: vi.fn(() => swSnapshot),
+  skipWaiting: (...args: unknown[]) => {
+    skipWaitingMock(...args)
+  },
+  setLastSync: vi.fn((value: string | null) => {
+    swSnapshot = { ...swSnapshot, lastSyncAt: value }
+    swListeners.forEach((listener) =>
+      listener({ type: 'last-sync', lastSyncAt: value }),
+    )
+  }),
+}))
+
+vi.mock('../src/lib/telemetry', () => ({
+  track: vi.fn(),
+}))
+
+const emitSwEvent = (event: ServiceWorkerClientEvent) => {
+  if (event.type === 'waiting') {
+    swSnapshot = { ...swSnapshot, waiting: event.registration.waiting }
+  }
+  if (event.type === 'waiting-cleared') {
+    swSnapshot = { ...swSnapshot, waiting: null }
+  }
+  if (event.type === 'offline') {
+    swSnapshot = { ...swSnapshot, isOffline: event.isOffline }
+  }
+  if (event.type === 'last-sync') {
+    swSnapshot = { ...swSnapshot, lastSyncAt: event.lastSyncAt }
+  }
+  swListeners.forEach((listener) => listener(event))
+}
 
 describe('App refresh workflow', () => {
   beforeEach(() => {
     resetAppSpies()
+    swListeners.clear()
+    skipWaitingMock.mockReset()
+    swSnapshot = {
+      waiting: null,
+      isOffline: false,
+      lastSyncAt: null,
+    }
   })
 
   afterEach(() => {
@@ -128,5 +185,66 @@ describe('App refresh workflow', () => {
     expect(reloadCurrentWeekSpy).toHaveBeenCalledTimes(1)
 
     useRecommendationsMock.mockRestore()
+  })
+
+  test('Service Worker 更新トーストで「今すぐ更新」を押下すると skipWaiting が呼ばれる', async () => {
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+      isMarketFallback: false,
+    })
+    fetchCrops.mockResolvedValue([])
+    swSnapshot = {
+      ...swSnapshot,
+      waiting: {
+        postMessage: vi.fn(),
+      } as unknown as ServiceWorker,
+    }
+
+    await renderApp()
+
+    const updateToast = await screen.findByText(TOAST_MESSAGES.serviceWorkerUpdateAvailable)
+    const updateToastContainer = updateToast.closest('[data-testid="toast"]')
+    expect(updateToastContainer).not.toBeNull()
+    const updateNowButton = await within(updateToastContainer as Element).findByRole(
+      'button',
+      { name: TOAST_MESSAGES.serviceWorkerUpdateNow },
+    )
+    await fireEvent.click(updateNowButton)
+
+    expect(skipWaitingMock).toHaveBeenCalledTimes(1)
+  })
+
+  test('オフライン時にバナーとステータスバーを表示し telemetry を送出する', async () => {
+    const telemetryModule = await import('../src/lib/telemetry')
+    const trackMock = vi.mocked(telemetryModule.track)
+    fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
+    fetchRecommendations.mockResolvedValue({
+      week: '2024-W30',
+      region: 'temperate',
+      items: [],
+      isMarketFallback: false,
+    })
+    fetchCrops.mockResolvedValue([])
+
+    await renderApp()
+
+    emitSwEvent({ type: 'last-sync', lastSyncAt: '2024-03-04T05:06:07Z' })
+    emitSwEvent({ type: 'offline', isOffline: true })
+
+    const banner = await screen.findByTestId('offline-status-banner')
+    expect(banner).toHaveTextContent('オフラインで表示しています')
+    expect(banner).toHaveTextContent('最終同期: 2024/03/04 05:06')
+
+    const statusBars = screen.getAllByTestId('app-status-bar')
+    const latestStatusBar = statusBars[statusBars.length - 1]
+    expect(latestStatusBar).toHaveTextContent('オフライン')
+    expect(latestStatusBar).toHaveTextContent('最終同期: 2024/03/04 05:06')
+
+    expect(trackMock).toHaveBeenCalledWith('offline.banner_shown', {
+      lastSyncAt: '2024-03-04T05:06:07Z',
+    })
   })
 })
