@@ -1,0 +1,68 @@
+# プロダクト要件定義（PRD） — v0.3
+
+## 概要
+
+v0.3 は既存の栽培計画支援を拡張し、市場視点の切替とカテゴリ別ナビゲーションを導入して比較検討を容易にする。同時に UI を Tailwind CSS へ刷新し、将来のコンポーネント拡張とアクセシビリティ向上の基盤を整える。E2E テストを Playwright で追加し、主要導線の品質を自動検証する。
+
+## 目的
+
+- 全国平均と都市別市場価格の比較をワンタップで可能にする。
+- 葉菜/根菜/花きカテゴリで作物情報を整理し、探索性を改善する。
+- Tailwind ベースのデザイン指針へ移行し、一貫したスタイリングとレスポンシブ対応を実現する。
+- 重要ユーザーフロー（市場切替・カテゴリ切替・推薦閲覧）を E2E テストで保証する。
+
+## スコープ
+
+- バックエンド: 市場クエリ（national, city）を受け取り既存レスポンス構造を維持。都市別データは既存 ETL で取得済みの `market_prices` を都市キーで参照。市場メタデータ API として `GET /api/markets` を追加し、`market_metadata` キャッシュを JSON で公開。
+- フロントエンド: 市場切替トグルとカテゴリタブ UI を追加し、Tailwind コンポーネントに置換。状態管理は既存 store を拡張し、副作用を actions 内へ限定。
+- データ/ETL: 都市一覧メタデータのメンテと欠損時フォールバック（全国平均）。既存スキーマ変更なし。
+- 品質保証: GitHub Actions CI は `push` / `pull_request` トリガーで `frontend`・`frontend e2e (playwright)`・`backend-lint`・`backend-test`・`frontend-lighthouse` ジョブを並列実行し、型/静的解析・E2E・パフォーマンス検証を網羅する（Playwright 実行ジョブであることを表示名で明示するための改称）。Playwright 成果の集計スクリプトでは `python backend/app/ci/playwright_metrics.py --job-name "frontend e2e (playwright)" ...` のように `--job-name` を指定して CI 記録と整合させる。
+
+## 非スコープ
+
+- `GET /api/markets` 以外の新規 API エンドポイントの追加。
+- ユーザー定義都市の登録 UI。
+- Tailwind プラグインによる高度なテーマカスタマイズ。
+
+## 成功指標
+
+- 市場切替操作後 300ms 以内にリストが再描画される（Lighthouse 測定）。
+- カテゴリタブ切替でユーザーが 3 クリック以内に目的作物へ到達（ユーザビリティテスト）。
+- Playwright シナリオが main ブランチで連続 5 回成功。
+- `GET /api/markets` の 5xx 率を 1% 未満に維持し、キャッシュ欠損時は 2 分以内に復旧。
+
+## UI/UX 指針
+
+- グローバルヘッダー右上に市場切替セレクタ（トグル or セレクト）。初期値は「全国平均」。
+- カテゴリタブは上部水平タブで、選択状態を Tailwind `aria-selected` ユーティリティで表現。
+- ブレークポイント: `sm` で縦積み、`md` 以上で横並び。Tailwind カスタムカラーは `theme.colors.market.*` を利用。
+- 市場未選択時は全国平均を表示し、都市データ欠損はトーストで案内。
+
+## アーキテクチャ指針
+
+- API リクエストに `marketScope` パラメータを追加（`national` デフォルト、都市は `city:<city_id>`）。既存レスポンス JSON を変更しない。
+- カテゴリタブは `CropCategory` 列挙を流用。store に `selectedCategory` を追加し、既存 selectors を拡張。
+- Tailwind 設定は `frontend/tailwind.config.ts` を更新し、コンポーネントは Tailwind ユーティリティとテーマトークン（`theme.colors.market.*` など）へ全面移行する。
+- Playwright セットアップは `frontend/tests/e2e` に配置し、`npm run test:e2e` を追加。CI は Playwright のデフォルトワーカー数で実行し、固定 1 にはしない。固定並列数へ戻す場合は flake 率や実行時間の悪化を評価し、必要最小限のシナリオ抽出後に適用する。
+
+## テスト計画
+
+- 単体: 市場スコープ引数追加による API ハンドラの分岐テスト、カテゴリフィルタ reducer テスト。
+- 結合: フロントエンドで市場切替 → API コール → レンダリングの一連テスト（React Testing Library）。
+- E2E: Playwright で以下を自動化。
+  - 市場切替で価格表示が都市値へ更新。
+  - カテゴリタブ変更で該当作物のみ表示。
+  - 推薦カードの Tailwind クラス存在確認とリンク遷移。
+
+## リスクと緩和策
+
+- Tailwind への置換で既存スタイル崩れ → Storybook Visual Regression をスポット実行。
+- 都市別データ不足 → バックエンドで全国平均へのフォールバックとアラート通知。
+- Playwright 実行時間増加 → smoke シナリオ最小化と並列化準備。
+
+## マイルストーン
+
+1. 市場データ API 拡張（バックエンド、1 スプリント）。
+2. Tailwind 基盤導入とコンポーネントリファクタ（フロントエンド、1.5 スプリント）。
+3. カテゴリタブと市場切替 UI 実装（フロントエンド、1 スプリント）。
+4. Playwright 導入と CI 統合（QA/フロントエンド、0.5 スプリント）。
