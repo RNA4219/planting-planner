@@ -5,7 +5,9 @@ import sqlite3
 
 from fastapi import BackgroundTasks, HTTPException, status
 
-from . import etl_runner, schemas
+from .. import etl_runner, schemas
+
+__all__ = ["start_refresh", "refresh_status"]
 
 logger = logging.getLogger(__name__)
 
