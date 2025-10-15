@@ -1,26 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { sendTelemetry, track } from '../telemetry'
 
 describe('telemetry', () => {
-  const originalNavigator = globalThis.navigator
-  const originalFetch = globalThis.fetch
-
-  beforeEach(() => {
-    vi.restoreAllMocks()
-    Object.defineProperty(globalThis, 'navigator', {
-      value: originalNavigator,
-      configurable: true,
-    })
-    globalThis.fetch = originalFetch
-  })
-
   afterEach(() => {
-    Object.defineProperty(globalThis, 'navigator', {
-      value: originalNavigator,
-      configurable: true,
-    })
-    globalThis.fetch = originalFetch
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('exports track that proxies sendTelemetry', () => {
@@ -32,12 +17,8 @@ describe('telemetry', () => {
       Promise.resolve(new Response(null, { status: 204 })),
     ) as unknown as typeof fetch
 
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {},
-      configurable: true,
-    })
-
-    globalThis.fetch = mockFetch
+    vi.stubGlobal('navigator', {})
+    vi.stubGlobal('fetch', mockFetch)
 
     await track('test-event', { foo: 'bar' }, 'request-id')
 
