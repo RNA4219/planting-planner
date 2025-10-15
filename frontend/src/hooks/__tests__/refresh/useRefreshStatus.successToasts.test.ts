@@ -1,5 +1,5 @@
 import { act } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TOAST_AUTO_DISMISS_MS } from '../../../constants/toast'
 import { TOAST_MESSAGES } from '../../../constants/messages'
@@ -13,6 +13,53 @@ import {
 } from './setup'
 
 describe('useRefreshStatusController / success toasts', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('refresh 成功時に lastSync を更新し永続化する', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(
+      createStatus('success', {
+        finished_at: '2024-01-01T00:30:00Z',
+        updated_records: 7,
+      }),
+    )
+
+    const { result } = renderController()
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
+    })
+
+    expect(result.current.lastSync).toEqual({
+      finished_at: '2024-01-01T00:30:00Z',
+      updated_records: 7,
+    })
+    expect(JSON.parse(localStorage.getItem('refresh:lastSync') ?? 'null')).toEqual({
+      finished_at: '2024-01-01T00:30:00Z',
+      updated_records: 7,
+    })
+  })
+
+  it('永続化された lastSync を初期値として返す', () => {
+    localStorage.setItem(
+      'refresh:lastSync',
+      JSON.stringify({ finished_at: '2023-12-31T23:59:59Z', updated_records: 4 }),
+    )
+
+    const { result } = renderController()
+
+    expect(result.current.lastSync).toEqual({
+      finished_at: '2023-12-31T23:59:59Z',
+      updated_records: 4,
+    })
+  })
+
   it('成功時にトーストを表示し onSuccess を呼び出す', async () => {
     postRefreshMock.mockResolvedValueOnce({ state: 'running' })
     fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
