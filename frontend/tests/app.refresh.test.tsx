@@ -165,6 +165,7 @@ describe('App refresh workflow', () => {
     const successDetail = screen.getByText('7件のデータを更新しました。')
     expect(successMessage).toBeInTheDocument()
     expect(successDetail).toBeInTheDocument()
+    expect(swSnapshot.lastSyncAt).toBe('2024-01-01T00:10:00Z')
     const successToast = successMessage.closest('[data-testid="toast"]')
     expect(successToast).not.toBeNull()
     if (successToast) {
