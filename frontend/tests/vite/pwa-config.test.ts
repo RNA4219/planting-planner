@@ -46,6 +46,14 @@ describe('vite PWA configuration', () => {
           injectRegister?: boolean
           registerType?: string
           workbox?: Record<string, unknown>
+          manifest?: {
+            icons?: Array<{
+              src?: string
+              sizes?: string
+              type?: string
+              purpose?: string
+            }>
+          }
         }
 
     expect(options).toMatchObject({
@@ -58,6 +66,26 @@ describe('vite PWA configuration', () => {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         navigateFallback: '/index.html',
       },
+      manifest: expect.objectContaining({
+        icons: expect.arrayContaining([
+          expect.objectContaining({
+            src: '/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          }),
+          expect.objectContaining({
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          }),
+          expect.objectContaining({
+            src: '/icons/icon-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          }),
+        ]),
+      }),
     })
   })
 })
