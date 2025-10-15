@@ -31,6 +31,7 @@ vi.mock('../src/lib/swClient', () => ({
     }
   }),
   getSnapshot: vi.fn(() => swSnapshot),
+  isForceUpdateEnabled: vi.fn(() => false),
   skipWaiting: (...args: unknown[]) => {
     skipWaitingMock(...args)
   },

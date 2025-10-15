@@ -4,7 +4,12 @@ import type { ToastStackItem } from '../components/ToastStack'
 import { APP_STATUS_MESSAGES, TOAST_MESSAGES } from '../constants/messages'
 import { useRefreshStatusController } from '../hooks/refresh/controller'
 import type { RecommendationLoadError } from '../hooks/recommendations/loader'
-import { getSnapshot, subscribe, skipWaiting } from '../lib/swClient'
+import {
+  getSnapshot,
+  isForceUpdateEnabled,
+  subscribe,
+  skipWaiting,
+} from '../lib/swClient'
 import { sendTelemetry } from '../lib/telemetry'
 import { formatLastSync } from '../utils/formatLastSync'
 
@@ -37,9 +42,13 @@ export const useAppNotifications = ({
   const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
   const recommendationErrorToastSeqRef = useRef(0)
   const [recommendationErrorToasts, setRecommendationErrorToasts] = useState<ToastStackItem[]>([])
-  const [{ waiting, isOffline, lastSyncAt }, setSwState] = useState(() => getSnapshot())
+  const initialSnapshot = useMemo(() => getSnapshot(), [])
+  const [{ waiting, isOffline, lastSyncAt }, setSwState] = useState(initialSnapshot)
   const [updateToast, setUpdateToast] = useState<ToastStackItem | null>(null)
   const [suppressUpdateToast, setSuppressUpdateToast] = useState(false)
+  const [forceUpdateRequired, setForceUpdateRequired] = useState(
+    () => initialSnapshot.waiting !== null && isForceUpdateEnabled(),
+  )
   const [offlineBanner, setOfflineBanner] = useState<ReactNode | null>(null)
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(() =>
     lastSyncAt ? new Date(lastSyncAt) : null,
@@ -111,11 +120,13 @@ export const useAppNotifications = ({
           ...prev,
           waiting: event.registration.waiting,
         }))
+        setForceUpdateRequired(event.forceUpdate)
         setSuppressUpdateToast(false)
         return
       }
       if (event.type === 'waiting-cleared') {
         setSwState((prev) => ({ ...prev, waiting: null }))
+        setForceUpdateRequired(false)
         setSuppressUpdateToast(false)
         return
       }
@@ -138,22 +149,25 @@ export const useAppNotifications = ({
   }, [lastSyncAt])
 
   useEffect(() => {
-    if (waiting && !suppressUpdateToast) {
+    const shouldShowForced = waiting && forceUpdateRequired
+    if (shouldShowForced || (waiting && !suppressUpdateToast)) {
       setUpdateToast({
         id: 'service-worker-update',
         variant: 'info',
         message: TOAST_MESSAGES.serviceWorkerUpdateAvailable,
         detail: TOAST_MESSAGES.serviceWorkerUpdateDetail,
-        actions: [
-          { id: 'update-now', label: TOAST_MESSAGES.serviceWorkerUpdateNow },
-          { id: 'dismiss-update', label: TOAST_MESSAGES.serviceWorkerUpdateLater },
-        ],
+        actions: shouldShowForced
+          ? [{ id: 'update-now', label: TOAST_MESSAGES.serviceWorkerUpdateNow }]
+          : [
+              { id: 'update-now', label: TOAST_MESSAGES.serviceWorkerUpdateNow },
+              { id: 'dismiss-update', label: TOAST_MESSAGES.serviceWorkerUpdateLater },
+            ],
         sticky: true,
       })
       return
     }
     setUpdateToast((prev) => (waiting ? prev : null))
-  }, [suppressUpdateToast, waiting])
+  }, [forceUpdateRequired, suppressUpdateToast, waiting])
 
   useEffect(() => {
     if (!isOffline) {
@@ -199,15 +213,19 @@ export const useAppNotifications = ({
         removed = true
         return prev.filter((toast) => toast.id !== id)
       })
-      if (!removed) {
+      const isUpdateToast = updateToast?.id === id
+      if (!removed && !isUpdateToast) {
         dismissToast(id)
       }
-      if (updateToast && id === updateToast.id) {
+      if (isUpdateToast) {
+        if (forceUpdateRequired) {
+          return
+        }
         setSuppressUpdateToast(true)
         setUpdateToast(null)
       }
     },
-    [dismissToast, updateToast],
+    [dismissToast, forceUpdateRequired, updateToast],
   )
 
   const combinedToasts = useMemo(
@@ -244,14 +262,14 @@ export const useAppNotifications = ({
           skipWaiting()
           setUpdateToast(null)
         }
-        if (actionId === 'dismiss-update') {
+        if (!forceUpdateRequired && actionId === 'dismiss-update') {
           setSuppressUpdateToast(true)
           setUpdateToast(null)
         }
         return
       }
     },
-    [updateToast],
+    [forceUpdateRequired, updateToast],
   )
 
   return {
