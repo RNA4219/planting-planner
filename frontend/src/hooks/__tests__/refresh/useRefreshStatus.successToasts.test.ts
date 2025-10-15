@@ -10,6 +10,7 @@ import {
   fetchRefreshStatusMock,
   postRefreshMock,
   renderController,
+  setLastSyncMock,
 } from './setup'
 
 describe('useRefreshStatusController / success toasts', () => {
@@ -44,6 +45,26 @@ describe('useRefreshStatusController / success toasts', () => {
       finished_at: '2024-01-01T00:30:00Z',
       updated_records: 7,
     })
+  })
+
+  it('成功時に service worker へ最終同期時刻を共有する', async () => {
+    const finishedAt = '2024-01-01T02:34:56.000Z'
+    vi.setSystemTime(new Date('2025-05-05T05:05:05.000Z'))
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'success',
+      updated_records: 1,
+      last_error: null,
+      finished_at: finishedAt,
+    })
+
+    const { result } = renderController()
+
+    await act(async () => {
+      await result.current.startRefresh()
+    })
+
+    expect(setLastSyncMock).toHaveBeenCalledTimes(1)
+    expect(setLastSyncMock).toHaveBeenCalledWith(finishedAt)
   })
 
   it('永続化された lastSync を初期値として返す', () => {

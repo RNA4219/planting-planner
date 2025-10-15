@@ -4,7 +4,7 @@ import type { ToastStackItem } from '../components/ToastStack'
 import { APP_STATUS_MESSAGES, TOAST_MESSAGES } from '../constants/messages'
 import { useRefreshStatusController } from '../hooks/refresh/controller'
 import { getSnapshot, subscribe, skipWaiting } from '../lib/swClient'
-import { track } from '../lib/telemetry'
+import { sendTelemetry } from '../lib/telemetry'
 import { formatLastSync } from '../utils/formatLastSync'
 
 type UseAppNotificationsArgs = {
@@ -150,7 +150,7 @@ export const useAppNotifications = ({
     )
     if (!offlineTelemetrySentRef.current) {
       offlineTelemetrySentRef.current = true
-      track('offline.banner_shown', { lastSyncAt })
+      void sendTelemetry('offline.banner_shown', { lastSyncAt })
     }
   }, [isOffline, lastSyncAt, lastSyncDate])
 

@@ -43,7 +43,7 @@ vi.mock('../src/lib/swClient', () => ({
 }))
 
 vi.mock('../src/lib/telemetry', () => ({
-  track: vi.fn(),
+  sendTelemetry: vi.fn(),
 }))
 
 const emitSwEvent = (event: ServiceWorkerClientEvent) => {
@@ -220,7 +220,7 @@ describe('App refresh workflow', () => {
 
   test('オフライン時にバナーとステータスバーを表示し telemetry を送出する', async () => {
     const telemetryModule = await import('../src/lib/telemetry')
-    const trackMock = vi.mocked(telemetryModule.track)
+    const sendTelemetryMock = vi.mocked(telemetryModule.sendTelemetry)
     fetchRecommend.mockRejectedValue(new Error('legacy endpoint disabled'))
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
@@ -244,7 +244,7 @@ describe('App refresh workflow', () => {
     expect(latestStatusBar).toHaveTextContent('オフライン')
     expect(latestStatusBar).toHaveTextContent('最終同期: 2024/03/04 05:06')
 
-    expect(trackMock).toHaveBeenCalledWith('offline.banner_shown', {
+    expect(sendTelemetryMock).toHaveBeenCalledWith('offline.banner_shown', {
       lastSyncAt: '2024-03-04T05:06:07Z',
     })
   })

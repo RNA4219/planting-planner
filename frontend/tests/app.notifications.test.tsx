@@ -39,6 +39,10 @@ vi.mock('../src/hooks/refresh/controller', () => ({
   useRefreshStatusController: vi.fn(),
 }))
 
+vi.mock('../src/lib/telemetry', () => ({
+  sendTelemetry: vi.fn(),
+}))
+
 const useRefreshStatusControllerMock = vi.mocked(useRefreshStatusController)
 const subscribeMock = vi.mocked(
   (await import('../src/lib/swClient')).subscribe,
@@ -206,7 +210,7 @@ describe('useAppNotifications', () => {
 
   test('オフラインイベントでバナーを表示し telemetry を送信する', async () => {
     const telemetryModule = await import('../src/lib/telemetry')
-    const trackMock = vi.spyOn(telemetryModule, 'track')
+    const sendTelemetryMock = vi.spyOn(telemetryModule, 'sendTelemetry')
     const reloadCurrentWeek = vi.fn()
 
     useRefreshStatusControllerMock.mockReturnValue({
@@ -222,7 +226,7 @@ describe('useAppNotifications', () => {
 
     expect(result.current.isOffline).toBe(false)
     expect(result.current.offlineBanner).toBeNull()
-    expect(trackMock).not.toHaveBeenCalled()
+    expect(sendTelemetryMock).not.toHaveBeenCalled()
 
     await act(async () => {
       emitEvent({ type: 'offline', isOffline: true })
@@ -231,10 +235,10 @@ describe('useAppNotifications', () => {
 
     expect(result.current.isOffline).toBe(true)
     expect(result.current.offlineBanner).not.toBeNull()
-    expect(trackMock).toHaveBeenCalledWith('offline.banner_shown', {
+    expect(sendTelemetryMock).toHaveBeenCalledWith('offline.banner_shown', {
       lastSyncAt: '2024-01-01T12:00:00Z',
     })
 
-    trackMock.mockRestore()
+    sendTelemetryMock.mockRestore()
   })
 })

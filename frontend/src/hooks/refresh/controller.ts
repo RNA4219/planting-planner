@@ -198,16 +198,18 @@ export const useRefreshStatusController = (
       setIsRefreshing(false)
       completion.current?.()
       completion.current = null
+      let snapshot: RefreshLastSyncSnapshot | null = null
       if (status) {
-        const snapshot = extractLastSync(status)
+        snapshot = extractLastSync(status)
         if (snapshot) {
           persistLastSync(snapshot)
           setLastSyncState(snapshot)
-          setServiceWorkerLastSync(snapshot.finished_at)
         }
       }
       if (toast) {
         if (toast.variant === 'success') {
+          const lastSyncAt = snapshot?.finished_at ?? new Date().toISOString()
+          setServiceWorkerLastSync(lastSyncAt)
           void Promise.resolve(options?.onSuccess?.()).catch(() => undefined)
         }
         enqueue(toast)
