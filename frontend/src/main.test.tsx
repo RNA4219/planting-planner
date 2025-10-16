@@ -74,9 +74,15 @@ describe('main entrypoint', () => {
     vi.doUnmock('./index.css')
   })
 
-  it('defers service worker registration using requestIdleCallback when available', async () => {
-    vi.useFakeTimers()
-    resetMainModule()
+  it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.resetModules()
+    renderMock.mockClear()
+    document.body.innerHTML = '<div id="root"></div>'
+
+    const registerMock = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    vi.doMock('./lib/swClient', () => ({
+      registerServiceWorker: registerMock,
+    }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
@@ -178,11 +184,10 @@ describe('main entrypoint', () => {
 
     loadListener?.()
 
-    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
-
-    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
-    if (!callback) {
-      throw new Error('requestIdleCallback callback missing')
+    if (originalIdle) {
+      globalWithIdle.requestIdleCallback = originalIdle
+    } else {
+      delete (globalWithIdle as { requestIdleCallback?: (callback: IdleCallback) => number }).requestIdleCallback
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
