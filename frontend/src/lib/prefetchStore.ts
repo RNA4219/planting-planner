@@ -1,3 +1,4 @@
+import { DATA_EPOCH, SCHEMA_VERSION } from '../config/pwa'
 import type { CropCategory, MarketScope, Region } from '../types'
 import type { RecommendationFetchResult } from '../hooks/recommendationFetcher'
 
@@ -65,7 +66,7 @@ export const __setPrefetchStoreAdapterForTests = (adapter: PrefetchStoreAdapter 
 }
 
 const createKey = ({ region, marketScope, category, week }: PrefetchKey): string =>
-  `${region}:${marketScope}:${category}:${week}`
+  `${SCHEMA_VERSION}:${DATA_EPOCH}:${region}:${marketScope}:${category}:${week}`
 
 const openDatabase = async (): Promise<IDBDatabase | null> => {
   if (!('indexedDB' in globalThis) || !globalThis.indexedDB) {

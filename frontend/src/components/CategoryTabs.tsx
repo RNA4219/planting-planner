@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react'
 
+import type { FeatureFlagConfig } from '../constants/messages'
 import type { CropCategory } from '../types'
 
 export interface CategoryTabDefinition {
@@ -7,11 +8,49 @@ export interface CategoryTabDefinition {
   label: string
 }
 
-export const DEFAULT_CATEGORY_TABS = [
-  { key: 'leaf', label: '葉菜' },
-  { key: 'root', label: '根菜' },
-  { key: 'flower', label: '花き' },
-] as const satisfies readonly CategoryTabDefinition[]
+type Locale = 'ja' | 'en'
+
+type CategoryTabsDictionary = {
+  readonly tablistLabel: string
+  readonly tabs: readonly CategoryTabDefinition[]
+}
+
+const CATEGORY_TABS_DICTIONARY: Record<Locale, CategoryTabsDictionary> = {
+  ja: {
+    tablistLabel: 'カテゴリ',
+    tabs: [
+      { key: 'leaf', label: '葉菜' },
+      { key: 'root', label: '根菜' },
+      { key: 'flower', label: '花き' },
+    ] as const satisfies readonly CategoryTabDefinition[],
+  },
+  en: {
+    tablistLabel: 'Category',
+    tabs: [
+      { key: 'leaf', label: 'Leafy vegetables' },
+      { key: 'root', label: 'Root vegetables' },
+      { key: 'flower', label: 'Flower crops' },
+    ] as const satisfies readonly CategoryTabDefinition[],
+  },
+}
+
+export const DEFAULT_CATEGORY_TABS = CATEGORY_TABS_DICTIONARY.ja.tabs
+
+const resolveLocale = (): Locale => {
+  if (typeof document === 'undefined') {
+    return 'ja'
+  }
+
+  const lang = document.documentElement.lang?.toLowerCase() ?? ''
+
+  if (!lang.startsWith('en')) {
+    return 'ja'
+  }
+
+  const flag = (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS?.I18N_EN
+
+  return flag === true ? 'en' : 'ja'
+}
 
 interface CategoryTabsProps {
   category: CropCategory
@@ -34,11 +73,19 @@ const TAB_CLASS =
 
 export const CategoryTabs = ({
   category,
-  categories = DEFAULT_CATEGORY_TABS,
+  categories,
   onChange,
   controlsId,
 }: CategoryTabsProps) => {
-  if (!categories.length) {
+  const locale = resolveLocale()
+  const dictionary = CATEGORY_TABS_DICTIONARY[locale]
+  const useDictionaryTabs =
+    categories === undefined || categories === DEFAULT_CATEGORY_TABS
+  const tabs: readonly CategoryTabDefinition[] = useDictionaryTabs
+    ? dictionary.tabs
+    : categories
+
+  if (!tabs.length) {
     return null
   }
 
@@ -70,10 +117,10 @@ export const CategoryTabs = ({
     <div
       className="flex w-full flex-col items-stretch gap-1 rounded-full bg-market-neutral-container p-1 sm:inline-flex sm:flex-row sm:items-center"
       role="tablist"
-      aria-label="カテゴリ"
+      aria-label={dictionary.tablistLabel}
       aria-controls={controlsId}
     >
-      {categories.map((tab: CategoryTabDefinition, index: number) => {
+      {tabs.map((tab: CategoryTabDefinition, index: number) => {
         const isActive = tab.key === category
         const tabId = resolveTabId(tab.key)
         return (
@@ -92,7 +139,7 @@ export const CategoryTabs = ({
               }
             }}
             onKeyDown={(event) => {
-              handleKeyDown(event, index, categories)
+              handleKeyDown(event, index, tabs)
             }}
           >
             {tab.label}
