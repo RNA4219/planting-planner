@@ -109,81 +109,18 @@ const APP_STATUS_MESSAGES_DICTIONARY = {
   },
 } as const
 
-type Language = keyof typeof APP_TEXT_DICTIONARY
-
-declare global {
-  // eslint-disable-next-line no-var
-  var FEATURE_FLAGS: { I18N_EN?: boolean } | undefined
-}
-
-const isEnglishEnabled = (): boolean => {
-  if (globalThis.FEATURE_FLAGS?.I18N_EN === true) {
-    return true
-  }
-  const envFlagRaw = import.meta.env?.VITE_I18N_EN
-  if (typeof envFlagRaw === 'string') {
-    const normalized = envFlagRaw.toLowerCase()
-    return normalized === 'true' || normalized === '1'
-  }
-  return false
-}
-
-const parseLanguage = (
-  value: string | null | undefined,
-  englishEnabled: boolean,
-): Language | null => {
-  if (!value) {
-    return null
-  }
-  const normalized = value.toLowerCase()
-  if (normalized.startsWith('ja')) {
-    return 'ja'
-  }
-  if (englishEnabled && normalized.startsWith('en')) {
-    return 'en'
-  }
-  return null
-}
-
-const languageFromQuery = (englishEnabled: boolean): Language | null => {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  const langParam = new URLSearchParams(window.location.search).get('lang')
-  return parseLanguage(langParam, englishEnabled)
-}
-
-const languageFromNavigator = (englishEnabled: boolean): Language | null => {
-  if (typeof navigator === 'undefined') {
-    return null
-  }
-  const candidate = navigator.language || navigator.languages?.[0]
-  return parseLanguage(candidate ?? undefined, englishEnabled)
-}
-
-export const resolveLanguage = (): Language => {
-  const englishEnabled = isEnglishEnabled()
-  return (
-    languageFromQuery(englishEnabled) ??
-    languageFromNavigator(englishEnabled) ??
-    DEFAULT_LANGUAGE
-  )
-}
-
-const ACTIVE_LANGUAGE = resolveLanguage()
-
-if (typeof document !== 'undefined' && document.documentElement) {
-  document.documentElement.lang = ACTIVE_LANGUAGE
-}
-
-const APP_TEXT_SOURCE = APP_TEXT_DICTIONARY[ACTIVE_LANGUAGE]
-const SEARCH_CONTROLS_TEXT_SOURCE =
-  SEARCH_CONTROLS_TEXT_DICTIONARY[ACTIVE_LANGUAGE]
-const TOAST_MESSAGES_SOURCE = TOAST_MESSAGES_DICTIONARY[ACTIVE_LANGUAGE]
-const APP_STATUS_MESSAGES_SOURCE =
-  APP_STATUS_MESSAGES_DICTIONARY[ACTIVE_LANGUAGE]
-
-export const APP_TEXT = APP_TEXT_SOURCE
-export const SEARCH_CONTROLS_TEXT = SEARCH_CONTROLS_TEXT_SOURCE
-export const TOAST_MESSAGES = TOAST_MESSAGES_SOURCE
-export const APP_STATUS_MESSAGES = APP_STATUS_MESSAGES_SOURCE
+export const WEATHER_MESSAGES = {
+  title: '天気',
+  latestLabel: '最新値',
+  previousLabel: '前回値',
+  updatedAt: (value: string) => `取得日時: ${value}`,
+  loading: '取得中…',
+  empty: '天気データがありません',
+  error: '天気データの取得に失敗しました',
+  metrics: {
+    tmax: '最高気温',
+    tmin: '最低気温',
+    rain: '降水量',
+    wind: '風速',
+  },
+} as const

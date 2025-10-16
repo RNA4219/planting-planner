@@ -5,7 +5,8 @@ import sqlite3
 
 from fastapi import BackgroundTasks, HTTPException, status
 
-from . import etl_runner, schemas
+from .. import etl_runner, schemas
+from .weather import WeatherAdapter, WeatherService, WeatherServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,8 @@ def start_refresh(
 
 
 def refresh_status(conn: sqlite3.Connection) -> schemas.RefreshStatusResponse:
-    status = etl_runner.get_last_status(conn)
-    payload = status.model_dump() if hasattr(status, "model_dump") else status.dict()
+    status_obj = etl_runner.get_last_status(conn)
+    payload = status_obj.model_dump() if hasattr(status_obj, "model_dump") else status_obj.dict()
     response = schemas.RefreshStatusResponse(**payload)
     if response.state == etl_runner.STATE_SUCCESS:
         logger.info(
@@ -41,3 +42,13 @@ def log_telemetry_event(event: schemas.TelemetryEvent) -> None:
         "telemetry event received",
         extra=event.model_dump(),
     )
+
+
+__all__ = [
+    "WeatherAdapter",
+    "WeatherService",
+    "WeatherServiceError",
+    "start_refresh",
+    "refresh_status",
+    "log_telemetry_event",
+]
