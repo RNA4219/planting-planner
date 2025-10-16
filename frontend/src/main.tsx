@@ -9,16 +9,52 @@ import { registerServiceWorker } from './lib/swClient'
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
+    cancelIdleCallback?: (handle: number) => void
+  }
+
+  let executed = false
+  const run = () => {
+    if (executed) {
+      return
+    }
+    executed = true
+    callback()
   }
 
   if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    globalWithIdle.requestIdleCallback(() => {
-      callback()
+    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined
+    const idleHandle = globalWithIdle.requestIdleCallback(() => {
+      if (fallbackTimeout !== undefined) {
+        clearTimeout(fallbackTimeout)
+      }
+      run()
     })
+
+    fallbackTimeout = setTimeout(() => {
+      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
+        globalWithIdle.cancelIdleCallback(idleHandle)
+      }
+      run()
+    }, 0)
+
     return
   }
 
-  setTimeout(callback, 0)
+  setTimeout(run, 0)
+}
+
+const scheduleAfterWindowLoad = (callback: () => void) => {
+  if (document.readyState === 'complete') {
+    callback()
+    return
+  }
+
+  const onLoad = () => {
+    window.removeEventListener('load', onLoad)
+    callback()
+  }
+
+  window.addEventListener('load', onLoad)
 }
 
 const queryClient = new QueryClient({
@@ -43,7 +79,12 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-  startWebVitalsTracking()
+scheduleAfterWindowLoad(() => {
+  scheduleAfterIdle(() => {
+    void registerServiceWorker()
+
+    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+      startWebVitalsTracking()
+    })
+  })
 })
-void registerServiceWorker()
