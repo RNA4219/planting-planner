@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:file": "vitest run --passWithNoTests",
     "test:e2e": "npm run build && npx playwright test playwright/app.spec.js tests/e2e/*.spec.ts",
-    "test:lighthouse": "npm run build && lighthouse http://localhost:4173 --chrome-flags=--headless"
+    "test:lighthouse": "npm run build && lighthouse http://localhost:4173 --chrome-flags=--headless",
+    "test:bundle-size": "node --test tests/ci/bundle-size.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0",
