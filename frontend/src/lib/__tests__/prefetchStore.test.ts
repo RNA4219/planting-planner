@@ -1,20 +1,24 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  __setPrefetchStoreAdapterForTests,
-  clearPrefetchSnapshots,
-  loadPrefetchSnapshot,
-  savePrefetchSnapshot,
-  type PrefetchCounters,
-  type PrefetchKey,
-  type PrefetchStoreAdapter,
+import type {
+  PrefetchCounters,
+  PrefetchKey,
+  PrefetchStoreAdapter,
 } from '../prefetchStore'
 import type { RecommendationFetchResult } from '../../hooks/recommendationFetcher'
 
 const TTL_MS = 1000 * 60 * 60 * 24 * 14
 
+let adapterSchemaVersion = 'unknown'
+let adapterDataEpoch = 'unknown'
+
+const setAdapterVersions = (schema: string, epoch: string) => {
+  adapterSchemaVersion = schema
+  adapterDataEpoch = epoch
+}
+
 const createKey = ({ region, marketScope, category, week }: PrefetchKey): string =>
-  `${region}:${marketScope}:${category}:${week}`
+  `${adapterSchemaVersion}:${adapterDataEpoch}:${region}:${marketScope}:${category}:${week}`
 
 interface MemoryEntry {
   key: PrefetchKey
@@ -92,17 +96,83 @@ const baseKey: PrefetchKey = {
   week: '2024-W10',
 }
 
-beforeEach(() => {
-  __setPrefetchStoreAdapterForTests(createMemoryAdapter())
-})
+describe('prefetchStore versioning', () => {
+  it('ignores snapshots saved with different schema or data versions', async () => {
+    const memoryAdapter = createMemoryAdapter()
 
-afterEach(() => {
-  __setPrefetchStoreAdapterForTests(null)
+    vi.resetModules()
+    vi.doMock('../../config/pwa', () => ({
+      APP_VERSION: 'development',
+      SCHEMA_VERSION: 'schema-v1',
+      DATA_EPOCH: 'epoch-v1',
+      SW_FORCE_UPDATE: false,
+      buildTelemetryContext: () => ({
+        appVersion: 'development',
+        schemaVersion: 'schema-v1',
+        dataEpoch: 'epoch-v1',
+      }),
+    }))
+
+    const storeV1 = await import('../prefetchStore')
+    const configV1 = await import('../../config/pwa')
+    setAdapterVersions(configV1.SCHEMA_VERSION, configV1.DATA_EPOCH)
+    storeV1.__setPrefetchStoreAdapterForTests(memoryAdapter)
+
+    await storeV1.savePrefetchSnapshot({
+      ...baseKey,
+      snapshot: {
+        result: { week: baseKey.week, items: [], source: 'modern' },
+        isMarketFallback: false,
+      },
+    })
+
+    const firstLoad = await storeV1.loadPrefetchSnapshot(baseKey)
+    expect(firstLoad.snapshot).not.toBeNull()
+
+    vi.resetModules()
+    vi.doMock('../../config/pwa', () => ({
+      APP_VERSION: 'development',
+      SCHEMA_VERSION: 'schema-v2',
+      DATA_EPOCH: 'epoch-v2',
+      SW_FORCE_UPDATE: false,
+      buildTelemetryContext: () => ({
+        appVersion: 'development',
+        schemaVersion: 'schema-v2',
+        dataEpoch: 'epoch-v2',
+      }),
+    }))
+
+    const storeV2 = await import('../prefetchStore')
+    const configV2 = await import('../../config/pwa')
+    setAdapterVersions(configV2.SCHEMA_VERSION, configV2.DATA_EPOCH)
+    storeV2.__setPrefetchStoreAdapterForTests(memoryAdapter)
+
+    const miss = await storeV2.loadPrefetchSnapshot(baseKey)
+    expect(miss.snapshot).toBeNull()
+    expect(miss.counters.misses).toBeGreaterThan(0)
+
+    storeV2.__setPrefetchStoreAdapterForTests(null)
+    vi.doUnmock('../../config/pwa')
+    vi.resetModules()
+  })
 })
 
 describe('prefetchStore', () => {
+  let storeModule: typeof import('../prefetchStore')
+
+  beforeEach(async () => {
+    storeModule = await import('../prefetchStore')
+    const config = await import('../../config/pwa')
+    setAdapterVersions(config.SCHEMA_VERSION, config.DATA_EPOCH)
+    storeModule.__setPrefetchStoreAdapterForTests(createMemoryAdapter())
+  })
+
+  afterEach(() => {
+    storeModule.__setPrefetchStoreAdapterForTests(null)
+  })
+
   it('saves and loads snapshots while tracking hits', async () => {
-    const saveResult = await savePrefetchSnapshot({
+    const saveResult = await storeModule.savePrefetchSnapshot({
       ...baseKey,
       snapshot: {
         result: { week: baseKey.week, items: [], source: 'modern' },
@@ -110,7 +180,7 @@ describe('prefetchStore', () => {
       },
     })
     expect(saveResult.counters).toEqual({ hits: 0, misses: 0 })
-    const { snapshot, counters } = await loadPrefetchSnapshot(baseKey)
+    const { snapshot, counters } = await storeModule.loadPrefetchSnapshot(baseKey)
     expect(snapshot?.key).toEqual(baseKey)
     expect(snapshot?.result?.week).toBe(baseKey.week)
     expect(counters).toEqual({ hits: 1, misses: 0 })
@@ -118,7 +188,7 @@ describe('prefetchStore', () => {
 
   it('evicts expired entries when saving new data', async () => {
     const oldTimestamp = Date.now() - 16 * 24 * 60 * 60 * 1000
-    await savePrefetchSnapshot({
+    await storeModule.savePrefetchSnapshot({
       ...baseKey,
       week: '2024-W05',
       snapshot: {
@@ -127,7 +197,7 @@ describe('prefetchStore', () => {
       },
       fetchedAt: oldTimestamp,
     })
-    const result = await savePrefetchSnapshot({
+    const result = await storeModule.savePrefetchSnapshot({
       ...baseKey,
       snapshot: {
         result: {
@@ -147,29 +217,29 @@ describe('prefetchStore', () => {
       },
     })
     expect(result.pruned).toBe(1)
-    const miss = await loadPrefetchSnapshot({ ...baseKey, week: '2024-W05' })
+    const miss = await storeModule.loadPrefetchSnapshot({ ...baseKey, week: '2024-W05' })
     expect(miss.snapshot).toBeNull()
     expect(miss.counters.misses).toBeGreaterThan(0)
   })
 
   it('increments miss counters when data is unavailable', async () => {
-    const miss = await loadPrefetchSnapshot(baseKey)
+    const miss = await storeModule.loadPrefetchSnapshot(baseKey)
     expect(miss.snapshot).toBeNull()
     expect(miss.counters).toEqual({ hits: 0, misses: 1 })
   })
 
   it('clears stored data and resets counters', async () => {
-    await savePrefetchSnapshot({
+    await storeModule.savePrefetchSnapshot({
       ...baseKey,
       snapshot: {
         result: { week: baseKey.week, items: [], source: 'modern' },
         isMarketFallback: true,
       },
     })
-    await loadPrefetchSnapshot(baseKey)
-    const cleared = await clearPrefetchSnapshots()
+    await storeModule.loadPrefetchSnapshot(baseKey)
+    const cleared = await storeModule.clearPrefetchSnapshots()
     expect(cleared).toEqual({ hits: 0, misses: 0 })
-    const { counters } = await loadPrefetchSnapshot(baseKey)
+    const { counters } = await storeModule.loadPrefetchSnapshot(baseKey)
     expect(counters).toEqual({ hits: 0, misses: 1 })
   })
 })
