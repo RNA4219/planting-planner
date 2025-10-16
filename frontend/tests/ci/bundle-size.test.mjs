@@ -10,16 +10,33 @@ const __dirname = path.dirname(__filename);
 const assetsDir = path.resolve(__dirname, '../../dist/assets');
 const MAX_GZIP_BYTES = 300 * 1024;
 
+const collectJavaScriptFiles = (directoryPath) => {
+  const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
+  const filePaths = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(directoryPath, entry.name);
+
+    if (entry.isDirectory()) {
+      filePaths.push(...collectJavaScriptFiles(entryPath));
+      continue;
+    }
+
+    if (entry.isFile() && entry.name.endsWith('.js')) {
+      filePaths.push(entryPath);
+    }
+  }
+
+  return filePaths;
+};
+
 test('bundled JavaScript assets stay under 300 KiB compressed', () => {
   assert.ok(
     fs.existsSync(assetsDir),
     'dist/assets directory is missing. Run `npm run build` before executing this test.'
   );
 
-  const assetFiles = fs
-    .readdirSync(assetsDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.js'))
-    .map((entry) => path.join(assetsDir, entry.name));
+  const assetFiles = collectJavaScriptFiles(assetsDir);
 
   assert.ok(
     assetFiles.length > 0,
@@ -32,7 +49,7 @@ test('bundled JavaScript assets stay under 300 KiB compressed', () => {
 
     assert.ok(
       compressedSize <= MAX_GZIP_BYTES,
-      `${path.basename(assetPath)} exceeds ${MAX_GZIP_BYTES} bytes when gzipped (actual: ${compressedSize}).`
+      `${path.relative(assetsDir, assetPath)} exceeds ${MAX_GZIP_BYTES} bytes when gzipped (actual: ${compressedSize}).`
     );
   }
 });
