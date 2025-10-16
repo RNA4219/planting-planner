@@ -22,6 +22,8 @@ declare const self: ServiceWorkerGlobalScope & {
 
 const API_CACHE_NAME = 'api-get-cache'
 const STATIC_CACHE_NAME = 'static-assets'
+const REFRESH_QUEUE_NAME = 'refresh-queue'
+const MAX_BACKGROUND_SYNC_ATTEMPTS = 3
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -72,7 +74,7 @@ export const telemetryCachePlugin = {
 const processRequestWithRetries = async (request: Request): Promise<Response | void> => {
   const requestId = request.headers.get('x-request-id') ?? undefined
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < MAX_BACKGROUND_SYNC_ATTEMPTS; attempt += 1) {
     try {
       const response = await fetch(request.clone())
       if (!response.ok && response.status >= 500) {
@@ -80,7 +82,7 @@ const processRequestWithRetries = async (request: Request): Promise<Response | v
       }
       return response
     } catch (error) {
-      if (attempt >= 2) {
+      if (attempt >= MAX_BACKGROUND_SYNC_ATTEMPTS - 1) {
         throw error
       }
       const nextAttempt = attempt + 1
@@ -94,9 +96,16 @@ export const processRefreshQueue = async (queue: Queue) => {
   let entry = await queue.shiftRequest()
 
   while (entry) {
+    const requestId = entry.request.headers.get('x-request-id') ?? undefined
     try {
       await processRequestWithRetries(entry.request)
+      await sendTelemetry('bg.sync.succeeded', { queue: REFRESH_QUEUE_NAME }, requestId)
     } catch (error) {
+      await sendTelemetry(
+        'bg.sync.failed',
+        { attempt: MAX_BACKGROUND_SYNC_ATTEMPTS, queue: REFRESH_QUEUE_NAME },
+        requestId,
+      )
       await queue.unshiftRequest(entry)
       throw error
     }
@@ -123,7 +132,7 @@ const notifyWaitingClients = async () => {
   }
 }
 
-const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-queue', {
+const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin(REFRESH_QUEUE_NAME, {
   maxRetentionTime: 60 * 24,
   onSync: ({ queue }) => processRefreshQueue(queue),
 })
