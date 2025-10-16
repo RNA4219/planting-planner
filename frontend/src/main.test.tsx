@@ -184,10 +184,9 @@ describe('main entrypoint', () => {
 
     loadListener?.()
 
-    if (originalIdle) {
-      globalWithIdle.requestIdleCallback = originalIdle
-    } else {
-      Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
+    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
+    if (!callback) {
+      throw new Error('requestIdleCallback callback missing')
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
