@@ -46,12 +46,25 @@ const scheduleServiceWorkerRegistration = () => {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(() => {
+    let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
+
+    const registerOnce = () => {
+      if (fallbackTimeoutId !== null) {
+        globalThis.clearTimeout(fallbackTimeoutId)
+        fallbackTimeoutId = null
+      }
       invokeRegistration()
+    }
+
+    requestIdleCallback(() => {
+      registerOnce()
     })
-  } else {
-    window.setTimeout(invokeRegistration, 1500)
+
+    fallbackTimeoutId = globalThis.setTimeout(registerOnce, 1500)
+    return
   }
+
+  globalThis.setTimeout(invokeRegistration, 1500)
 }
 
 scheduleServiceWorkerRegistration()
