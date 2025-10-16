@@ -9,8 +9,9 @@ from starlette.types import ASGIApp
 
 DEFAULT_SECURITY_HEADERS: Mapping[str, str] = {
     "Content-Security-Policy": (
-        "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; "
-        "connect-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'"
+        "default-src 'self'; connect-src 'self'; img-src 'self' data:; script-src 'self' "
+        "'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; "
+        "base-uri 'none'; form-action 'none'"
     ),
     "Referrer-Policy": "no-referrer",
     "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",

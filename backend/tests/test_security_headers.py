@@ -10,6 +10,7 @@ def test_health_includes_csp_header() -> None:
 
     assert response.status_code == 200
     assert response.headers["Content-Security-Policy"] == (
-        "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; "
-        "connect-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'"
+        "default-src 'self'; connect-src 'self'; img-src 'self' data:; script-src 'self' "
+        "'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; "
+        "base-uri 'none'; form-action 'none'"
     )
