@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import inspect
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -7,12 +8,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from threading import Lock
-from typing import Any, Protocol
-
-try:
-    from adapter import registry as adapter_registry
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    adapter_registry = None
+from typing import Any, Protocol, cast
 
 from pydantic import ValidationError
 
@@ -21,9 +17,25 @@ from .. import schemas
 CacheKey = str
 
 
+class AdapterRegistry(Protocol):
+    def get(self, name: str) -> Any:  # pragma: no cover - protocol definition
+        ...
+
+
 class WeatherAdapter(Protocol):
     def get_daily(self, lat: float, lon: float) -> Any:  # pragma: no cover - protocol definition
         ...
+
+
+def _load_adapter_registry() -> AdapterRegistry | None:
+    try:
+        module = importlib.import_module("adapter")
+    except ModuleNotFoundError:  # pragma: no cover - optional dependency
+        return None
+    return cast(AdapterRegistry | None, getattr(module, "registry", None))
+
+
+adapter_registry = _load_adapter_registry()
 
 
 @dataclass
