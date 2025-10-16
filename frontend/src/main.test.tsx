@@ -1,15 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { isValidElement, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { type Container, type Root } from 'react-dom/client'
 
-const renderMock = vi.fn()
+const renderMock = vi.fn<Root['render']>()
+const createRootMock = vi.fn<(container: Container) => Root>(() => ({
+  render: renderMock,
+  unmount: vi.fn<Root['unmount']>(),
+}))
 
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
 
 vi.mock('react-dom/client', () => ({
-  createRoot: () => ({
-    render: renderMock,
-  }),
+  createRoot: createRootMock,
 }))
 
 afterEach(() => {

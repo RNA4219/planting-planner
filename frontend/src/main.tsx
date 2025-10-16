@@ -5,7 +5,6 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
-import { startWebVitalsTracking } from './lib/webVitals'
 
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
@@ -44,51 +43,7 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-startWebVitalsTracking()
-
-const scheduleServiceWorkerRegistration = () => {
-  const invokeRegistration = () => {
-    void registerServiceWorker()
-  }
-
-  if (typeof window === 'undefined') {
-    invokeRegistration()
-    return
-  }
-
-  const runAfterWindowLoad = (callback: () => void) => {
-    if (document.readyState === 'complete') {
-      callback()
-      return
-    }
-
-    window.addEventListener('load', () => callback(), { once: true })
-  }
-
-  runAfterWindowLoad(() => {
-    const { requestIdleCallback } = window as Window & {
-      requestIdleCallback?: (callback: () => void) => number
-    }
-
-    if (typeof requestIdleCallback === 'function') {
-      let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
-
-      const registerOnce = () => {
-        if (fallbackTimeoutId !== null) {
-          globalThis.clearTimeout(fallbackTimeoutId)
-          fallbackTimeoutId = null
-        }
-        invokeRegistration()
-      }
-
-      requestIdleCallback(registerOnce)
-
-      fallbackTimeoutId = globalThis.setTimeout(registerOnce, 3000)
-      return
-    }
-
-    globalThis.setTimeout(invokeRegistration, 1500)
-  })
-}
-
-scheduleServiceWorkerRegistration()
+void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+  startWebVitalsTracking()
+})
+void registerServiceWorker()
