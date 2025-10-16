@@ -4,6 +4,19 @@ import { track } from './telemetry'
 
 type MetricEventName = 'web_vitals.lcp' | 'web_vitals.inp' | 'web_vitals.cls'
 
+type IdleCallbackDeadline = {
+  readonly didTimeout: boolean
+  timeRemaining(): number
+}
+
+type IdleCallback = (deadline: IdleCallbackDeadline) => void
+
+type IdleScheduler = (callback: IdleCallback) => number
+
+type IdleGlobal = {
+  requestIdleCallback?: IdleScheduler
+}
+
 const createHandler = (event: MetricEventName) => (metric: Metric) => {
   const payload: Record<string, unknown> = {
     id: metric.id,
@@ -18,35 +31,30 @@ const createHandler = (event: MetricEventName) => (metric: Metric) => {
   void track(event, payload)
 }
 
-export const startWebVitalsTracking = (): Promise<void> => {
-  const globalWithIdle = globalThis as typeof globalThis & {
-    requestIdleCallback?: typeof window.requestIdleCallback
+const registerWebVitals = async () => {
+  const { onCLS, onINP, onLCP } = await import('web-vitals')
+  onLCP(createHandler('web_vitals.lcp'))
+  onINP(createHandler('web_vitals.inp'))
+  onCLS(createHandler('web_vitals.cls'))
+}
+
+const runWhenIdle = (task: () => void | Promise<void>) => {
+  const { requestIdleCallback } = globalThis as IdleGlobal
+
+  const invoke = () => {
+    void task()
   }
 
-  const schedule = (callback: () => void) => {
-    if (typeof globalWithIdle.requestIdleCallback === 'function') {
-      globalWithIdle.requestIdleCallback(() => {
-        callback()
-      })
-      return
-    }
-    setTimeout(callback, 0)
-  }
-
-  return new Promise<void>((resolve) => {
-    schedule(() => {
-      void import('web-vitals')
-        .then(({ onCLS, onINP, onLCP }) => {
-          onLCP(createHandler('web_vitals.lcp'))
-          onINP(createHandler('web_vitals.inp'))
-          onCLS(createHandler('web_vitals.cls'))
-        })
-        .catch(() => {
-          // Web Vitals の計測失敗は致命的ではないため握りつぶす
-        })
-        .finally(() => {
-          resolve()
-        })
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => {
+      invoke()
     })
-  })
+    return
+  }
+
+  setTimeout(invoke, 0)
+}
+
+export const startWebVitalsTracking = (): void => {
+  runWhenIdle(registerWebVitals)
 }
