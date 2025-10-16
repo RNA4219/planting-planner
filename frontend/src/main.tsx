@@ -87,8 +87,6 @@ const schedulePostLoadTasks = () => {
       startWebVitalsTracking()
     })
     void registerServiceWorker()
-  })
-}
 
 if (document.readyState === 'complete') {
   schedulePostLoadTasks()
