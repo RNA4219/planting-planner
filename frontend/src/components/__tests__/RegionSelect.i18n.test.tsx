@@ -2,9 +2,9 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { RegionSelect } from '../RegionSelect'
+import type { FeatureFlagConfig } from '../../constants/messages'
 
-type FeatureFlagConfig = { I18N_EN?: boolean }
+import { RegionSelect } from '../RegionSelect'
 
 declare global {
   // eslint-disable-next-line no-var

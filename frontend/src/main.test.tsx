@@ -45,7 +45,7 @@ describe('main entrypoint', () => {
     renderMock.mockClear()
     document.body.innerHTML = '<div id="root"></div>'
 
-    const registerMock = vi.fn<[], Promise<void>>().mockResolvedValue()
+    const registerMock = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
     vi.doMock('./lib/swClient', () => ({
       registerServiceWorker: registerMock,
     }))
@@ -76,7 +76,7 @@ describe('main entrypoint', () => {
     if (originalIdle) {
       globalWithIdle.requestIdleCallback = originalIdle
     } else {
-      delete globalWithIdle.requestIdleCallback
+      delete (globalWithIdle as { requestIdleCallback?: (callback: IdleCallback) => number }).requestIdleCallback
     }
     vi.doUnmock('./lib/swClient')
   })
