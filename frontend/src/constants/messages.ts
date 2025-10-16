@@ -111,8 +111,8 @@ const APP_STATUS_MESSAGES_DICTIONARY = {
 
 type LanguageCode = keyof typeof APP_TEXT_DICTIONARY
 
-type FeatureFlagConfig = {
-  I18N_EN?: boolean
+export type FeatureFlagConfig = {
+  readonly I18N_EN?: boolean
 }
 
 declare global {

@@ -1,11 +1,54 @@
 import { useId } from 'react'
 
-import { WEATHER_MESSAGES } from '../constants/messages'
+import { WEATHER_MESSAGES, type FeatureFlagConfig } from '../constants/messages'
 import type { WeatherSnapshot } from '../hooks/weather/useWeather'
 
-const numberFormatter = new Intl.NumberFormat('ja-JP', {
+declare global {
+  // eslint-disable-next-line no-var
+  var FEATURE_FLAGS: FeatureFlagConfig | undefined
+}
+
+const DEFAULT_LOCALE = 'ja-JP'
+
+const resolveLocale = (): string => {
+  const flags = (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS
+  const runtime = flags?.I18N_EN
+  const envFlag = import.meta.env?.VITE_I18N_EN
+  const englishEnabled =
+    typeof runtime === 'boolean'
+      ? runtime
+      : typeof envFlag === 'string' && envFlag.toLowerCase() === 'true'
+  if (!englishEnabled) {
+    return DEFAULT_LOCALE
+  }
+  const documentLanguage =
+    typeof document === 'undefined'
+      ? null
+      : document.documentElement?.lang?.trim() || null
+  if (!documentLanguage?.toLowerCase().startsWith('en')) {
+    return DEFAULT_LOCALE
+  }
+  if (typeof navigator === 'undefined') {
+    return documentLanguage ?? 'en'
+  }
+  const navigatorWithLanguages = navigator as Navigator & { languages?: readonly string[] }
+  const candidates = [
+    ...(Array.isArray(navigatorWithLanguages.languages)
+      ? navigatorWithLanguages.languages
+      : []),
+    navigator.language,
+  ].filter((locale): locale is string => typeof locale === 'string' && locale.trim().length > 0)
+  const englishCandidate = candidates.find((locale) => locale.toLowerCase().startsWith('en'))
+  return englishCandidate ?? documentLanguage ?? 'en'
+}
+
+const resolvedLocale = resolveLocale()
+
+const numberFormatter = new Intl.NumberFormat(resolvedLocale, {
   maximumFractionDigits: 1,
 })
+
+const dateTimeFormatter = new Intl.DateTimeFormat(resolvedLocale, { hour12: false })
 
 const formatTemperature = (value: number): string => `${numberFormatter.format(value)}℃`
 const formatRain = (value: number): string => `${numberFormatter.format(value)}mm`
@@ -16,7 +59,7 @@ const formatFetchedAt = (value: string): string => {
   if (Number.isNaN(date.getTime())) {
     return value
   }
-  return date.toLocaleString('ja-JP', { hour12: false })
+  return dateTimeFormatter.format(date)
 }
 
 interface WeatherTabProps {
