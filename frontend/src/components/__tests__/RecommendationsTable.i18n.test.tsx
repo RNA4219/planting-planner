@@ -37,7 +37,7 @@ const stubLocation = (href: string) => {
 }
 
 const createQueryClient = () =>
-  new QueryClient({ defaultOptions: { queries: { retry: false, cacheTime: 0 } } })
+  new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
 
 interface RenderOptions {
   readonly region?: Region
