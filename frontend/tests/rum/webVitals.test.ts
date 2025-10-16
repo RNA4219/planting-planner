@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
 type WebVitalsMetric = {
   id: string
@@ -58,20 +58,9 @@ vi.mock('web-vitals', () => ({
 import { startWebVitalsTracking } from '../../src/lib/webVitals'
 
 describe('startWebVitalsTracking', () => {
-  beforeEach(() => {
-    mocks.reset()
-  })
+  let originalRequestIdleCallback: typeof globalThis.requestIdleCallback
 
-  it('registers listeners and forwards metrics to telemetry', () => {
-    startWebVitalsTracking()
-
-    expect(mocks.onLCPSpy).toHaveBeenCalledTimes(1)
-    expect(mocks.onLCPSpy).toHaveBeenCalledWith(expect.any(Function))
-    expect(mocks.onINPSpy).toHaveBeenCalledTimes(1)
-    expect(mocks.onINPSpy).toHaveBeenCalledWith(expect.any(Function))
-    expect(mocks.onCLSSpy).toHaveBeenCalledTimes(1)
-    expect(mocks.onCLSSpy).toHaveBeenCalledWith(expect.any(Function))
-
+  const emitMetrics = () => {
     const { lcpListener, inpListener, clsListener } = mocks.getListeners()
 
     if (!lcpListener || !inpListener || !clsListener) {
@@ -120,5 +109,66 @@ describe('startWebVitalsTracking', () => {
       value: 0.15,
       delta: 0.1,
     })
+  }
+
+  beforeEach(() => {
+    mocks.reset()
+    originalRequestIdleCallback = globalThis.requestIdleCallback
+    delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback }).requestIdleCallback
+  })
+
+  afterEach(() => {
+    if (originalRequestIdleCallback) {
+      vi.stubGlobal('requestIdleCallback', originalRequestIdleCallback)
+    } else {
+      delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback }).requestIdleCallback
+    }
+  })
+
+  it('defers listener registration to requestIdleCallback when available', async () => {
+    const idleCallbacks: IdleRequestCallback[] = []
+    const idleCallbackMock = vi.fn((callback: IdleRequestCallback) => {
+      idleCallbacks.push(callback)
+      return idleCallbacks.length
+    })
+    vi.stubGlobal('requestIdleCallback', idleCallbackMock)
+
+    startWebVitalsTracking()
+
+    expect(idleCallbackMock).toHaveBeenCalledTimes(1)
+    expect(mocks.onLCPSpy).not.toHaveBeenCalled()
+    expect(mocks.onINPSpy).not.toHaveBeenCalled()
+    expect(mocks.onCLSSpy).not.toHaveBeenCalled()
+
+    idleCallbacks.forEach((callback) =>
+      callback({ didTimeout: false, timeRemaining: () => 50 }),
+    )
+
+    await Promise.resolve()
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
+
+    expect(mocks.onLCPSpy).toHaveBeenCalledTimes(1)
+    expect(mocks.onINPSpy).toHaveBeenCalledTimes(1)
+    expect(mocks.onCLSSpy).toHaveBeenCalledTimes(1)
+
+    emitMetrics()
+  })
+
+  it('falls back to setTimeout when requestIdleCallback is unavailable', async () => {
+    vi.useFakeTimers()
+
+    startWebVitalsTracking()
+
+    await vi.runOnlyPendingTimersAsync()
+
+    expect(mocks.onLCPSpy).toHaveBeenCalledTimes(1)
+    expect(mocks.onINPSpy).toHaveBeenCalledTimes(1)
+    expect(mocks.onCLSSpy).toHaveBeenCalledTimes(1)
+
+    emitMetrics()
+
+    vi.useRealTimers()
   })
 })

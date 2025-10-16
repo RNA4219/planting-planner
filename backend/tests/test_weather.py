@@ -77,3 +77,28 @@ def test_weather_endpoint_requires_lat_and_lon(
 
     response = weather_client.get("/api/weather", params={"lon": "139.0"})
     assert response.status_code == 422
+
+
+def test_weather_module_initializes_when_registry_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    import importlib
+    import sys
+    from types import ModuleType
+
+    original_adapter = sys.modules.get("adapter")
+    original_weather = sys.modules.get("app.services.weather")
+
+    monkeypatch.setitem(sys.modules, "adapter", ModuleType("adapter"))
+    monkeypatch.delitem(sys.modules, "app.services.weather", raising=False)
+
+    weather_module = importlib.import_module("app.services.weather")
+    assert getattr(weather_module, "adapter_registry", None) is None
+
+    if original_weather is not None:
+        sys.modules["app.services.weather"] = original_weather
+    else:
+        sys.modules.pop("app.services.weather", None)
+
+    if original_adapter is not None:
+        sys.modules["adapter"] = original_adapter
+    else:
+        sys.modules.pop("adapter", None)
