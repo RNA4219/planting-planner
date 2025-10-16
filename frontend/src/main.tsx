@@ -6,6 +6,8 @@ import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
 
+const isTestEnvironment = import.meta.env?.MODE === 'test'
+
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
@@ -18,6 +20,16 @@ const scheduleAfterIdle = (callback: () => void) => {
       return
     }
     executed = true
+    callback()
+  }
+
+  let timeoutId: number | undefined
+
+  const runCallback = () => {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId)
+      timeoutId = undefined
+    }
     callback()
   }
 
