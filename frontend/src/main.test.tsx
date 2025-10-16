@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { isValidElement, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { type Container, type Root } from 'react-dom/client'
 
-const renderMock = vi.fn()
+const renderMock = vi.fn<Root['render']>()
+const createRootMock = vi.fn<(container: Container) => Root>(() => ({
+  render: renderMock,
+  unmount: vi.fn<Root['unmount']>(),
+}))
 
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
 type IdleScheduler = (callback: IdleCallback) => number
@@ -15,9 +20,7 @@ const setIdleScheduler = (scheduler: IdleScheduler | undefined) => {
 }
 
 vi.mock('react-dom/client', () => ({
-  createRoot: () => ({
-    render: renderMock,
-  }),
+  createRoot: createRootMock,
 }))
 
 afterEach(() => {
@@ -80,9 +83,15 @@ describe('main entrypoint', () => {
     vi.doUnmock('./index.css')
   })
 
-  it('defers service worker registration using requestIdleCallback when available', async () => {
-    vi.useFakeTimers()
-    resetMainModule()
+  it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.resetModules()
+    renderMock.mockClear()
+    document.body.innerHTML = '<div id="root"></div>'
+
+    const registerMock = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    vi.doMock('./lib/swClient', () => ({
+      registerServiceWorker: registerMock,
+    }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
     setIdleScheduler((callback: IdleCallback) => {
@@ -186,9 +195,9 @@ describe('main entrypoint', () => {
 
     expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
 
-    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
+    const callback = scheduledIdleCallback
     if (!callback) {
-      throw new Error('requestIdleCallback callback missing')
+      throw new Error('Idle callback was not scheduled')
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })

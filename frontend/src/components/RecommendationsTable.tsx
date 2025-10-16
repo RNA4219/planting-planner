@@ -2,21 +2,14 @@ import { type KeyboardEvent, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { FavStar } from './FavStar'
+import { RECOMMENDATIONS_TABLE_MESSAGES } from '../constants/messages'
 import type { RecommendationRow } from '../hooks/recommendations/controller'
 import type { CropCategory, MarketScope, Region } from '../types'
 import { fetchMarkets } from '../lib/marketMetadata'
 
-const REGION_LABEL: Record<Region, string> = {
-  cold: '寒冷地',
-  temperate: '温暖地',
-  warm: '暖地',
-}
-
-const CATEGORY_LABELS: Record<CropCategory, string> = {
-  leaf: '葉菜類',
-  root: '根菜類',
-  flower: '花き',
-}
+const TABLE_MESSAGES = RECOMMENDATIONS_TABLE_MESSAGES
+const REGION_LABELS = TABLE_MESSAGES.regionNames
+const CATEGORY_LABELS = TABLE_MESSAGES.categoryLabels
 
 const isCropCategory = (value: string): value is CropCategory =>
   Object.hasOwn(CATEGORY_LABELS, value)
@@ -60,7 +53,8 @@ export const RecommendationsTable = ({
   tabpanelId,
   labelledById,
 }: RecommendationsTableProps) => {
-  const listLabel = `${REGION_LABEL[region]}向けの推奨一覧（基準週: ${displayWeek}）`
+  const regionLabel = REGION_LABELS[region]
+  const listLabel = TABLE_MESSAGES.listLabel(regionLabel, displayWeek)
   const resolvedTabpanelId = tabpanelId ?? 'recommendations-tabpanel'
   const resolvedLabelledById = labelledById ?? undefined
 
@@ -112,8 +106,12 @@ export const RecommendationsTable = ({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
-          <span>対象地域: {REGION_LABEL[region]}</span>
-          <span>基準週: {displayWeek}</span>
+          <span>
+            {TABLE_MESSAGES.labels.region}: {regionLabel}
+          </span>
+          <span>
+            {TABLE_MESSAGES.labels.baselineWeek}: {displayWeek}
+          </span>
         </div>
         {headerSlot}
       </div>
@@ -136,7 +134,7 @@ export const RecommendationsTable = ({
               </div>
             </div>
           ))}
-          <span className="sr-only">読み込み中</span>
+          <span className="sr-only">{TABLE_MESSAGES.status.loading}</span>
         </div>
       ) : rows.length === 0 ? (
         <div
@@ -144,16 +142,18 @@ export const RecommendationsTable = ({
           aria-live="polite"
           className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-market-neutral/40 bg-market-neutral/10 p-8 text-center text-sm text-slate-500"
         >
-          <span className="font-semibold text-slate-600">推奨データがありません</span>
-          <span>市場やカテゴリを変更して再度お試しください。</span>
+          <span className="font-semibold text-slate-600">
+            {TABLE_MESSAGES.status.emptyTitle}
+          </span>
+          <span>{TABLE_MESSAGES.status.emptyDescription}</span>
         </div>
       ) : (
         <table className="w-full border-separate border-spacing-4" aria-label={listLabel}>
           <thead className="sr-only">
             <tr>
-              <th scope="col">作物</th>
-              <th scope="col">期間</th>
-              <th scope="col">情報源</th>
+              <th scope="col">{TABLE_MESSAGES.tableHeaders.crop}</th>
+              <th scope="col">{TABLE_MESSAGES.tableHeaders.period}</th>
+              <th scope="col">{TABLE_MESSAGES.tableHeaders.source}</th>
             </tr>
           </thead>
           <tbody className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -183,22 +183,28 @@ export const RecommendationsTable = ({
                     </div>
                     {item.category ? (
                       <span className="text-xs text-slate-500">
-                        カテゴリ: {resolveCategoryLabel(item.category)}
+                        {TABLE_MESSAGES.labels.category}: {resolveCategoryLabel(item.category)}
                       </span>
                     ) : null}
                   </td>
                   <td className="grid grid-cols-2 gap-2 text-xs text-slate-600 align-top">
                     <div>
-                      <p className="font-medium text-slate-500">播種週</p>
+                      <p className="font-medium text-slate-500">
+                        {TABLE_MESSAGES.labels.sowingWeek}
+                      </p>
                       <p className="text-sm text-slate-700">{item.sowingWeekLabel}</p>
                     </div>
                     <div>
-                      <p className="font-medium text-slate-500">収穫週</p>
+                      <p className="font-medium text-slate-500">
+                        {TABLE_MESSAGES.labels.harvestWeek}
+                      </p>
                       <p className="text-sm text-slate-700">{item.harvestWeekLabel}</p>
                     </div>
                   </td>
                   <td className="text-xs text-slate-600 align-top">
-                    <p className="font-medium text-slate-500">情報源</p>
+                    <p className="font-medium text-slate-500">
+                      {TABLE_MESSAGES.labels.source}
+                    </p>
                     <p className="text-sm text-slate-700">{item.source}</p>
                   </td>
                 </tr>

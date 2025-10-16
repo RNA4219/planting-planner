@@ -1,3 +1,5 @@
+import type { CropCategory, Region } from '../types'
+
 const DEFAULT_LANGUAGE = 'ja' as const
 
 const APP_TEXT_DICTIONARY = {
@@ -80,6 +82,100 @@ const TOAST_MESSAGES_DICTIONARY = {
     shareSuccess: 'Shared link has been sent',
     shareCopied: 'Shared link copied',
     shareError: 'Failed to share',
+  },
+} as const
+
+type RecommendationTableMessages = {
+  readonly regionNames: Record<Region, string>
+  readonly categoryLabels: Record<CropCategory, string>
+  readonly labels: {
+    readonly region: string
+    readonly baselineWeek: string
+    readonly category: string
+    readonly sowingWeek: string
+    readonly harvestWeek: string
+    readonly source: string
+  }
+  readonly tableHeaders: {
+    readonly crop: string
+    readonly period: string
+    readonly source: string
+  }
+  readonly status: {
+    readonly loading: string
+    readonly emptyTitle: string
+    readonly emptyDescription: string
+  }
+  readonly listLabel: (regionLabel: string, displayWeek: string) => string
+}
+
+const RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY: Record<
+  LanguageCode,
+  RecommendationTableMessages
+> = {
+  ja: {
+    regionNames: {
+      cold: '寒冷地',
+      temperate: '温暖地',
+      warm: '暖地',
+    },
+    categoryLabels: {
+      leaf: '葉菜類',
+      root: '根菜類',
+      flower: '花き',
+    },
+    labels: {
+      region: '対象地域',
+      baselineWeek: '基準週',
+      category: 'カテゴリ',
+      sowingWeek: '播種週',
+      harvestWeek: '収穫週',
+      source: '情報源',
+    },
+    tableHeaders: {
+      crop: '作物',
+      period: '期間',
+      source: '情報源',
+    },
+    status: {
+      loading: '読み込み中',
+      emptyTitle: '推奨データがありません',
+      emptyDescription: '市場やカテゴリを変更して再度お試しください。',
+    },
+    listLabel: (regionLabel, displayWeek) =>
+      `${regionLabel}向けの推奨一覧（基準週: ${displayWeek}）`,
+  },
+  en: {
+    regionNames: {
+      cold: 'Cold region',
+      temperate: 'Temperate region',
+      warm: 'Warm region',
+    },
+    categoryLabels: {
+      leaf: 'Leafy vegetables',
+      root: 'Root vegetables',
+      flower: 'Flower crops',
+    },
+    labels: {
+      region: 'Region',
+      baselineWeek: 'Baseline week',
+      category: 'Category',
+      sowingWeek: 'Sowing week',
+      harvestWeek: 'Harvest week',
+      source: 'Source',
+    },
+    tableHeaders: {
+      crop: 'Crop',
+      period: 'Period',
+      source: 'Source',
+    },
+    status: {
+      loading: 'Loading',
+      emptyTitle: 'No recommendations available',
+      emptyDescription: 'Try adjusting the market or category filters.',
+    },
+    listLabel: (regionLabel, displayWeek) =>
+      `Recommendations for ${regionLabel} (Baseline week: ${displayWeek})`,
   },
 } as const
 
@@ -224,4 +320,7 @@ export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const RECOMMENDATIONS_TABLE_MESSAGES = selectMessages(
+  RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY,
+)
 export const APP_STATUS_MESSAGES = selectMessages(APP_STATUS_MESSAGES_DICTIONARY)
