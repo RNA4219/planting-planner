@@ -48,3 +48,19 @@ export const APP_STATUS_MESSAGES = {
   statusLastSyncUnknown: '未同期',
   versionLabel: (version: string) => `バージョン: ${version}`,
 } as const
+
+export const WEATHER_MESSAGES = {
+  title: '天気',
+  latestLabel: '最新値',
+  previousLabel: '前回値',
+  updatedAt: (value: string) => `取得日時: ${value}`,
+  loading: '取得中…',
+  empty: '天気データがありません',
+  error: '天気データの取得に失敗しました',
+  metrics: {
+    tmax: '最高気温',
+    tmin: '最低気温',
+    rain: '降水量',
+    wind: '風速',
+  },
+} as const

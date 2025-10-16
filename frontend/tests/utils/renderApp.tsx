@@ -9,10 +9,12 @@ import {
   postRefresh,
   fetchRefreshStatus,
   fetchPrice,
+  fetchWeather,
   resetApiMocks,
 } from './mocks/api'
 import type { StorageState } from './mocks/storage'
 import { resetStorageMocks, storageState } from './mocks/storage'
+import { resetWeatherCacheForTests } from '../../src/hooks/weather/useWeather'
 
 export {
   fetchRecommendations,
@@ -21,6 +23,7 @@ export {
   postRefresh,
   fetchRefreshStatus,
   fetchPrice,
+  fetchWeather,
   resetApiMocks,
 } from './mocks/api'
 export {
@@ -76,6 +79,7 @@ const resetAppMocks = () => {
   resetStorageMocks()
   resetApiMocks()
   destroyQueryClients()
+  resetWeatherCacheForTests()
 }
 
 export const resetAppSpies = resetAppMocks
@@ -86,6 +90,7 @@ interface RenderAppOptions {
 }
 
 export const renderApp = async (options: RenderAppOptions = {}) => {
+  cleanup()
   const fakeTimersMode = resolveFakeTimersMode(options)
   const App = (await import('../../src/App')).default
   const user = userEvent.setup(
@@ -143,6 +148,7 @@ interface AppTestHarness {
   readonly postRefresh: typeof postRefresh
   readonly fetchRefreshStatus: typeof fetchRefreshStatus
   readonly fetchPrice: typeof fetchPrice
+  readonly fetchWeather: typeof fetchWeather
   readonly storage: StorageState
 }
 
@@ -165,6 +171,7 @@ export const createAppTestHarness = (): AppTestHarness => {
     postRefresh,
     fetchRefreshStatus,
     fetchPrice,
+    fetchWeather,
     get storage() {
       return storageState
     },

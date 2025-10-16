@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from . import crops, markets, price, recommend, refresh
+from . import crops, markets, price, recommend, refresh, weather
 
 api_router = APIRouter()
 
@@ -17,3 +17,4 @@ api_router.include_router(markets.router)
 api_router.include_router(recommend.router)
 api_router.include_router(price.router)
 api_router.include_router(refresh.router)
+api_router.include_router(weather.router)

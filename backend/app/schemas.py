@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal, NotRequired, cast, get_args
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import TypedDict
 
 Region = Literal["cold", "temperate", "warm"]
@@ -142,3 +142,18 @@ class TelemetryEvent(BaseModel):
         if isinstance(data, dict):
             return {_to_snake(key): value for key, value in data.items()}
         return data
+
+
+class WeatherDaily(BaseModel):
+    date: str
+    tmax: float
+    tmin: float
+    rain: float
+    wind: float
+
+
+class WeatherResponse(BaseModel):
+    daily: list[WeatherDaily]
+    fetched_at: str = Field(alias="fetchedAt", serialization_alias="fetchedAt")
+
+    model_config = ConfigDict(populate_by_name=True)
