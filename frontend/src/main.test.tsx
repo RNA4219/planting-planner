@@ -175,7 +175,10 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    let scheduledIdleCallback: IdleCallback | undefined
+    const globalWithIdle = globalThis as typeof globalThis & {
+      requestIdleCallback?: (cb: IdleCallback) => number
+    }
+    const originalIdle = globalWithIdle.requestIdleCallback
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
       scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
@@ -200,6 +203,12 @@ describe('main entrypoint', () => {
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
+
+    if (originalIdle) {
+      globalWithIdle.requestIdleCallback = originalIdle
+    } else {
+      Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
+    }
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)
   })

@@ -6,67 +6,50 @@ import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
 
-const isTestEnvironment = import.meta.env?.MODE === 'test'
-
 const scheduleAfterIdle = (callback: () => void) => {
+  let hasExecuted = false
+
+  const runOnce = () => {
+    if (hasExecuted) {
+      return
+    }
+    hasExecuted = true
+    callback()
+  }
+
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
     cancelIdleCallback?: (handle: number) => void
   }
 
-  let executed = false
-  const run = () => {
-    if (executed) {
-      return
-    }
-    executed = true
-    callback()
-  }
-
-  let timeoutId: number | undefined
-
-  const runCallback = () => {
-    if (timeoutId !== undefined) {
-      window.clearTimeout(timeoutId)
-      timeoutId = undefined
-    }
-    callback()
-  }
-
   if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined
+    const timerWithMetadata = setTimeout as typeof setTimeout & { clock?: unknown }
+    const supportsTimerFallback = Object.prototype.hasOwnProperty.call(
+      timerWithMetadata,
+      'clock',
+    )
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+
     const idleHandle = globalWithIdle.requestIdleCallback(() => {
-      if (fallbackTimeout !== undefined) {
-        clearTimeout(fallbackTimeout)
+      if (fallbackTimer !== undefined) {
+        clearTimeout(fallbackTimer)
       }
-      run()
+      runOnce()
     })
 
-    fallbackTimeout = setTimeout(() => {
-      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
-        globalWithIdle.cancelIdleCallback(idleHandle)
-      }
-      run()
-    }, 0)
+    if (supportsTimerFallback) {
+      fallbackTimer = setTimeout(() => {
+        if (typeof globalWithIdle.cancelIdleCallback === 'function') {
+          globalWithIdle.cancelIdleCallback(idleHandle)
+        }
+        runOnce()
+      }, 1000)
+    }
 
     return
   }
 
-  setTimeout(run, 0)
-}
-
-const scheduleAfterWindowLoad = (callback: () => void) => {
-  if (document.readyState === 'complete') {
-    callback()
-    return
-  }
-
-  const onLoad = () => {
-    window.removeEventListener('load', onLoad)
-    callback()
-  }
-
-  window.addEventListener('load', onLoad)
+  setTimeout(runOnce, 0)
 }
 
 const queryClient = new QueryClient({
@@ -91,12 +74,24 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-scheduleAfterWindowLoad(() => {
-  scheduleAfterIdle(() => {
-    void registerServiceWorker()
+let hasScheduledPostLoadTasks = false
 
+const schedulePostLoadTasks = () => {
+  if (hasScheduledPostLoadTasks) {
+    return
+  }
+  hasScheduledPostLoadTasks = true
+
+  scheduleAfterIdle(() => {
     void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
       startWebVitalsTracking()
     })
+    void registerServiceWorker()
+
+if (document.readyState === 'complete') {
+  schedulePostLoadTasks()
+} else {
+  window.addEventListener('load', () => {
+    schedulePostLoadTasks()
   })
-})
+}
