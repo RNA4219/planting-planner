@@ -13,13 +13,22 @@ const scheduleAfterIdle = (callback: () => void) => {
   }
 
   if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null =
+      globalThis.setTimeout(callback, 3000)
+
     globalWithIdle.requestIdleCallback(() => {
+      if (fallbackTimeoutId !== null) {
+        globalThis.clearTimeout(fallbackTimeoutId)
+        fallbackTimeoutId = null
+      }
+
       callback()
     })
+
     return
   }
 
-  setTimeout(callback, 0)
+  globalThis.setTimeout(callback, 1500)
 }
 
 const queryClient = new QueryClient({
@@ -66,28 +75,7 @@ const scheduleServiceWorkerRegistration = () => {
   }
 
   runAfterWindowLoad(() => {
-    const { requestIdleCallback } = window as Window & {
-      requestIdleCallback?: (callback: () => void) => number
-    }
-
-    if (typeof requestIdleCallback === 'function') {
-      let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
-
-      const registerOnce = () => {
-        if (fallbackTimeoutId !== null) {
-          globalThis.clearTimeout(fallbackTimeoutId)
-          fallbackTimeoutId = null
-        }
-        invokeRegistration()
-      }
-
-      requestIdleCallback(registerOnce)
-
-      fallbackTimeoutId = globalThis.setTimeout(registerOnce, 3000)
-      return
-    }
-
-    globalThis.setTimeout(invokeRegistration, 1500)
+    scheduleAfterIdle(invokeRegistration)
   })
 }
 
