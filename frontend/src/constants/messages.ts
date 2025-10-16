@@ -187,22 +187,40 @@ const selectMessages = <Dictionary extends Record<LanguageCode, unknown>>(
   return (selected ?? fallback) as Dictionary[LanguageCode]
 }
 
-export const WEATHER_MESSAGES = {
-  title: '天気',
-  latestLabel: '最新値',
-  previousLabel: '前回値',
-  updatedAt: (value: string) => `取得日時: ${value}`,
-  loading: '取得中…',
-  empty: '天気データがありません',
-  error: '天気データの取得に失敗しました',
-  metrics: {
-    tmax: '最高気温',
-    tmin: '最低気温',
-    rain: '降水量',
-    wind: '風速',
+const WEATHER_MESSAGES_DICTIONARY = {
+  ja: {
+    title: '天気',
+    latestLabel: '最新値',
+    previousLabel: '前回値',
+    updatedAt: (value: string) => `取得日時: ${value}`,
+    loading: '取得中…',
+    empty: '天気データがありません',
+    error: '天気データの取得に失敗しました',
+    metrics: {
+      tmax: '最高気温',
+      tmin: '最低気温',
+      rain: '降水量',
+      wind: '風速',
+    },
+  },
+  en: {
+    title: 'Weather',
+    latestLabel: 'Latest value',
+    previousLabel: 'Previous value',
+    updatedAt: (value: string) => `Updated at: ${value}`,
+    loading: 'Loading…',
+    empty: 'No weather data',
+    error: 'Failed to fetch weather data',
+    metrics: {
+      tmax: 'High temperature',
+      tmin: 'Low temperature',
+      rain: 'Precipitation',
+      wind: 'Wind speed',
+    },
   },
 } as const
 
+export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)

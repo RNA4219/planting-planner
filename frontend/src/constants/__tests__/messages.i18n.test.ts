@@ -42,6 +42,29 @@ describe('messages internationalization', () => {
     })
   })
 
+  it('returns English weather messages when lang=en and FEATURE_FLAGS.I18N_EN is enabled', async () => {
+    globalThis.FEATURE_FLAGS = { I18N_EN: true }
+    vi.stubEnv('VITE_I18N_EN', 'false')
+    stubLocation('http://localhost/?lang=en')
+
+    const { WEATHER_MESSAGES } = await import('../messages')
+
+    expect(WEATHER_MESSAGES.title).toBe('Weather')
+    expect(WEATHER_MESSAGES.metrics.tmax).toBe('High temperature')
+    expect(document.documentElement.lang).toBe('en')
+  })
+
+  it('falls back to Japanese weather messages when English feature flag is disabled', async () => {
+    vi.stubEnv('VITE_I18N_EN', 'false')
+    stubLocation('http://localhost/?lang=en')
+
+    const { WEATHER_MESSAGES } = await import('../messages')
+
+    expect(WEATHER_MESSAGES.title).toBe('天気')
+    expect(WEATHER_MESSAGES.metrics.tmax).toBe('最高気温')
+    expect(document.documentElement.lang).toBe('ja')
+  })
+
   it('returns English messages when lang=en and FEATURE_FLAGS.I18N_EN is enabled', async () => {
     globalThis.FEATURE_FLAGS = { I18N_EN: true }
     vi.stubEnv('VITE_I18N_EN', 'false')
