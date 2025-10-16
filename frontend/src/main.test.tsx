@@ -86,7 +86,9 @@ describe('main entrypoint', () => {
     }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -133,7 +135,9 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -170,7 +174,9 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
