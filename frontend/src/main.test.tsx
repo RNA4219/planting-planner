@@ -39,6 +39,47 @@ describe('main entrypoint', () => {
     expect(cssImport).toHaveBeenCalledTimes(1)
     vi.doUnmock('./index.css')
   })
+
+  it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.resetModules()
+    renderMock.mockClear()
+    document.body.innerHTML = '<div id="root"></div>'
+
+    const registerMock = vi.fn<[], Promise<void>>().mockResolvedValue()
+    vi.doMock('./lib/swClient', () => ({
+      registerServiceWorker: registerMock,
+    }))
+
+    type IdleCallback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
+    const idleCallbacks: IdleCallback[] = []
+    const idleSpy = vi.fn((callback: IdleCallback) => {
+      idleCallbacks.push(callback)
+      return 1
+    })
+    const globalWithIdle = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: IdleCallback) => number
+    }
+    const originalIdle = globalWithIdle.requestIdleCallback
+    globalWithIdle.requestIdleCallback = idleSpy
+
+    await import('./main')
+
+    expect(registerMock).not.toHaveBeenCalled()
+
+    idleCallbacks.forEach((callback) =>
+      callback({ didTimeout: false, timeRemaining: () => 0 }),
+    )
+    await Promise.resolve()
+
+    expect(registerMock).toHaveBeenCalledTimes(1)
+
+    if (originalIdle) {
+      globalWithIdle.requestIdleCallback = originalIdle
+    } else {
+      delete globalWithIdle.requestIdleCallback
+    }
+    vi.doUnmock('./lib/swClient')
+  })
 })
 
 function elementContainsQueryClientProvider(node: ReactNode): boolean {
