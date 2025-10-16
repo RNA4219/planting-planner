@@ -16,6 +16,12 @@ export const createApiTestContext = (): ApiTestContext => {
     vi.resetModules()
     fetchMock = vi.fn<typeof fetch>()
     vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal(
+      'navigator',
+      {
+        sendBeacon: vi.fn(() => true),
+      } as unknown as Navigator,
+    )
   })
 
   afterEach(() => {

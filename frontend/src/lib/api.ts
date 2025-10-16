@@ -14,6 +14,7 @@ import {
   type MarketScopeApiDefinition,
   type MarketScopeOption,
 } from '../constants/marketScopes'
+import { track } from './telemetry'
 
 const API_ENDPOINT = (import.meta.env.VITE_API_ENDPOINT ?? '/api').replace(/\/$/, '')
 
@@ -94,6 +95,58 @@ const randomUUID = (): string => {
   return `${Date.now().toString(16)}-${random}`
 }
 
+const resolveRequestUrl = (input: RequestInfo | URL): URL => {
+  if (typeof input === 'string') {
+    const base =
+      API_ENDPOINT_ORIGIN || globalThis.location?.origin || 'http://localhost'
+    return new URL(input, base)
+  }
+
+  if (input instanceof URL) {
+    return input
+  }
+
+  if (typeof Request !== 'undefined' && input instanceof Request) {
+    return new URL(input.url)
+  }
+
+  return new URL(String(input), API_ENDPOINT_ORIGIN || 'http://localhost')
+}
+
+const resolveTelemetryPath = (url: URL): string => {
+  const endpointPath = API_ENDPOINT_URL?.pathname.replace(/\/$/, '')
+  const pathname = url.pathname
+
+  if (endpointPath && pathname.startsWith(endpointPath)) {
+    const remainder = pathname.slice(endpointPath.length)
+    if (!remainder) {
+      return '/'
+    }
+    return remainder.startsWith('/') ? remainder : `/${remainder}`
+  }
+
+  return pathname
+}
+
+const resolveMethod = (input: RequestInfo | URL, init?: RequestInit): string => {
+  const methodFromInput =
+    typeof Request !== 'undefined' && input instanceof Request
+      ? input.method
+      : undefined
+  const method = init?.method ?? methodFromInput ?? 'GET'
+  return method.toUpperCase()
+}
+
+const resolveErrorMessage = (error: unknown): string | undefined => {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (error == null) {
+    return undefined
+  }
+  return String(error)
+}
+
 type RequestResult<T> = {
   readonly data: T
   readonly requestId: string
@@ -106,13 +159,61 @@ const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<Reque
   headers.set('Content-Type', 'application/json')
   headers.set(REQUEST_ID_HEADER, requestId)
 
-  const response = await fetch(input, {
-    ...init,
-    headers,
-  })
+  const method = resolveMethod(input, init)
+  const requestUrl = resolveRequestUrl(input)
+  const path = resolveTelemetryPath(requestUrl)
+  const startedAt = Date.now()
 
-  const data = await parseResponse<T>(response)
-  return { data, requestId, response }
+  let response: Response
+  try {
+    response = await fetch(input, {
+      ...init,
+      headers,
+    })
+  } catch (error) {
+    const durationMs = Date.now() - startedAt
+    void track(
+      'api.request',
+      {
+        method,
+        path,
+        durationMs,
+        errorMessage: resolveErrorMessage(error),
+      },
+      requestId,
+    )
+    throw error
+  }
+
+  try {
+    const data = await parseResponse<T>(response)
+    const durationMs = Date.now() - startedAt
+    void track(
+      'api.request',
+      {
+        method,
+        path,
+        status: response.status,
+        durationMs,
+      },
+      requestId,
+    )
+    return { data, requestId, response }
+  } catch (error) {
+    const durationMs = Date.now() - startedAt
+    void track(
+      'api.request',
+      {
+        method,
+        path,
+        status: response.status,
+        durationMs,
+        errorMessage: resolveErrorMessage(error),
+      },
+      requestId,
+    )
+    throw error
+  }
 }
 
 const MARKET_FALLBACK_HEADER = 'fallback'
