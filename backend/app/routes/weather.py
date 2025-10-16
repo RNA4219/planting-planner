@@ -14,11 +14,14 @@ def get_weather_service() -> WeatherService:
     return _weather_service
 
 
+weather_service_dependency = Depends(get_weather_service)
+
+
 @router.get("/api/weather", response_model=schemas.WeatherResponse)
 async def read_weather(
     lat: float = Query(..., description="latitude"),
     lon: float = Query(..., description="longitude"),
-    service: WeatherService = Depends(get_weather_service),
+    service: WeatherService = weather_service_dependency,
 ) -> schemas.WeatherResponse:
     try:
         return await service.get_weather(lat, lon)

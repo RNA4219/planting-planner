@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from threading import Lock
-from typing import Any, Callable, Mapping, Protocol
+from typing import Any, Protocol
 
 try:
     from adapter import registry as adapter_registry
@@ -47,7 +48,7 @@ class WeatherService:
     ) -> None:
         self._adapter_factory = adapter_factory
         self._cache_ttl = cache_ttl or timedelta(hours=24)
-        self._clock = clock or partial(datetime.now, timezone.utc)
+        self._clock = clock or partial(datetime.now, UTC)
         self._cache: dict[CacheKey, CacheEntry] = {}
         self._lock = Lock()
         self._adapter: WeatherAdapter | None = None
