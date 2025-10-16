@@ -5,7 +5,6 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
-import { startWebVitalsTracking } from './lib/webVitals'
 
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
