@@ -5,6 +5,31 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
+import { startWebVitalsTracking } from './lib/webVitals'
+
+const scheduleAfterIdle = (callback: () => void) => {
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => number
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null =
+      globalThis.setTimeout(callback, 3000)
+
+    globalWithIdle.requestIdleCallback(() => {
+      if (fallbackTimeoutId !== null) {
+        globalThis.clearTimeout(fallbackTimeoutId)
+        fallbackTimeoutId = null
+      }
+
+      callback()
+    })
+
+    return
+  }
+
+  globalThis.setTimeout(callback, 1500)
+}
 
 const scheduleAfterIdle = (callback: () => void) => {
   let hasExecuted = false
@@ -74,24 +99,30 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-let hasScheduledPostLoadTasks = false
+startWebVitalsTracking()
 
-const schedulePostLoadTasks = () => {
-  if (hasScheduledPostLoadTasks) {
+const scheduleServiceWorkerRegistration = () => {
+  const invokeRegistration = () => {
+    void registerServiceWorker()
+  }
+
+  if (typeof window === 'undefined') {
+    invokeRegistration()
     return
   }
-  hasScheduledPostLoadTasks = true
 
-  scheduleAfterIdle(() => {
-    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-      startWebVitalsTracking()
-    })
-    void registerServiceWorker()
+  const runAfterWindowLoad = (callback: () => void) => {
+    if (document.readyState === 'complete') {
+      callback()
+      return
+    }
 
-if (document.readyState === 'complete') {
-  schedulePostLoadTasks()
-} else {
-  window.addEventListener('load', () => {
-    schedulePostLoadTasks()
+    window.addEventListener('load', () => callback(), { once: true })
+  }
+
+  runAfterWindowLoad(() => {
+    scheduleAfterIdle(invokeRegistration)
   })
 }
+
+scheduleServiceWorkerRegistration()

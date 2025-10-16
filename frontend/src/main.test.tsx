@@ -10,6 +10,14 @@ const createRootMock = vi.fn<(container: Container) => Root>(() => ({
 }))
 
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
+type IdleScheduler = (callback: IdleCallback) => number
+
+const originalIdle =
+  (globalThis as typeof globalThis & { requestIdleCallback?: IdleScheduler }).requestIdleCallback
+
+const setIdleScheduler = (scheduler: IdleScheduler | undefined) => {
+  vi.stubGlobal('requestIdleCallback', scheduler)
+}
 
 vi.mock('react-dom/client', () => ({
   createRoot: createRootMock,
@@ -22,6 +30,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
   setDocumentReadyState('complete')
+  vi.stubGlobal('requestIdleCallback', originalIdle)
 })
 
 const setDocumentReadyState = (state: DocumentReadyState) => {
@@ -87,9 +96,7 @@ describe('main entrypoint', () => {
     }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    let scheduledIdleCallback: IdleCallback | undefined
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
-      scheduledIdleCallback = callback
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -118,7 +125,7 @@ describe('main entrypoint', () => {
   it('falls back to setTimeout when requestIdleCallback is unavailable', async () => {
     vi.useFakeTimers()
     resetMainModule()
-    vi.stubGlobal('requestIdleCallback', undefined)
+    setIdleScheduler(undefined)
 
     const { registerServiceWorker } = mockServiceWorkerModules()
 
@@ -136,9 +143,7 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    let scheduledIdleCallback: IdleCallback | undefined
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
-      scheduledIdleCallback = callback
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -175,12 +180,7 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    const globalWithIdle = globalThis as typeof globalThis & {
-      requestIdleCallback?: (cb: IdleCallback) => number
-    }
-    const originalIdle = globalWithIdle.requestIdleCallback
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
-      scheduledIdleCallback = callback
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
