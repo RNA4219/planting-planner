@@ -24,13 +24,11 @@ class WeatherAdapter(Protocol):
 
 
 class AdapterProviderSpec(Protocol):
-    def factory(self) -> WeatherAdapter:
-        ...
+    def factory(self) -> WeatherAdapter: ...
 
 
 class AdapterRegistry(Protocol):
-    def get(self, name: str) -> AdapterProviderSpec:
-        ...
+    def get(self, name: str) -> AdapterProviderSpec: ...
 
 
 def _load_adapter_registry() -> AdapterRegistry | None:
