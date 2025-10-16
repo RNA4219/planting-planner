@@ -13,6 +13,10 @@ import {
 import { renderHookWithQueryClient } from '../../utils/renderHookWithQueryClient'
 
 const fetchQueryMock = vi.hoisted(() => vi.fn())
+const getQueryDataMock = vi.hoisted(() => vi.fn())
+const setQueryDataMock = vi.hoisted(() => vi.fn())
+const invalidateQueriesMock = vi.hoisted(() => vi.fn())
+const trackMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
@@ -20,12 +24,16 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
     ...actual,
     useQueryClient: () => ({
       fetchQuery: fetchQueryMock,
-      getQueryData: vi.fn(),
-      setQueryData: vi.fn(),
-      invalidateQueries: vi.fn(),
+      getQueryData: getQueryDataMock,
+      setQueryData: setQueryDataMock,
+      invalidateQueries: invalidateQueriesMock,
     }),
   }
 })
+
+vi.mock('../../../src/lib/telemetry', () => ({
+  track: trackMock,
+}))
 
 describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
   beforeEach(() => {
@@ -44,6 +52,10 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
     }))
     fetchCropsMock.mockClear()
     setupFetchQueryMock(fetchQueryMock)
+    getQueryDataMock.mockReset()
+    setQueryDataMock.mockReset()
+    invalidateQueriesMock.mockReset()
+    trackMock.mockReset()
   })
 
   it('requestRecommendations は入力週を ISO 形式に正規化して API へ渡す', async () => {
@@ -172,5 +184,66 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
 
     expect(result.current.activeWeek).toBe('2024-W12')
     expect(result.current.items).toHaveLength(1)
+  })
+
+  it('ネットワーク失敗時にキャッシュへフォールバックした場合は prefetch.hit を送信する', async () => {
+    const { result } = renderHookWithQueryClient(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    fetchQueryMock.mockImplementationOnce(async () => {
+      throw new Error('network-error')
+    })
+
+    await act(async () => {
+      await result.current.requestRecommendations('2024-W10')
+    })
+
+    expect(trackMock).toHaveBeenCalledTimes(1)
+    const [event, payload, requestId] = trackMock.mock.calls[0] ?? []
+    expect(event).toBe('prefetch.hit')
+    expect(payload).toMatchObject({
+      region: 'temperate',
+      marketScope: 'national',
+      category: 'leaf',
+      requestedWeek: '2024-W10',
+      resolvedWeek: result.current.activeWeek,
+      isMarketFallback: false,
+      itemsCount: 0,
+    })
+    expect(requestId).toBe('2')
+  })
+
+  it('キャッシュが無く空配列で終了した場合は prefetch.miss を送信する', async () => {
+    fetchQueryMock.mockImplementationOnce(async () => {
+      throw new Error('network-error')
+    })
+    getQueryDataMock.mockReturnValueOnce(undefined)
+
+    const { result } = renderHookWithQueryClient(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(trackMock).toHaveBeenCalledTimes(1)
+    const [event, payload, requestId] = trackMock.mock.calls[0] ?? []
+    expect(event).toBe('prefetch.miss')
+    expect(payload).toMatchObject({
+      region: 'temperate',
+      marketScope: 'national',
+      category: 'leaf',
+      requestedWeek: result.current.activeWeek,
+      resolvedWeek: result.current.activeWeek,
+      isMarketFallback: false,
+      itemsCount: 0,
+    })
+    expect(requestId).toBe('1')
   })
 })
