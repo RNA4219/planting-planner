@@ -85,7 +85,9 @@ describe('main entrypoint', () => {
     }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -132,7 +134,9 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -169,7 +173,9 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let scheduledIdleCallback: IdleCallback | undefined
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      scheduledIdleCallback = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -184,10 +190,11 @@ describe('main entrypoint', () => {
 
     loadListener?.()
 
-    if (originalIdle) {
-      globalWithIdle.requestIdleCallback = originalIdle
-    } else {
-      Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
+    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+
+    const callback = scheduledIdleCallback
+    if (!callback) {
+      throw new Error('Idle callback was not scheduled')
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
