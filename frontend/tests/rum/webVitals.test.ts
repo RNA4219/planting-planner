@@ -44,6 +44,11 @@ const mocks = vi.hoisted(() => {
   }
 })
 
+const originalRequestIdleCallback =
+  (globalThis as typeof globalThis & {
+    requestIdleCallback?: typeof window.requestIdleCallback
+  }).requestIdleCallback
+
 vi.mock('../../src/lib/telemetry', () => ({
   track: mocks.trackSpy,
 }))

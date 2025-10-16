@@ -186,7 +186,7 @@ registerRoute(
   ({ url, request }) => request.method === 'GET' && url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: API_CACHE_NAME,
-    networkTimeoutSeconds: 5,
+    networkTimeoutSeconds: 4,
     plugins: [
       versionedCacheKeyPlugin,
       telemetryCachePlugin,
