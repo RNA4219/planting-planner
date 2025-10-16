@@ -1,9 +1,7 @@
 import { useId } from 'react'
 
-import { WEATHER_MESSAGES } from '../constants/messages'
+import { WEATHER_MESSAGES, type FeatureFlagConfig } from '../constants/messages'
 import type { WeatherSnapshot } from '../hooks/weather/useWeather'
-
-type FeatureFlagConfig = { readonly I18N_EN?: boolean }
 
 declare global {
   // eslint-disable-next-line no-var
