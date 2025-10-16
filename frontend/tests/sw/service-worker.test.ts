@@ -7,7 +7,7 @@ declare global {
 
 const sendTelemetryMock = vi.fn()
 
-vi.mock('../../src/config/pwa', () => ({
+const pwaConfigMock = {
   APP_VERSION: '1.2.3',
   SCHEMA_VERSION: '2024-04-01',
   DATA_EPOCH: '2024-04-15T12:00:00Z',
@@ -17,7 +17,9 @@ vi.mock('../../src/config/pwa', () => ({
     schemaVersion: '2024-04-01',
     dataEpoch: '2024-04-15T12:00:00Z',
   }),
-}))
+}
+
+vi.mock('../../src/config/pwa', () => pwaConfigMock)
 
 vi.mock('../../src/lib/telemetry', () => ({
   sendTelemetry: sendTelemetryMock,
@@ -98,6 +100,7 @@ let skipWaitingMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.resetModules()
+  pwaConfigMock.SW_FORCE_UPDATE = false
   sendTelemetryMock.mockReset()
   registerRouteMock.mockReset()
   precacheAndRouteMock.mockReset()
@@ -244,6 +247,33 @@ describe('service worker', () => {
     expect(sendTelemetryMock).toHaveBeenCalledWith('sw.install', {
       appVersion: '1.2.3',
     })
+  })
+
+  test('install handler keeps waiting state when force update is enabled', async () => {
+    pwaConfigMock.SW_FORCE_UPDATE = true
+
+    await import('../../src/sw')
+
+    expect(installHandler).toBeDefined()
+
+    const postMessageMock = vi.fn()
+    matchAllMock.mockResolvedValue([{ postMessage: postMessageMock }])
+    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting =
+      { state: 'installed' } as ServiceWorker
+
+    const waitUntil = vi.fn(async (promise: Promise<unknown>) => promise)
+    await installHandler?.({
+      waitUntil,
+    } as unknown as ExtendableEvent)
+
+    const installTask = waitUntil.mock.calls.at(-1)?.[0]
+    if (installTask && installTask instanceof Promise) {
+      await installTask
+    }
+
+    expect(skipWaitingMock).not.toHaveBeenCalled()
+    expect(matchAllMock).toHaveBeenCalledWith({ includeUncontrolled: true, type: 'window' })
+    expect(postMessageMock).toHaveBeenCalledWith({ type: 'SW_WAITING', version: '1.2.3' })
   })
 
   test('install handler notifies existing clients about waiting version', async () => {

@@ -11,7 +11,6 @@ import {
   APP_VERSION,
   DATA_EPOCH,
   SCHEMA_VERSION,
-  SW_FORCE_UPDATE,
   buildTelemetryContext,
 } from './config/pwa'
 import { sendTelemetry } from './lib/telemetry'
@@ -144,10 +143,6 @@ clientsClaim()
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
-      if (SW_FORCE_UPDATE) {
-        self.skipWaiting()
-      }
-
       await sendTelemetry('sw.install', {
         appVersion: APP_VERSION,
       })
