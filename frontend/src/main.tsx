@@ -45,6 +45,50 @@ createRoot(container).render(
 )
 
 startWebVitalsTracking()
-scheduleAfterIdle(() => {
-  void registerServiceWorker()
-})
+
+const scheduleServiceWorkerRegistration = () => {
+  const invokeRegistration = () => {
+    void registerServiceWorker()
+  }
+
+  if (typeof window === 'undefined') {
+    invokeRegistration()
+    return
+  }
+
+  const runAfterWindowLoad = (callback: () => void) => {
+    if (document.readyState === 'complete') {
+      callback()
+      return
+    }
+
+    window.addEventListener('load', () => callback(), { once: true })
+  }
+
+  runAfterWindowLoad(() => {
+    const { requestIdleCallback } = window as Window & {
+      requestIdleCallback?: (callback: () => void) => number
+    }
+
+    if (typeof requestIdleCallback === 'function') {
+      let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
+
+      const registerOnce = () => {
+        if (fallbackTimeoutId !== null) {
+          globalThis.clearTimeout(fallbackTimeoutId)
+          fallbackTimeoutId = null
+        }
+        invokeRegistration()
+      }
+
+      requestIdleCallback(registerOnce)
+
+      fallbackTimeoutId = globalThis.setTimeout(registerOnce, 3000)
+      return
+    }
+
+    globalThis.setTimeout(invokeRegistration, 1500)
+  })
+}
+
+scheduleServiceWorkerRegistration()
