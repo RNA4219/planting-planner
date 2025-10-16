@@ -28,7 +28,7 @@ const resetEnvironment = () => {
 
 describe('messages internationalization', () => {
   beforeEach(() => {
-    stubLocation(DEFAULT_URL)
+    resetEnvironment()
   })
 
   afterEach(() => {
