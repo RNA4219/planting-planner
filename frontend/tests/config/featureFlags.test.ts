@@ -32,8 +32,8 @@ describe('isWeatherTabEnabled', () => {
     }
   })
 
-  it('未設定の場合は天気タブを有効化する', () => {
-    expect(isWeatherTabEnabled()).toBe(true)
+  it('未設定の場合は天気タブを無効化する', () => {
+    expect(isWeatherTabEnabled()).toBe(false)
   })
 
   it('グローバル設定で天気タブの有効・無効を切り替えられる', () => {

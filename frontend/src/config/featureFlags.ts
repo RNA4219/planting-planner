@@ -33,5 +33,5 @@ export const isWeatherTabEnabled = (): boolean => {
   if (typeof envValue !== 'undefined') {
     return normalizeBoolean(envValue, false)
   }
-  return true
+  return false
 }
