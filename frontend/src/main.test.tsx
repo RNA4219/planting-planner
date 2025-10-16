@@ -75,6 +75,7 @@ describe('main entrypoint', () => {
   })
 
   it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.useFakeTimers()
     vi.resetModules()
     vi.useFakeTimers()
     renderMock.mockClear()
