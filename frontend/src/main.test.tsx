@@ -187,7 +187,7 @@ describe('main entrypoint', () => {
     if (originalIdle) {
       globalWithIdle.requestIdleCallback = originalIdle
     } else {
-      delete (globalWithIdle as { requestIdleCallback?: (callback: IdleCallback) => number }).requestIdleCallback
+      Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
