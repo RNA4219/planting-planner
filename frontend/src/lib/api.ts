@@ -180,6 +180,24 @@ export interface RecommendResponseWithFallback extends RecommendResponse {
   readonly isMarketFallback: boolean
 }
 
+export interface WeatherDaily {
+  readonly date: string
+  readonly tmax: number
+  readonly tmin: number
+  readonly rain: number
+  readonly wind: number
+}
+
+export interface WeatherResponse {
+  readonly daily: readonly WeatherDaily[]
+  readonly fetchedAt: string
+}
+
+export interface FetchWeatherResult {
+  readonly weather: WeatherResponse
+  readonly requestId: string
+}
+
 export const fetchRecommendations = async (
   region: Region,
   week: string | undefined,
@@ -194,6 +212,16 @@ export const fetchRecommendations = async (
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
   const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
   return { ...data, isMarketFallback }
+}
+
+export const fetchWeather = async (lat: number, lon: number): Promise<FetchWeatherResult> => {
+  const params = new URLSearchParams({
+    lat: lat.toString(),
+    lon: lon.toString(),
+  })
+  const url = buildUrl('/weather', params)
+  const { data, requestId } = await request<WeatherResponse>(url)
+  return { weather: data, requestId }
 }
 
 export const fetchRecommend = async ({

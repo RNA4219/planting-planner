@@ -16,6 +16,24 @@ import type {
 } from '../../../src/lib/api'
 import { MARKET_SCOPE_OPTIONS } from '../../../src/constants/marketScopes'
 
+interface WeatherDaily {
+  readonly date: string
+  readonly tmax: number
+  readonly tmin: number
+  readonly rain: number
+  readonly wind: number
+}
+
+interface WeatherPayload {
+  readonly daily: WeatherDaily[]
+  readonly fetchedAt: string
+}
+
+export interface WeatherApiResult {
+  readonly weather: WeatherPayload
+  readonly requestId: string
+}
+
 export const fetchRecommendations = vi.fn<
   (
     region: Region,
@@ -48,6 +66,10 @@ export const fetchPrice = vi.fn<
   ) => Promise<PriceSeriesResponse>
 >()
 
+export const fetchWeather = vi.fn<
+  (lat: number, lon: number, options?: { readonly requestId?: string }) => Promise<WeatherApiResult>
+>()
+
 vi.mock('../../../src/lib/api', () => ({
   fetchRecommendations,
   fetchRecommend,
@@ -56,6 +78,7 @@ vi.mock('../../../src/lib/api', () => ({
   postRefresh,
   fetchRefreshStatus,
   fetchPrice,
+  fetchWeather,
 }))
 
 export const resetApiMocks = () => {
@@ -70,6 +93,7 @@ export const resetApiMocks = () => {
   postRefresh.mockReset()
   fetchRefreshStatus.mockReset()
   fetchPrice.mockReset()
+  fetchWeather.mockReset()
 }
 
 export const createRecommendResponse = (

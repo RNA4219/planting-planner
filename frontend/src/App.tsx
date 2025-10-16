@@ -7,6 +7,7 @@ import { useAppNotifications } from './app/useAppNotifications'
 import { useCategoryTabs } from './app/useCategoryTabs'
 import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
+import { WeatherTab } from './components/WeatherTab'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
@@ -14,8 +15,11 @@ import { ToastStack } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { isShareSupported, shareCurrentView } from './lib/share'
 import { useRecommendations } from './hooks/recommendations/controller'
+import { useWeather } from './hooks/weather/useWeather'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
+import { getRegionCoordinates } from './constants/weather'
+import { isWeatherTabEnabled } from './config/featureFlags'
 
 const createQueryClient = () =>
   new QueryClient({
@@ -60,6 +64,18 @@ export const AppContent = () => {
     initialRegion: initialRegionRef.current,
     initialMarketScope: initialMarketScopeRef.current,
     initialCategory: initialCategoryRef.current,
+  })
+  const weatherTabEnabled = isWeatherTabEnabled()
+  const regionCoordinates = useMemo(() => getRegionCoordinates(region), [region])
+  const {
+    latest: weatherLatest,
+    previous: weatherPrevious,
+    isLoading: isWeatherLoading,
+    error: weatherError,
+  } = useWeather({
+    lat: regionCoordinates?.lat ?? null,
+    lon: regionCoordinates?.lon ?? null,
+    enabled: weatherTabEnabled,
   })
   const { resolveCategoriesForScope, ensureValidCategory, handleMarketsUpdate } =
     useCategoryTabs()
@@ -184,6 +200,14 @@ export const AppContent = () => {
       : null)
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
+  const weatherSection = weatherTabEnabled ? (
+    <WeatherTab
+      latest={weatherLatest}
+      previous={weatherPrevious}
+      isLoading={isWeatherLoading}
+      error={weatherError}
+    />
+  ) : null
 
   return (
     <AppScreen
@@ -241,6 +265,7 @@ export const AppContent = () => {
       priceChartSection={
         <PriceChartSection selectedCropId={selectedCropId} marketScope={selectedMarket} />
       }
+      weatherTab={weatherSection}
       appVersion={appVersion}
     />
   )

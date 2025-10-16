@@ -9,6 +9,7 @@ type AppScreenProps = {
   toastStack: ReactNode
   recommendationsTable: ReactNode
   priceChartSection: ReactNode
+  weatherTab?: ReactNode | null
   fallbackNotice?: ReactNode | null
   offlineBanner?: ReactNode | null
   status: {
@@ -24,6 +25,7 @@ export const AppScreen = ({
   toastStack,
   recommendationsTable,
   priceChartSection,
+  weatherTab = null,
   fallbackNotice = null,
   offlineBanner = null,
   status,
@@ -61,6 +63,7 @@ export const AppScreen = ({
           {offlineBanner}
           {fallbackNotice}
           {recommendationsTable}
+          {weatherTab}
           {priceChartSection}
         </main>
         <footer className="border-t border-white/40 pt-4 text-sm text-market-neutral/80">
