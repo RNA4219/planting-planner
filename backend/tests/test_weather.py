@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -54,7 +55,7 @@ def test_weather_endpoint_returns_cached_payload_within_24h(
         "fetchedAt": "2024-01-01T00:00:00+00:00",
     }
     adapter = StubWeatherAdapter(base_payload)
-    clock = create_clock(datetime(2024, 1, 1, tzinfo=timezone.utc), delta=timedelta(hours=1))
+    clock = create_clock(datetime(2024, 1, 1, tzinfo=UTC), delta=timedelta(hours=1))
     service = WeatherService(adapter_factory=lambda: adapter, clock=clock)
     app.dependency_overrides[get_weather_service] = lambda: service
 
