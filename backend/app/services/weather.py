@@ -6,13 +6,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
+from importlib import import_module
 from threading import Lock
-from typing import Any, Protocol
-
-try:
-    from adapter import registry as adapter_registry
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    adapter_registry = None
+from types import ModuleType
+from typing import Any, Protocol, cast
 
 from pydantic import ValidationError
 
@@ -24,6 +21,23 @@ CacheKey = str
 class WeatherAdapter(Protocol):
     def get_daily(self, lat: float, lon: float) -> Any:  # pragma: no cover - protocol definition
         ...
+
+
+class AdapterRegistry(Protocol):
+    def get(self, name: str) -> Any:  # pragma: no cover - protocol definition
+        ...
+
+
+def _load_adapter_registry() -> AdapterRegistry | None:
+    try:
+        module: ModuleType = import_module("adapter")
+    except ModuleNotFoundError:  # pragma: no cover - optional dependency
+        return None
+
+    registry = getattr(module, "registry", None)
+    if registry is None:
+        return None
+    return cast(AdapterRegistry, registry)
 
 
 @dataclass
@@ -52,6 +66,7 @@ class WeatherService:
         self._cache: dict[CacheKey, CacheEntry] = {}
         self._lock = Lock()
         self._adapter: WeatherAdapter | None = None
+        self._adapter_registry: AdapterRegistry | None = _load_adapter_registry()
 
     async def get_weather(self, lat: float, lon: float) -> schemas.WeatherResponse:
         key = self._build_cache_key(lat, lon)
@@ -85,13 +100,13 @@ class WeatherService:
             return self._adapter
 
         if self._adapter is None:
-            if adapter_registry is None:
+            if self._adapter_registry is None:
                 raise WeatherServiceError(
                     "weather adapter is not configured",
                     status_code=HTTPStatus.SERVICE_UNAVAILABLE,
                 )
             try:
-                spec = adapter_registry.get("weather")
+                spec = self._adapter_registry.get("weather")
             except KeyError as exc:  # pragma: no cover - defensive guard
                 raise WeatherServiceError(
                     "weather adapter is not configured",
