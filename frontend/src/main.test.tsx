@@ -1,8 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { isValidElement, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 
 const renderMock = vi.fn()
+
+type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
 
 vi.mock('react-dom/client', () => ({
   createRoot: () => ({
@@ -10,11 +12,32 @@ vi.mock('react-dom/client', () => ({
   }),
 }))
 
+afterEach(() => {
+  vi.doUnmock('./lib/swClient')
+  vi.doUnmock('./lib/webVitals')
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
+
+const resetMainModule = () => {
+  vi.resetModules()
+  renderMock.mockClear()
+  document.body.innerHTML = '<div id="root"></div>'
+}
+
+const mockServiceWorkerModules = () => {
+  const registerServiceWorker = vi.fn().mockResolvedValue(undefined)
+  const startWebVitalsTracking = vi.fn()
+
+  vi.doMock('./lib/swClient', () => ({ registerServiceWorker }))
+  vi.doMock('./lib/webVitals', () => ({ startWebVitalsTracking }))
+
+  return { registerServiceWorker, startWebVitalsTracking }
+}
+
 describe('main entrypoint', () => {
   it('renders App within QueryClientProvider', async () => {
-    vi.resetModules()
-    renderMock.mockClear()
-    document.body.innerHTML = '<div id="root"></div>'
+    resetMainModule()
 
     await import('./main')
 
@@ -24,9 +47,7 @@ describe('main entrypoint', () => {
   })
 
   it('imports global styles', async () => {
-    vi.resetModules()
-    renderMock.mockClear()
-    document.body.innerHTML = '<div id="root"></div>'
+    resetMainModule()
 
     const cssImport = vi.fn()
     vi.doMock('./index.css', () => {
@@ -38,6 +59,48 @@ describe('main entrypoint', () => {
 
     expect(cssImport).toHaveBeenCalledTimes(1)
     vi.doUnmock('./index.css')
+  })
+
+  it('defers service worker registration using requestIdleCallback when available', async () => {
+    resetMainModule()
+
+    const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      requestIdleCallbackSpy(callback)
+      return 1
+    })
+
+    const { registerServiceWorker } = mockServiceWorkerModules()
+
+    await import('./main')
+
+    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+    expect(registerServiceWorker).not.toHaveBeenCalled()
+
+    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
+    if (!callback) {
+      throw new Error('requestIdleCallback callback missing')
+    }
+
+    callback({ didTimeout: false, timeRemaining: () => 1 })
+
+    expect(registerServiceWorker).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to setTimeout when requestIdleCallback is unavailable', async () => {
+    vi.useFakeTimers()
+    resetMainModule()
+    vi.stubGlobal('requestIdleCallback', undefined)
+
+    const { registerServiceWorker } = mockServiceWorkerModules()
+
+    await import('./main')
+
+    expect(registerServiceWorker).not.toHaveBeenCalled()
+
+    vi.runOnlyPendingTimers()
+
+    expect(registerServiceWorker).toHaveBeenCalledTimes(1)
   })
 })
 

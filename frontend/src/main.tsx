@@ -30,4 +30,28 @@ createRoot(container).render(
 )
 
 startWebVitalsTracking()
-void registerServiceWorker()
+
+const scheduleServiceWorkerRegistration = () => {
+  const invokeRegistration = () => {
+    void registerServiceWorker()
+  }
+
+  if (typeof window === 'undefined') {
+    invokeRegistration()
+    return
+  }
+
+  const { requestIdleCallback } = window as Window & {
+    requestIdleCallback?: (callback: () => void) => number
+  }
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => {
+      invokeRegistration()
+    })
+  } else {
+    window.setTimeout(invokeRegistration, 1500)
+  }
+}
+
+scheduleServiceWorkerRegistration()
