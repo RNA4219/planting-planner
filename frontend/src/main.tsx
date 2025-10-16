@@ -7,6 +7,21 @@ import './index.css'
 import { registerServiceWorker } from './lib/swClient'
 import { startWebVitalsTracking } from './lib/webVitals'
 
+const scheduleAfterIdle = (callback: () => void) => {
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => number
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    globalWithIdle.requestIdleCallback(() => {
+      callback()
+    })
+    return
+  }
+
+  setTimeout(callback, 0)
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

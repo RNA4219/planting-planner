@@ -161,6 +161,14 @@ describe('service worker', () => {
     expect(key).toBe('api:get:/api/list?foo=bar:v2024-04-01:e2024-04-15T12:00:00Z')
   })
 
+  test('API cache network strategy times out after 4 seconds', async () => {
+    await import('../../src/sw')
+
+    expect(networkFirstCalls).toHaveLength(1)
+    const [options] = networkFirstCalls as Array<{ networkTimeoutSeconds?: number }>
+    expect(options).toMatchObject({ networkTimeoutSeconds: 4 })
+  })
+
   test('background sync plugin retries with telemetry', async () => {
     const module = await import('../../src/sw')
     const { processRefreshQueue } = module
