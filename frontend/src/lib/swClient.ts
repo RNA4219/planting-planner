@@ -1,3 +1,4 @@
+import { buildTelemetryContext } from '../config/pwa'
 import { track } from './telemetry'
 
 export type ServiceWorkerClientEvent =
@@ -123,8 +124,12 @@ export const registerServiceWorker = async () => {
   try {
     const registration = await navigator.serviceWorker.register('/sw.js')
     attachRegistrationListeners(registration)
-  } catch {
-    // ignore registration failure
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    void track('sw.register.failed', {
+      error: message,
+      telemetryContext: buildTelemetryContext(),
+    })
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     state.waiting = null
