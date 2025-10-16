@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import inspect
+import importlib
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from threading import Lock
-from typing import Any, Protocol
-
-try:
-    from adapter import registry as adapter_registry
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    adapter_registry = None
+from typing import Any, Protocol, cast
 
 from pydantic import ValidationError
 
@@ -24,6 +21,29 @@ CacheKey = str
 class WeatherAdapter(Protocol):
     def get_daily(self, lat: float, lon: float) -> Any:  # pragma: no cover - protocol definition
         ...
+
+
+class AdapterProviderSpec(Protocol):
+    def factory(self) -> WeatherAdapter:
+        ...
+
+
+class AdapterRegistry(Protocol):
+    def get(self, name: str) -> AdapterProviderSpec:
+        ...
+
+
+def _load_adapter_registry() -> AdapterRegistry | None:
+    with suppress(ModuleNotFoundError):
+        module = importlib.import_module("adapter")
+        registry = getattr(module, "registry", None)
+        if registry is None:
+            return None
+        return cast(AdapterRegistry, registry)
+    return None
+
+
+adapter_registry = _load_adapter_registry()
 
 
 @dataclass
