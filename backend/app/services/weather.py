@@ -18,26 +18,20 @@ from .. import schemas
 CacheKey = str
 
 
+class AdapterRegistry(Protocol):
+    def get(self, name: str) -> Any:  # pragma: no cover - protocol definition
+        ...
+
+
 class WeatherAdapter(Protocol):
     def get_daily(self, lat: float, lon: float) -> Any:  # pragma: no cover - protocol definition
         ...
 
 
-class AdapterProviderSpec(Protocol):
-    def factory(self) -> WeatherAdapter: ...
-
-
-class AdapterRegistry(Protocol):
-    def get(self, name: str) -> AdapterProviderSpec: ...
-
-
 def _load_adapter_registry() -> AdapterRegistry | None:
-    with suppress(ModuleNotFoundError):
+    with suppress(ModuleNotFoundError):  # pragma: no cover - optional dependency
         module = importlib.import_module("adapter")
-        registry = getattr(module, "registry", None)
-        if registry is None:
-            return None
-        return cast(AdapterRegistry, registry)
+        return cast(AdapterRegistry | None, getattr(module, "registry", None))
     return None
 
 
