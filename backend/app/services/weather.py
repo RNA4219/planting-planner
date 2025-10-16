@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import inspect
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
