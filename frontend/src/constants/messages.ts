@@ -109,90 +109,83 @@ const APP_STATUS_MESSAGES_DICTIONARY = {
   },
 } as const
 
-type MessageDictionary = typeof APP_TEXT_DICTIONARY
-type SupportedLanguage = keyof MessageDictionary
+type LanguageCode = keyof typeof APP_TEXT_DICTIONARY
 
-type FeatureFlags = {
+type FeatureFlagConfig = {
   I18N_EN?: boolean
 }
 
 declare global {
   // eslint-disable-next-line no-var
-  var FEATURE_FLAGS: FeatureFlags | undefined
-
-  interface Window {
-    FEATURE_FLAGS?: FeatureFlags
-  }
+  var FEATURE_FLAGS: FeatureFlagConfig | undefined
 }
 
-const readFeatureFlags = (): FeatureFlags | undefined => {
-  if (typeof globalThis === 'undefined') {
-    return undefined
+const getRuntimeFeatureFlags = (): FeatureFlagConfig => {
+  const flags = (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS
+
+  if (!flags || typeof flags !== 'object') {
+    return {}
   }
 
-  if (typeof globalThis.FEATURE_FLAGS !== 'undefined') {
-    return globalThis.FEATURE_FLAGS
-  }
-
-  if (typeof window !== 'undefined' && typeof window.FEATURE_FLAGS !== 'undefined') {
-    return window.FEATURE_FLAGS
-  }
-
-  return undefined
+  return flags
 }
 
-const isEnglishEnabled = (flags: FeatureFlags | undefined): boolean => {
-  if (flags?.I18N_EN) {
-    return true
+const isEnglishEnabled = (): boolean => {
+  const runtimeFlag = getRuntimeFeatureFlags().I18N_EN
+
+  if (typeof runtimeFlag === 'boolean') {
+    return runtimeFlag
   }
 
-  return import.meta.env?.VITE_I18N_EN === 'true'
+  const envFlag = import.meta.env?.VITE_I18N_EN
+
+  if (typeof envFlag === 'string') {
+    return envFlag.toLowerCase() === 'true'
+  }
+
+  return false
 }
 
-const resolveLanguage = (): SupportedLanguage => {
-  const flags = readFeatureFlags()
-  const englishEnabled = isEnglishEnabled(flags)
+const getRequestedLanguage = (): LanguageCode | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
 
-  if (typeof window !== 'undefined' && typeof window.location !== 'undefined') {
-    const languageParam = new URLSearchParams(window.location.search ?? '').get('lang')
+  try {
+    const { searchParams } = new URL(window.location.href)
+    const langParam = searchParams.get('lang')?.toLowerCase()
 
-    if (languageParam === 'ja') {
-      return 'ja'
-    }
-
-    if (languageParam === 'en' && englishEnabled) {
+    if (langParam === 'en') {
       return 'en'
     }
+  } catch {
+    // ignore malformed URLs and fall back to default language
   }
 
-  if (englishEnabled && typeof document !== 'undefined') {
-    const lang = document.documentElement.lang
-    if (lang === 'en') {
-      return 'en'
-    }
+  return null
+}
+
+const resolveLanguage = (): LanguageCode => {
+  const requestedLanguage = getRequestedLanguage()
+  const language: LanguageCode =
+    requestedLanguage === 'en' && isEnglishEnabled() ? 'en' : DEFAULT_LANGUAGE
+
+  if (typeof document !== 'undefined' && document?.documentElement) {
+    document.documentElement.lang = language
   }
 
-  return DEFAULT_LANGUAGE
+  return language
 }
 
-const SELECTED_LANGUAGE = resolveLanguage()
+const selectMessages = <Dictionary extends Record<LanguageCode, unknown>>(
+  dictionary: Dictionary,
+): Dictionary[LanguageCode] => {
+  const language = resolveLanguage()
+  const fallback = dictionary[DEFAULT_LANGUAGE]
+  const selected = dictionary[language]
 
-if (typeof document !== 'undefined') {
-  document.documentElement.lang = SELECTED_LANGUAGE
+  return (selected ?? fallback) as Dictionary[LanguageCode]
 }
-
-const selectMessages = <T extends Record<SupportedLanguage, unknown>>(
-  dictionary: T,
-) => dictionary[SELECTED_LANGUAGE] as T[SupportedLanguage]
-
-export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
-export const SEARCH_CONTROLS_TEXT = selectMessages(
-  SEARCH_CONTROLS_TEXT_DICTIONARY,
-)
-export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
-export const APP_STATUS_MESSAGES = selectMessages(
-  APP_STATUS_MESSAGES_DICTIONARY,
-)
 
 export const WEATHER_MESSAGES = {
   title: '天気',
@@ -209,3 +202,8 @@ export const WEATHER_MESSAGES = {
     wind: '風速',
   },
 } as const
+
+export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
+export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
+export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const APP_STATUS_MESSAGES = selectMessages(APP_STATUS_MESSAGES_DICTIONARY)

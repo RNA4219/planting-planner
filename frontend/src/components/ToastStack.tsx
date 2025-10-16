@@ -102,7 +102,7 @@ export const ToastStack = ({
   }, [])
 
   if (toasts.length === 0) {
-    return null
+    return <div data-testid="toast-stack" aria-hidden="true" className="hidden" />
   }
 
   return (
