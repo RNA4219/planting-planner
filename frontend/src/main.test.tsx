@@ -15,14 +15,24 @@ vi.mock('react-dom/client', () => ({
 afterEach(() => {
   vi.doUnmock('./lib/swClient')
   vi.doUnmock('./lib/webVitals')
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  setDocumentReadyState('complete')
 })
+
+const setDocumentReadyState = (state: DocumentReadyState) => {
+  Object.defineProperty(document, 'readyState', {
+    configurable: true,
+    value: state,
+  })
+}
 
 const resetMainModule = () => {
   vi.resetModules()
   renderMock.mockClear()
   document.body.innerHTML = '<div id="root"></div>'
+  setDocumentReadyState('complete')
 }
 
 const mockServiceWorkerModules = () => {
@@ -126,6 +136,53 @@ describe('main entrypoint', () => {
     expect(registerServiceWorker).not.toHaveBeenCalled()
 
     vi.runOnlyPendingTimers()
+
+    expect(registerServiceWorker).toHaveBeenCalledTimes(1)
+  })
+
+  it('waits for window load event before scheduling registration work', async () => {
+    vi.useFakeTimers()
+    resetMainModule()
+    setDocumentReadyState('loading')
+
+    let loadListener: (() => void) | undefined
+    vi.spyOn(window, 'addEventListener').mockImplementation(
+      ((type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === 'load') {
+          if (typeof listener === 'function') {
+            loadListener = () => listener(new Event('load'))
+          } else if (typeof listener === 'object' && listener !== null && 'handleEvent' in listener) {
+            loadListener = () => listener.handleEvent(new Event('load'))
+          }
+        }
+        return undefined
+      }) as typeof window.addEventListener,
+    )
+
+    const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      requestIdleCallbackSpy(callback)
+      return 1
+    })
+
+    const { registerServiceWorker } = mockServiceWorkerModules()
+
+    await import('./main')
+
+    expect(registerServiceWorker).not.toHaveBeenCalled()
+    expect(requestIdleCallbackSpy).not.toHaveBeenCalled()
+    expect(loadListener).toBeDefined()
+
+    loadListener?.()
+
+    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+
+    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
+    if (!callback) {
+      throw new Error('requestIdleCallback callback missing')
+    }
+
+    callback({ didTimeout: false, timeRemaining: () => 1 })
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)
   })

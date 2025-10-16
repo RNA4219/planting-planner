@@ -41,30 +41,39 @@ const scheduleServiceWorkerRegistration = () => {
     return
   }
 
-  const { requestIdleCallback } = window as Window & {
-    requestIdleCallback?: (callback: () => void) => number
-  }
-
-  if (typeof requestIdleCallback === 'function') {
-    let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
-
-    const registerOnce = () => {
-      if (fallbackTimeoutId !== null) {
-        globalThis.clearTimeout(fallbackTimeoutId)
-        fallbackTimeoutId = null
-      }
-      invokeRegistration()
+  const runAfterWindowLoad = (callback: () => void) => {
+    if (document.readyState === 'complete') {
+      callback()
+      return
     }
 
-    requestIdleCallback(() => {
-      registerOnce()
-    })
-
-    fallbackTimeoutId = globalThis.setTimeout(registerOnce, 1500)
-    return
+    window.addEventListener('load', () => callback(), { once: true })
   }
 
-  globalThis.setTimeout(invokeRegistration, 1500)
+  runAfterWindowLoad(() => {
+    const { requestIdleCallback } = window as Window & {
+      requestIdleCallback?: (callback: () => void) => number
+    }
+
+    if (typeof requestIdleCallback === 'function') {
+      let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null
+
+      const registerOnce = () => {
+        if (fallbackTimeoutId !== null) {
+          globalThis.clearTimeout(fallbackTimeoutId)
+          fallbackTimeoutId = null
+        }
+        invokeRegistration()
+      }
+
+      requestIdleCallback(registerOnce)
+
+      fallbackTimeoutId = globalThis.setTimeout(registerOnce, 3000)
+      return
+    }
+
+    globalThis.setTimeout(invokeRegistration, 1500)
+  })
 }
 
 scheduleServiceWorkerRegistration()
