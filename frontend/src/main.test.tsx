@@ -5,6 +5,14 @@ import { QueryClientProvider } from '@tanstack/react-query'
 const renderMock = vi.fn()
 
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
+type IdleScheduler = (callback: IdleCallback) => number
+
+const originalIdle =
+  (globalThis as typeof globalThis & { requestIdleCallback?: IdleScheduler }).requestIdleCallback
+
+const setIdleScheduler = (scheduler: IdleScheduler | undefined) => {
+  vi.stubGlobal('requestIdleCallback', scheduler)
+}
 
 vi.mock('react-dom/client', () => ({
   createRoot: () => ({
@@ -19,6 +27,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
   setDocumentReadyState('complete')
+  vi.stubGlobal('requestIdleCallback', originalIdle)
 })
 
 const setDocumentReadyState = (state: DocumentReadyState) => {
@@ -76,7 +85,7 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -105,7 +114,7 @@ describe('main entrypoint', () => {
   it('falls back to setTimeout when requestIdleCallback is unavailable', async () => {
     vi.useFakeTimers()
     resetMainModule()
-    vi.stubGlobal('requestIdleCallback', undefined)
+    setIdleScheduler(undefined)
 
     const { registerServiceWorker } = mockServiceWorkerModules()
 
@@ -123,7 +132,7 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -160,7 +169,7 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
