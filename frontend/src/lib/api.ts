@@ -37,6 +37,23 @@ const REFRESH_IDEMPOTENCY_STORAGE_KEY = 'planting-planner:refresh-idempotency-ke
 
 let refreshIdempotencyKey: string | undefined
 
+declare global {
+  interface Window {
+    __recordRecommendRequest?: (search: string) => void
+  }
+}
+
+const recordRecommendRequest = (params: URLSearchParams): void => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  const recorder = window.__recordRecommendRequest
+  if (typeof recorder !== 'function') {
+    return
+  }
+  recorder(`?${params.toString()}`)
+}
+
 type BuildUrlOptions = {
   readonly includePrefix?: boolean
 }
@@ -308,6 +325,7 @@ export const fetchRecommendations = async (
   if (week) {
     params.set('week', week)
   }
+  recordRecommendRequest(params)
   const url = buildUrl('/recommend', params)
   const { data, response } = await request<RecommendResponse>(url)
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)

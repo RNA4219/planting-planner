@@ -34,6 +34,21 @@ const setupNavigator = (page: Page, supported: boolean) =>
 
 const setupApi = async (page: Page, telemetry: Telemetry[], recommendRequests?: string[]) => {
   const context = page.context();
+  await page.exposeFunction('__recordRecommendRequestBridge', (search: string) => {
+    if (!recommendRequests) {
+      return;
+    }
+    recommendRequests.push(search);
+  });
+  await page.addInitScript(() => {
+    const globalWindow = window as typeof window & {
+      __recordRecommendRequest?: (search: string) => void;
+      __recordRecommendRequestBridge?: (search: string) => void;
+    };
+    globalWindow.__recordRecommendRequest = (search: string) => {
+      globalWindow.__recordRecommendRequestBridge?.(search);
+    };
+  });
   await context.route('**/sw.js', (route) => route.fulfill({ status: 200, contentType: 'application/javascript', body: 'self.addEventListener("install",()=>self.skipWaiting());self.addEventListener("activate",()=>self.clients.claim());' }));
   await context.route('**/api/telemetry', async (route) => {
     const body = route.request().postData();
