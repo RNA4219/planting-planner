@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
 type WebVitalsMetric = {
   id: string
@@ -44,6 +44,11 @@ const mocks = vi.hoisted(() => {
   }
 })
 
+const originalRequestIdleCallback =
+  (globalThis as typeof globalThis & {
+    requestIdleCallback?: typeof window.requestIdleCallback
+  }).requestIdleCallback
+
 vi.mock('../../src/lib/telemetry', () => ({
   track: mocks.trackSpy,
 }))
@@ -60,10 +65,39 @@ import { startWebVitalsTracking } from '../../src/lib/webVitals'
 describe('startWebVitalsTracking', () => {
   beforeEach(() => {
     mocks.reset()
+    ;(globalThis as typeof globalThis & {
+      requestIdleCallback?: typeof window.requestIdleCallback
+    }).requestIdleCallback = vi
+      .fn<Parameters<typeof window.requestIdleCallback>[0], number>((callback) => {
+        callback({
+          didTimeout: false,
+          timeRemaining: () => 0,
+        })
+        return 0
+      })
   })
 
-  it('registers listeners and forwards metrics to telemetry', () => {
-    startWebVitalsTracking()
+  afterEach(() => {
+    if (originalRequestIdleCallback) {
+      ;(globalThis as typeof globalThis & {
+        requestIdleCallback?: typeof window.requestIdleCallback
+      }).requestIdleCallback = originalRequestIdleCallback
+    } else {
+      delete (globalThis as typeof globalThis & {
+        requestIdleCallback?: typeof window.requestIdleCallback
+      }).requestIdleCallback
+    }
+  })
+
+  it('registers listeners lazily and forwards metrics to telemetry', async () => {
+    const registration = startWebVitalsTracking()
+
+    const { requestIdleCallback } = globalThis as typeof globalThis & {
+      requestIdleCallback?: ReturnType<typeof vi.fn>
+    }
+
+    expect(requestIdleCallback).toHaveBeenCalledTimes(1)
+    await registration
 
     expect(mocks.onLCPSpy).toHaveBeenCalledTimes(1)
     expect(mocks.onLCPSpy).toHaveBeenCalledWith(expect.any(Function))

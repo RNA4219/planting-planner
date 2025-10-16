@@ -1,5 +1,4 @@
 import type { Metric } from 'web-vitals'
-import { onCLS, onINP, onLCP } from 'web-vitals'
 
 import { track } from './telemetry'
 
@@ -19,8 +18,35 @@ const createHandler = (event: MetricEventName) => (metric: Metric) => {
   void track(event, payload)
 }
 
-export const startWebVitalsTracking = (): void => {
-  onLCP(createHandler('web_vitals.lcp'))
-  onINP(createHandler('web_vitals.inp'))
-  onCLS(createHandler('web_vitals.cls'))
+export const startWebVitalsTracking = (): Promise<void> => {
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: typeof window.requestIdleCallback
+  }
+
+  const schedule = (callback: () => void) => {
+    if (typeof globalWithIdle.requestIdleCallback === 'function') {
+      globalWithIdle.requestIdleCallback(() => {
+        callback()
+      })
+      return
+    }
+    setTimeout(callback, 0)
+  }
+
+  return new Promise<void>((resolve) => {
+    schedule(() => {
+      void import('web-vitals')
+        .then(({ onCLS, onINP, onLCP }) => {
+          onLCP(createHandler('web_vitals.lcp'))
+          onINP(createHandler('web_vitals.inp'))
+          onCLS(createHandler('web_vitals.cls'))
+        })
+        .catch(() => {
+          // Web Vitals の計測失敗は致命的ではないため握りつぶす
+        })
+        .finally(() => {
+          resolve()
+        })
+    })
+  })
 }
