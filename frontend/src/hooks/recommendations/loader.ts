@@ -157,30 +157,38 @@ export const useRecommendationLoader = ({
           setIsMarketFallback(cached.isMarketFallback)
           setLoadError(null)
           const resolvedWeek = normalizeIsoWeek(cached.result.week, normalizedWeek)
-          void track('prefetch.hit', {
-            region: targetRegion,
-            marketScope: targetMarketScope,
-            category: targetCategory,
-            requestedWeek: normalizedWeek,
-            resolvedWeek,
-            isMarketFallback: cached.isMarketFallback,
-            itemsCount: cached.result.items.length,
-          })
+          void track(
+            'prefetch.hit',
+            {
+              region: targetRegion,
+              marketScope: targetMarketScope,
+              category: targetCategory,
+              requestedWeek: normalizedWeek,
+              resolvedWeek,
+              isMarketFallback: cached.isMarketFallback,
+              itemsCount: cached.result.items.length,
+            },
+            `${requestMeta.id}`,
+          )
           applyWeek(resolvedWeek, cached.result.items)
           settledRef.current = requestMeta
           return
         }
         setIsMarketFallback(false)
         setLoadError('recommendations-unavailable')
-        void track('prefetch.miss', {
-          region: targetRegion,
-          marketScope: targetMarketScope,
-          category: targetCategory,
-          requestedWeek: normalizedWeek,
-          resolvedWeek: normalizedWeek,
-          isMarketFallback: false,
-          itemsCount: 0,
-        })
+        void track(
+          'prefetch.miss',
+          {
+            region: targetRegion,
+            marketScope: targetMarketScope,
+            category: targetCategory,
+            requestedWeek: normalizedWeek,
+            resolvedWeek: normalizedWeek,
+            isMarketFallback: false,
+            itemsCount: 0,
+          },
+          `${requestMeta.id}`,
+        )
         applyWeek(normalizedWeek, [])
         settledRef.current = requestMeta
       }

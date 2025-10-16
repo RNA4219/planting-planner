@@ -204,7 +204,7 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
     })
 
     expect(trackMock).toHaveBeenCalledTimes(1)
-    const [event, payload] = trackMock.mock.calls[0] ?? []
+    const [event, payload, requestId] = trackMock.mock.calls[0] ?? []
     expect(event).toBe('prefetch.hit')
     expect(payload).toMatchObject({
       region: 'temperate',
@@ -215,6 +215,7 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
       isMarketFallback: false,
       itemsCount: 0,
     })
+    expect(requestId).toBe('2')
   })
 
   it('キャッシュが無く空配列で終了した場合は prefetch.miss を送信する', async () => {
@@ -232,7 +233,7 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
     })
 
     expect(trackMock).toHaveBeenCalledTimes(1)
-    const [event, payload] = trackMock.mock.calls[0] ?? []
+    const [event, payload, requestId] = trackMock.mock.calls[0] ?? []
     expect(event).toBe('prefetch.miss')
     expect(payload).toMatchObject({
       region: 'temperate',
@@ -243,5 +244,6 @@ describe('hooks/useRecommendations/useRecommendationLoader.behavior', () => {
       isMarketFallback: false,
       itemsCount: 0,
     })
+    expect(requestId).toBe('1')
   })
 })
