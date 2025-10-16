@@ -26,6 +26,7 @@ vi.mock('../mocks/api', () => {
     postRefresh: vi.fn(),
     fetchRefreshStatus: vi.fn(),
     fetchPrice: vi.fn(),
+    fetchWeather: vi.fn(),
   }
 })
 

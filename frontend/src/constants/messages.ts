@@ -1,5 +1,83 @@
 const DEFAULT_LANGUAGE = 'ja' as const
 
+type LanguageCode = keyof typeof APP_TEXT_DICTIONARY
+
+type FeatureFlagConfig = {
+  I18N_EN?: boolean
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var FEATURE_FLAGS: FeatureFlagConfig | undefined
+}
+
+const getRuntimeFeatureFlags = (): FeatureFlagConfig => {
+  const flags = (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS
+
+  if (!flags || typeof flags !== 'object') {
+    return {}
+  }
+
+  return flags
+}
+
+const isEnglishEnabled = (): boolean => {
+  const runtimeFlag = getRuntimeFeatureFlags().I18N_EN
+
+  if (typeof runtimeFlag === 'boolean') {
+    return runtimeFlag
+  }
+
+  const envFlag = import.meta.env?.VITE_I18N_EN
+
+  if (typeof envFlag === 'string') {
+    return envFlag.toLowerCase() === 'true'
+  }
+
+  return false
+}
+
+const getRequestedLanguage = (): LanguageCode | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const { searchParams } = new URL(window.location.href)
+    const langParam = searchParams.get('lang')?.toLowerCase()
+
+    if (langParam === 'en') {
+      return 'en'
+    }
+  } catch {
+    // ignore malformed URLs and fall back to default language
+  }
+
+  return null
+}
+
+const resolveLanguage = (): LanguageCode => {
+  const requestedLanguage = getRequestedLanguage()
+  const language: LanguageCode =
+    requestedLanguage === 'en' && isEnglishEnabled() ? 'en' : DEFAULT_LANGUAGE
+
+  if (typeof document !== 'undefined' && document?.documentElement) {
+    document.documentElement.lang = language
+  }
+
+  return language
+}
+
+const selectMessages = <Dictionary extends Record<LanguageCode, unknown>>(
+  dictionary: Dictionary,
+): Dictionary[LanguageCode] => {
+  const language = resolveLanguage()
+  const fallback = dictionary[DEFAULT_LANGUAGE]
+  const selected = dictionary[language]
+
+  return (selected ?? fallback) as Dictionary[LanguageCode]
+}
+
 const APP_TEXT_DICTIONARY = {
   ja: {
     title: 'Planting Planner',
@@ -124,3 +202,8 @@ export const WEATHER_MESSAGES = {
     wind: '風速',
   },
 } as const
+
+export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
+export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
+export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const APP_STATUS_MESSAGES = selectMessages(APP_STATUS_MESSAGES_DICTIONARY)
