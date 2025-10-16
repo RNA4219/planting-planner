@@ -109,6 +109,91 @@ const APP_STATUS_MESSAGES_DICTIONARY = {
   },
 } as const
 
+type MessageDictionary = typeof APP_TEXT_DICTIONARY
+type SupportedLanguage = keyof MessageDictionary
+
+type FeatureFlags = {
+  I18N_EN?: boolean
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var FEATURE_FLAGS: FeatureFlags | undefined
+
+  interface Window {
+    FEATURE_FLAGS?: FeatureFlags
+  }
+}
+
+const readFeatureFlags = (): FeatureFlags | undefined => {
+  if (typeof globalThis === 'undefined') {
+    return undefined
+  }
+
+  if (typeof globalThis.FEATURE_FLAGS !== 'undefined') {
+    return globalThis.FEATURE_FLAGS
+  }
+
+  if (typeof window !== 'undefined' && typeof window.FEATURE_FLAGS !== 'undefined') {
+    return window.FEATURE_FLAGS
+  }
+
+  return undefined
+}
+
+const isEnglishEnabled = (flags: FeatureFlags | undefined): boolean => {
+  if (flags?.I18N_EN) {
+    return true
+  }
+
+  return import.meta.env?.VITE_I18N_EN === 'true'
+}
+
+const resolveLanguage = (): SupportedLanguage => {
+  const flags = readFeatureFlags()
+  const englishEnabled = isEnglishEnabled(flags)
+
+  if (typeof window !== 'undefined' && typeof window.location !== 'undefined') {
+    const languageParam = new URLSearchParams(window.location.search ?? '').get('lang')
+
+    if (languageParam === 'ja') {
+      return 'ja'
+    }
+
+    if (languageParam === 'en' && englishEnabled) {
+      return 'en'
+    }
+  }
+
+  if (englishEnabled && typeof document !== 'undefined') {
+    const lang = document.documentElement.lang
+    if (lang === 'en') {
+      return 'en'
+    }
+  }
+
+  return DEFAULT_LANGUAGE
+}
+
+const SELECTED_LANGUAGE = resolveLanguage()
+
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = SELECTED_LANGUAGE
+}
+
+const selectMessages = <T extends Record<SupportedLanguage, unknown>>(
+  dictionary: T,
+) => dictionary[SELECTED_LANGUAGE] as T[SupportedLanguage]
+
+export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
+export const SEARCH_CONTROLS_TEXT = selectMessages(
+  SEARCH_CONTROLS_TEXT_DICTIONARY,
+)
+export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const APP_STATUS_MESSAGES = selectMessages(
+  APP_STATUS_MESSAGES_DICTIONARY,
+)
+
 export const WEATHER_MESSAGES = {
   title: '天気',
   latestLabel: '最新値',
