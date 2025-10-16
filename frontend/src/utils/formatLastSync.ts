@@ -1,5 +1,10 @@
 const FALLBACK_LOCALE = 'ja-JP'
-const DEFAULT_UNKNOWN_LABELS: Record<string, string> = { ja: '未同期', en: 'Not synced' }
+const FALLBACK_LANGUAGE = 'ja'
+const DEFAULT_UNKNOWN_LABELS: Record<string, string | undefined> = {
+  ja: '未同期',
+  en: 'Not synced',
+}
+const FALLBACK_UNKNOWN_LABEL = DEFAULT_UNKNOWN_LABELS[FALLBACK_LANGUAGE] ?? '未同期'
 
 const resolveLocale = () => {
   const candidates: string[] = []
@@ -27,15 +32,19 @@ const resolveLocale = () => {
   return FALLBACK_LOCALE
 }
 
-const resolveUnknownLabel = (locale: string, provided?: string) => {
-  if (provided) {
+const resolveUnknownLabel = (locale: string, provided?: string): string => {
+  if (provided !== undefined) {
     return provided
   }
-  const language = locale.toLowerCase().split('-')[0]
-  return DEFAULT_UNKNOWN_LABELS[language] ?? DEFAULT_UNKNOWN_LABELS.ja
+  const [language = ''] = locale.toLowerCase().split('-')
+  const resolved = DEFAULT_UNKNOWN_LABELS[language]
+  if (resolved !== undefined) {
+    return resolved
+  }
+  return FALLBACK_UNKNOWN_LABEL
 }
 
-export const formatLastSync = (date: Date | null, unknownLabel?: string) => {
+export const formatLastSync = (date: Date | null, unknownLabel?: string): string => {
   const locale = resolveLocale()
   const label = resolveUnknownLabel(locale, unknownLabel)
   if (!date) {
