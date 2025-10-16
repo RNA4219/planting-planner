@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import inspect
 import importlib
+import inspect
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
