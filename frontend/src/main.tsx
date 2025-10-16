@@ -11,6 +11,16 @@ const isTestEnvironment = import.meta.env?.MODE === 'test'
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
+    cancelIdleCallback?: (handle: number) => void
+  }
+
+  let executed = false
+  const run = () => {
+    if (executed) {
+      return
+    }
+    executed = true
+    callback()
   }
 
   let timeoutId: number | undefined
@@ -24,15 +34,39 @@ const scheduleAfterIdle = (callback: () => void) => {
   }
 
   if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    globalWithIdle.requestIdleCallback(runCallback)
+    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined
+    const idleHandle = globalWithIdle.requestIdleCallback(() => {
+      if (fallbackTimeout !== undefined) {
+        clearTimeout(fallbackTimeout)
+      }
+      run()
+    })
+
+    fallbackTimeout = setTimeout(() => {
+      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
+        globalWithIdle.cancelIdleCallback(idleHandle)
+      }
+      run()
+    }, 0)
+
+    return
   }
 
-  const shouldScheduleFallback =
-    typeof globalWithIdle.requestIdleCallback !== 'function' || !isTestEnvironment || 'clock' in window.setTimeout
+  setTimeout(run, 0)
+}
 
-  if (shouldScheduleFallback) {
-    timeoutId = window.setTimeout(runCallback, 0)
+const scheduleAfterWindowLoad = (callback: () => void) => {
+  if (document.readyState === 'complete') {
+    callback()
+    return
   }
+
+  const onLoad = () => {
+    window.removeEventListener('load', onLoad)
+    callback()
+  }
+
+  window.addEventListener('load', onLoad)
 }
 
 const queryClient = new QueryClient({
@@ -57,26 +91,12 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-if (!isTestEnvironment) {
-  void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-    startWebVitalsTracking()
-  })
-}
-
-let registrationScheduled = false
-
-const scheduleServiceWorkerRegistration = () => {
-  if (registrationScheduled) {
-    return
-  }
-  registrationScheduled = true
+scheduleAfterWindowLoad(() => {
   scheduleAfterIdle(() => {
     void registerServiceWorker()
-  })
-}
 
-if (document.readyState === 'complete') {
-  scheduleServiceWorkerRegistration()
-} else {
-  window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true })
-}
+    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+      startWebVitalsTracking()
+    })
+  })
+})

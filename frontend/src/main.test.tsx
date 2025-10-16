@@ -77,6 +77,7 @@ describe('main entrypoint', () => {
   it('サービスワーカー登録をアイドル時まで遅延する', async () => {
     vi.useFakeTimers()
     vi.resetModules()
+    vi.useFakeTimers()
     renderMock.mockClear()
     document.body.innerHTML = '<div id="root"></div>'
 
@@ -190,6 +191,8 @@ describe('main entrypoint', () => {
     expect(loadListener).toBeDefined()
 
     loadListener?.()
+
+    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
 
     const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
     if (!callback) {
