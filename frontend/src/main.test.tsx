@@ -84,7 +84,9 @@ describe('main entrypoint', () => {
   })
 
   it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.useFakeTimers()
     vi.resetModules()
+    vi.useFakeTimers()
     renderMock.mockClear()
     document.body.innerHTML = '<div id="root"></div>'
 
@@ -195,12 +197,18 @@ describe('main entrypoint', () => {
 
     expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
 
-    const callback = scheduledIdleCallback
+    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
     if (!callback) {
-      throw new Error('Idle callback was not scheduled')
+      throw new Error('requestIdleCallback callback missing')
     }
 
     callback({ didTimeout: false, timeRemaining: () => 1 })
+
+    if (originalIdle) {
+      globalWithIdle.requestIdleCallback = originalIdle
+    } else {
+      Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
+    }
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)
   })
