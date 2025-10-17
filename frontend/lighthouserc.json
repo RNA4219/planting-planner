@@ -1,6 +1,7 @@
 {
   "ci": {
     "collect": {
+      "buildCommand": "npm --prefix frontend run build",
       "staticDistDir": "frontend/dist",
       "numberOfRuns": 1
     },
