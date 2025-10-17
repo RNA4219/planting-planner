@@ -10,6 +10,14 @@ const createRootMock = vi.fn<(container: Container) => Root>(() => ({
 }))
 
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
+type IdleScheduler = (callback: IdleCallback) => number
+
+const originalIdle =
+  (globalThis as typeof globalThis & { requestIdleCallback?: IdleScheduler }).requestIdleCallback
+
+const setIdleScheduler = (scheduler: IdleScheduler | undefined) => {
+  vi.stubGlobal('requestIdleCallback', scheduler)
+}
 
 vi.mock('react-dom/client', () => ({
   createRoot: createRootMock,
@@ -22,6 +30,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
   setDocumentReadyState('complete')
+  vi.stubGlobal('requestIdleCallback', originalIdle)
 })
 
 const setDocumentReadyState = (state: DocumentReadyState) => {
@@ -77,6 +86,7 @@ describe('main entrypoint', () => {
   it('サービスワーカー登録をアイドル時まで遅延する', async () => {
     vi.useFakeTimers()
     vi.resetModules()
+    vi.useFakeTimers()
     renderMock.mockClear()
     document.body.innerHTML = '<div id="root"></div>'
 
@@ -118,7 +128,7 @@ describe('main entrypoint', () => {
   it('falls back to setTimeout when requestIdleCallback is unavailable', async () => {
     vi.useFakeTimers()
     resetMainModule()
-    vi.stubGlobal('requestIdleCallback', undefined)
+    setIdleScheduler(undefined)
 
     const { registerServiceWorker } = mockServiceWorkerModules()
 
@@ -136,7 +146,7 @@ describe('main entrypoint', () => {
     resetMainModule()
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
-    vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+    setIdleScheduler((callback: IdleCallback) => {
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -194,6 +204,15 @@ describe('main entrypoint', () => {
     expect(loadListener).toBeDefined()
 
     loadListener?.()
+
+    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+
+    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
+    if (!callback) {
+      throw new Error('requestIdleCallback callback missing')
+    }
+
+    callback({ didTimeout: false, timeRemaining: () => 1 })
 
     if (originalIdle) {
       globalWithIdle.requestIdleCallback = originalIdle
