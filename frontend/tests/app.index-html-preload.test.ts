@@ -5,10 +5,10 @@ import { describe, expect, test } from 'vitest'
 const INDEX_HTML_PATH = resolve(process.cwd(), 'index.html')
 
 describe('index.html performance hints', () => {
-  test('preloads the main module script for faster interactive boot', () => {
+  test('loads the main module script entry point', () => {
     const html = readFileSync(INDEX_HTML_PATH, 'utf-8')
     expect(html).toContain(
-      '<link rel="preload" href="/src/main.tsx" as="script" crossorigin="anonymous" />',
+      '<script type="module" src="/src/main.tsx" crossorigin="anonymous"></script>',
     )
   })
 })
