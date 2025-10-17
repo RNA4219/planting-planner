@@ -67,18 +67,10 @@ const scheduleAfterIdle = (() => {
         runQueue()
       })
 
-      timeoutHandle = setTimeout(() => {
-        runQueue()
-      }, 0)
-
-      return
-    }
-
-    timeoutHandle = setTimeout(() => {
-      runQueue()
-    }, 0)
-  }
-})()
+  timeoutHandle = setTimeout(() => {
+    runOnce()
+  }, 0)
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,19 +94,14 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-let serviceWorkerRegistrationScheduled = false
+function scheduleWebVitalsTracking(): void {
+  void import('./lib/webVitals').then((module) => {
+    const startWebVitalsTracking = module.startWebVitalsTracking
 
-let webVitalsTrackingScheduled = false
-
-const scheduleWebVitalsTracking = () => {
-  if (webVitalsTrackingScheduled) {
-    return
-  }
-  webVitalsTrackingScheduled = true
-
-  scheduleAfterIdle(() => {
-    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-      startWebVitalsTracking()
+    startWebVitalsTracking((task) => {
+      queueMicrotask(() => {
+        void task()
+      })
     })
   })
 }
