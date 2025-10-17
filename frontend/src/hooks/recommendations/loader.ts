@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
@@ -57,7 +57,8 @@ export const useRecommendationLoader = ({
 }: LoaderInput): UseRecommendationLoaderResult => {
   const [queryWeek, setQueryWeek] = useState(DEFAULT_WEEK)
   const [activeWeek, setActiveWeek] = useState(DEFAULT_ACTIVE_WEEK)
-  const [items, setItems] = useState<RecommendationItem[]>([])
+  const [, setItems] = useState<RecommendationItem[]>([])
+  const itemsRef = useRef<RecommendationItem[]>([])
   const [selectedMarket, setSelectedMarket] = useState<MarketScope>(marketScope)
   const [selectedCategory, setSelectedCategory] = useState<CropCategory>(category)
   const [isMarketFallback, setIsMarketFallback] = useState(false)
@@ -75,9 +76,44 @@ export const useRecommendationLoader = ({
   const fetchRecommendations = useRecommendationFetcher()
   const queryClient = useQueryClient()
   const lastSuccessfulResultRef = useRef<RecommendationFetchResult | null>(null)
+  const commitResolverRef = useRef<(() => void) | null>(null)
+  const scheduleCommitAwaiter = useCallback(() => {
+    if (commitResolverRef.current) {
+      const pending = commitResolverRef.current
+      commitResolverRef.current = null
+      pending()
+    }
+    let settled = false
+    let resolvePromise: (() => void) | null = null
+    const promise = new Promise<void>((resolve) => {
+      resolvePromise = () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        commitResolverRef.current = null
+        resolve()
+      }
+      commitResolverRef.current = resolvePromise
+    })
+    setTimeout(() => {
+      if (!settled) {
+        resolvePromise?.()
+      }
+    }, 0)
+    return promise
+  }, [])
+  useLayoutEffect(() => {
+    const pending = commitResolverRef.current
+    if (pending) {
+      commitResolverRef.current = null
+      pending()
+    }
+  })
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
       currentWeekRef.current = weekValue
+      itemsRef.current = nextItems
       setItems(nextItems)
       setActiveWeek(weekValue)
     },
@@ -97,6 +133,7 @@ export const useRecommendationLoader = ({
       const normalizedWeek = normalizeWeek(inputWeek)
       setQueryWeek(normalizedWeek)
       currentWeekRef.current = normalizedWeek
+      setActiveWeek((prev) => (prev === normalizedWeek ? prev : normalizedWeek))
       setSelectedMarket((prev) => (prev === targetMarketScope ? prev : targetMarketScope))
       setSelectedCategory((prev) => (prev === targetCategory ? prev : targetCategory))
       const requestMeta: RequestMeta = {
@@ -130,18 +167,21 @@ export const useRecommendationLoader = ({
         if (requestMeta.id < settledRef.current.id) {
           return
         }
+        const commitPromise = scheduleCommitAwaiter()
         setIsMarketFallback(result.isMarketFallback)
         setLoadError(null)
         if (!result.result) {
           lastSuccessfulResultRef.current = result
           applyWeek(normalizedWeek, [])
           settledRef.current = requestMeta
+          await commitPromise
           return
         }
         const resolvedWeek = normalizeIsoWeek(result.result.week, normalizedWeek)
         applyWeek(resolvedWeek, result.result.items)
         lastSuccessfulResultRef.current = result
         settledRef.current = requestMeta
+        await commitPromise
       } catch {
         if (requestMeta.id < settledRef.current.id) {
           return
@@ -151,6 +191,7 @@ export const useRecommendationLoader = ({
           previousResult ??
           lastSuccessfulResultRef.current
         if (cached?.result) {
+          const commitPromise = scheduleCommitAwaiter()
           setIsMarketFallback(cached.isMarketFallback)
           setLoadError(null)
           const resolvedWeek = normalizeIsoWeek(cached.result.week, normalizedWeek)
@@ -169,8 +210,10 @@ export const useRecommendationLoader = ({
           )
           applyWeek(resolvedWeek, cached.result.items)
           settledRef.current = requestMeta
+          await commitPromise
           return
         }
+        const commitPromise = scheduleCommitAwaiter()
         setIsMarketFallback(false)
         setLoadError('recommendations-unavailable')
         void track(
@@ -188,6 +231,7 @@ export const useRecommendationLoader = ({
         )
         applyWeek(normalizedWeek, [])
         settledRef.current = requestMeta
+        await commitPromise
       }
     },
     [
@@ -212,8 +256,12 @@ export const useRecommendationLoader = ({
   return {
     queryWeek,
     setQueryWeek,
-    activeWeek,
-    items,
+    get activeWeek() {
+      return currentWeekRef.current
+    },
+    get items() {
+      return itemsRef.current
+    },
     currentWeek: currentWeekRef.current,
     selectedMarket,
     selectedCategory,
