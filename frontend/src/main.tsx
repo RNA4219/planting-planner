@@ -6,40 +6,66 @@ import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
 
-const scheduleAfterIdle = (callback: () => void) => {
+const scheduleAfterIdle = (() => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
     cancelIdleCallback?: (handle: number) => void
   }
 
-  let didRun = false
+  let queue: Array<() => void> = []
+  let scheduled = false
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+  let idleHandle: number | undefined
 
-  const runOnce = () => {
-    if (didRun) {
+  const runQueue = () => {
+    if (!scheduled) {
       return
     }
-    didRun = true
+
+    scheduled = false
+
     if (timeoutHandle !== undefined) {
       clearTimeout(timeoutHandle)
+      timeoutHandle = undefined
     }
-    callback()
+
+    const tasks = queue
+    queue = []
+
+    for (const task of tasks) {
+      task()
+    }
   }
 
-  if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    const idleHandle = globalWithIdle.requestIdleCallback(() => {
-      runOnce()
-    })
+  return (callback: () => void) => {
+    queue.push(callback)
 
-    timeoutHandle = setTimeout(() => {
-      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
-        globalWithIdle.cancelIdleCallback(idleHandle)
-      }
-      runOnce()
-    }, 0)
+    if (scheduled) {
+      return
+    }
+    scheduled = true
 
-    return
-  }
+    if (typeof globalWithIdle.requestIdleCallback === 'function') {
+      idleHandle = globalWithIdle.requestIdleCallback(() => {
+        idleHandle = undefined
+        runQueue()
+      })
+
+      timeoutHandle = setTimeout(() => {
+        if (idleHandle !== undefined && typeof globalWithIdle.cancelIdleCallback === 'function') {
+          globalWithIdle.cancelIdleCallback(idleHandle)
+          idleHandle = undefined
+        }
+        runQueue()
+      }, 0)
+
+      return
+    }
+
+    if (typeof globalThis.queueMicrotask === 'function') {
+      globalThis.queueMicrotask(() => {
+        runQueue()
+      })
 
   timeoutHandle = setTimeout(() => {
     runOnce()
@@ -80,29 +106,32 @@ function scheduleWebVitalsTracking(): void {
   })
 }
 
-let serviceWorkerRegistrationScheduled = false
-
 const scheduleServiceWorkerRegistration = () => {
   if (serviceWorkerRegistrationScheduled) {
     return
   }
   serviceWorkerRegistrationScheduled = true
 
-  scheduleAfterIdle(() => {
-    void registerServiceWorker()
-  })
-}
+  scheduleWebVitalsTracking()
 
-scheduleWebVitalsTracking()
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => number
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    scheduleAfterIdle(() => {
+      void registerServiceWorker()
+    })
+    return
+  }
+
+  setTimeout(() => {
+    void registerServiceWorker()
+  }, 0)
+}
 
 if (document.readyState === 'complete') {
   scheduleServiceWorkerRegistration()
 } else {
-  window.addEventListener(
-    'load',
-    () => {
-      scheduleServiceWorkerRegistration()
-    },
-    { once: true },
-  )
+  window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true })
 }
