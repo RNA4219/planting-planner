@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { CropCategory, MarketScope, RecommendationItem, Region } from '../../types'
@@ -79,10 +78,8 @@ export const useRecommendationLoader = ({
   const applyWeek = useCallback(
     (weekValue: string, nextItems: RecommendationItem[]) => {
       currentWeekRef.current = weekValue
-      flushSync(() => {
-        setItems(nextItems)
-        setActiveWeek(weekValue)
-      })
+      setItems(nextItems)
+      setActiveWeek(weekValue)
     },
     [],
   )
