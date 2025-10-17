@@ -8,7 +8,7 @@ from fastapi import BackgroundTasks, HTTPException, status
 from .. import etl_runner, schemas
 from .weather import WeatherAdapter, WeatherService, WeatherServiceError
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def start_refresh(
