@@ -22,6 +22,10 @@
 ## 4. テレメトリ
 - `sw.fetch.cache_hit` / `bg.sync.retry` / `bg.sync.succeeded` / `bg.sync.failed`
   - API クライアントが付与した `x-request-id` ヘッダを Service Worker が保持し、イベントに `requestId` を渡す。
+- `sw.waiting`
+  - `frontend/src/lib/swClient.ts` が `postMessage({type:'SW_WAITING', version})` を受信した際に発火する。ネットワークリクエストを伴わないメッセージ起点のイベントのため、`requestId` は付与されない。
+- `sw.register.failed`
+  - `frontend/src/lib/swClient.ts` が `navigator.serviceWorker.register` の例外を捕捉した際に発火する。登録処理が HTTP リクエストに至る前に失敗するケースがあり、`requestId` を割り当てられないまま送信される。
 - `sw.install` / `offline.banner_shown`
   - 通信が発生しないイベントのためヘッダが存在せず、`requestId` は `undefined` のまま送信される。
 
