@@ -89,6 +89,17 @@ const TOAST_MESSAGES_DICTIONARY = {
   },
 } as const
 
+const FAVORITES_TOGGLE_MESSAGES_DICTIONARY = {
+  ja: {
+    add: (cropName: string) => `${cropName}をお気に入りに追加`,
+    remove: (cropName: string) => `${cropName}をお気に入りから外す`,
+  },
+  en: {
+    add: (cropName: string) => `Add ${cropName} to favorites`,
+    remove: (cropName: string) => `Remove ${cropName} from favorites`,
+  },
+} as const
+
 type PriceChartMessages = {
   readonly section: {
     readonly heading: string
@@ -384,6 +395,9 @@ export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const FAVORITES_TOGGLE_MESSAGES = selectMessages(
+  FAVORITES_TOGGLE_MESSAGES_DICTIONARY,
+)
 export const PRICE_CHART_MESSAGES = selectMessages(PRICE_CHART_MESSAGES_DICTIONARY)
 export const RECOMMENDATIONS_TABLE_MESSAGES = selectMessages(
   RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY,
