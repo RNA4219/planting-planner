@@ -75,6 +75,7 @@ describe('main entrypoint', () => {
   })
 
   it('サービスワーカー登録をアイドル時まで遅延する', async () => {
+    vi.useFakeTimers()
     vi.resetModules()
     renderMock.mockClear()
     document.body.innerHTML = '<div id="root"></div>'
@@ -85,7 +86,10 @@ describe('main entrypoint', () => {
     }))
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    let idleCallbackRef: IdleCallback | undefined
+
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      idleCallbackRef = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -97,12 +101,12 @@ describe('main entrypoint', () => {
     expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
     expect(registerServiceWorker).not.toHaveBeenCalled()
 
-    const callback = requestIdleCallbackSpy.mock.calls[0]?.[0]
-    if (!callback) {
+    const idleCallback = idleCallbackRef
+    if (!idleCallback) {
       throw new Error('requestIdleCallback callback missing')
     }
 
-    callback({ didTimeout: false, timeRemaining: () => 1 })
+    idleCallback({ didTimeout: false, timeRemaining: () => 1 })
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)
 
@@ -169,7 +173,14 @@ describe('main entrypoint', () => {
     )
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
+    const globalWithIdle = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: IdleCallback) => number
+    }
+    const originalIdle = globalWithIdle.requestIdleCallback
+    let idleCallbackRef: IdleCallback | undefined
+
     vi.stubGlobal('requestIdleCallback', (callback: IdleCallback) => {
+      idleCallbackRef = callback
       requestIdleCallbackSpy(callback)
       return 1
     })
@@ -190,7 +201,12 @@ describe('main entrypoint', () => {
       Reflect.deleteProperty(globalWithIdle, 'requestIdleCallback')
     }
 
-    callback({ didTimeout: false, timeRemaining: () => 1 })
+    const idleCallback = idleCallbackRef
+    if (!idleCallback) {
+      throw new Error('requestIdleCallback callback missing')
+    }
+
+    idleCallback({ didTimeout: false, timeRemaining: () => 1 })
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)
   })
