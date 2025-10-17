@@ -146,11 +146,5 @@ const scheduleServiceWorkerRegistration = () => {
 if (document.readyState === 'complete') {
   scheduleServiceWorkerRegistration()
 } else {
-  window.addEventListener(
-    'load',
-    () => {
-      scheduleServiceWorkerRegistration()
-    },
-    { once: true },
-  )
+  window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true })
 }
