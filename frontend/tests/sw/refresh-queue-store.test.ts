@@ -6,9 +6,13 @@ const recordAttempt = vi.fn<Parameters<Store['recordAttempt']>[0], ReturnType<St
 const recordSuccess = vi.fn<Parameters<Store['recordSuccess']>[0], ReturnType<Store['recordSuccess']>>().mockResolvedValue(undefined)
 const recordFailure = vi.fn<Parameters<Store['recordFailure']>[0], ReturnType<Store['recordFailure']>>().mockResolvedValue(undefined)
 
-let callbacks: Record<string, ((...args: any[]) => unknown) | undefined> | undefined
 let swModule: typeof import('../../src/sw')
 const queue = { shiftRequest: vi.fn(), unshiftRequest: vi.fn() }
+let queueInstance: {
+  pushRequest: ReturnType<typeof vi.fn>
+  shiftRequest: typeof queue.shiftRequest
+  unshiftRequest: typeof queue.unshiftRequest
+} | undefined
 const fetchMock = vi.fn()
 const originalFetch = globalThis.fetch
 const originalSetTimeout = globalThis.setTimeout
@@ -26,12 +30,28 @@ vi.mock('../../src/sw/config/pwa', () => ({
   SCHEMA_VERSION: '1',
   buildTelemetryContext: vi.fn(),
 }))
-vi.mock('workbox-background-sync', () => ({
-  BackgroundSyncPlugin: vi.fn().mockImplementation((_name, options) => {
-    callbacks = options?.callbacks
-    return {}
-  }),
-}))
+vi.mock('workbox-background-sync', () => {
+  class MockQueue {
+    pushRequest = vi.fn().mockResolvedValue(undefined)
+    shiftRequest = queue.shiftRequest
+    unshiftRequest = queue.unshiftRequest
+  }
+
+  class MockBackgroundSyncPlugin {
+    _queue: MockQueue
+    fetchDidFail: ReturnType<typeof vi.fn>
+
+    constructor(_name: string, _options?: { onSync?: ({ queue }: { queue: unknown }) => Promise<void> | void }) {
+      this._queue = new MockQueue()
+      queueInstance = this._queue
+      this.fetchDidFail = vi.fn(async ({ request }: { request: Request }) => {
+        await this._queue.pushRequest({ request })
+      })
+    }
+  }
+
+  return { BackgroundSyncPlugin: MockBackgroundSyncPlugin }
+})
 vi.mock('workbox-core', () => ({ clientsClaim: vi.fn() })); vi.mock('workbox-precaching', () => ({ precacheAndRoute: vi.fn(), cleanupOutdatedCaches: vi.fn() }))
 vi.mock('workbox-routing', () => ({ registerRoute: vi.fn() }))
 vi.mock('workbox-strategies', () => ({ NetworkFirst: vi.fn(), NetworkOnly: vi.fn(), StaleWhileRevalidate: vi.fn() }))
@@ -41,7 +61,7 @@ describe('refresh background sync plugin', () => {
   beforeEach(async () => {
     vi.resetModules()
     vi.clearAllMocks()
-    callbacks = undefined
+    queueInstance = undefined
     queue.shiftRequest.mockReset()
     queue.unshiftRequest.mockReset().mockResolvedValue(undefined)
     fetchMock.mockReset()
@@ -64,31 +84,37 @@ describe('refresh background sync plugin', () => {
 
   it('records queue lifecycle events on success', async () => {
     const request = new Request('https://example.test/api/refresh', { method: 'POST', body: 'ok' })
-    const entry = { request, timestamp: 123, metadata: {} as { refreshQueueId?: string } }
-    await callbacks?.requestWillEnqueue?.({ entry })
-    const id = entry.metadata?.refreshQueueId as string
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(123)
+    await swModule.__workbox.refreshBackgroundSyncPlugin.fetchDidFail?.({ request })
+    dateSpy.mockRestore()
+    expect(queueInstance).toBeDefined()
+    const pushedEntry = queueInstance!.pushRequest.mock.calls[0]?.[0]
+    const id = pushedEntry?.metadata?.refreshQueueId as string
     expect(recordEnqueue).toHaveBeenCalledWith({ id, request, timestamp: 123 })
-    await callbacks?.requestWillReplay?.({ entry })
-    expect(recordAttempt).toHaveBeenCalledWith({ id })
     queue.shiftRequest
-      .mockResolvedValueOnce({ request, timestamp: 123, metadata: { refreshQueueId: id } })
+      .mockResolvedValueOnce({ request, timestamp: pushedEntry?.timestamp, metadata: { refreshQueueId: id } })
       .mockResolvedValueOnce(undefined)
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }))
     await swModule.processRefreshQueue(queue as never)
+    expect(recordAttempt).toHaveBeenCalledWith({ id })
     expect(recordSuccess).toHaveBeenCalledWith({ id })
     expect(recordFailure).not.toHaveBeenCalled()
   })
 
   it('records failure when replay throws', async () => {
     const request = new Request('https://example.test/api/refresh', { method: 'POST', body: 'fail' })
-    const entry = { request, timestamp: 456, metadata: {} as { refreshQueueId?: string } }
-    await callbacks?.requestWillEnqueue?.({ entry })
-    const id = entry.metadata?.refreshQueueId as string
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(456)
+    await swModule.__workbox.refreshBackgroundSyncPlugin.fetchDidFail?.({ request })
+    dateSpy.mockRestore()
+    expect(queueInstance).toBeDefined()
+    const pushedEntry = queueInstance!.pushRequest.mock.calls[0]?.[0]
+    const id = pushedEntry?.metadata?.refreshQueueId as string
     queue.shiftRequest
-      .mockResolvedValueOnce({ request, timestamp: 456, metadata: { refreshQueueId: id } })
+      .mockResolvedValueOnce({ request, timestamp: pushedEntry?.timestamp, metadata: { refreshQueueId: id } })
       .mockResolvedValueOnce(undefined)
     fetchMock.mockResolvedValue(new Response(null, { status: 500 }))
     await expect(swModule.processRefreshQueue(queue as never)).rejects.toThrow('Server error: 500')
+    expect(recordAttempt).toHaveBeenCalledWith({ id })
     expect(recordFailure).toHaveBeenCalledWith({ id })
     expect(queue.unshiftRequest).toHaveBeenCalled()
   })

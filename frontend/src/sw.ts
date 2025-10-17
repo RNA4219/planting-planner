@@ -133,6 +133,9 @@ export const processRefreshQueue = async (queue: Queue) => {
     const requestId = entry.request.headers.get('x-request-id') ?? undefined
     const metadata = entry.metadata as RefreshQueueMetadata | undefined
     const refreshQueueId = metadata?.refreshQueueId
+    if (refreshQueueId) {
+      await recordAttempt({ id: refreshQueueId })
+    }
     try {
       await processRequestWithRetries(entry.request)
       await sendTelemetry('bg.sync.succeeded', { queue: REFRESH_QUEUE_NAME }, requestId)
@@ -177,20 +180,25 @@ const notifyWaitingClients = async () => {
 const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin(REFRESH_QUEUE_NAME, {
   maxRetentionTime: 60 * 24,
   onSync: ({ queue }) => processRefreshQueue(queue),
-  callbacks: {
-    requestWillEnqueue: async ({ entry }: { entry: QueueEntry }) => {
-      const id = getOrCreateEntryId(entry)
-      await recordEnqueue({ id, request: entry.request, timestamp: entry.timestamp })
-    },
-    requestWillReplay: async ({ entry }: { entry: QueueEntry }) => {
-      const metadata = entry.metadata as RefreshQueueMetadata | undefined
-      const id = metadata?.refreshQueueId
-      if (id) {
-        await recordAttempt({ id })
-      }
-    },
-  },
 })
+
+const attachRefreshQueueInstrumentation = (plugin: BackgroundSyncPlugin) => {
+  const internalQueue = (plugin as unknown as { _queue?: Queue })._queue
+  if (!internalQueue) {
+    return
+  }
+
+  plugin.fetchDidFail = async ({ request }) => {
+    const entry: QueueEntry = { request }
+    const id = getOrCreateEntryId(entry)
+    const timestamp = Date.now()
+    entry.timestamp = timestamp
+    await recordEnqueue({ id, request, timestamp })
+    await internalQueue.pushRequest(entry)
+  }
+}
+
+attachRefreshQueueInstrumentation(refreshBackgroundSyncPlugin)
 
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
