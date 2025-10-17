@@ -103,20 +103,30 @@ describe('refresh background sync plugin', () => {
 
   it('records failure when replay throws', async () => {
     const request = new Request('https://example.test/api/refresh', { method: 'POST', body: 'fail' })
-    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(456)
+    const dateSpy = vi.spyOn(Date, 'now')
+    dateSpy.mockReturnValueOnce(456)
     await swModule.__workbox.refreshBackgroundSyncPlugin.fetchDidFail?.({ request })
-    dateSpy.mockRestore()
     expect(queueInstance).toBeDefined()
     const pushedEntry = queueInstance!.pushRequest.mock.calls[0]?.[0]
     const id = pushedEntry?.metadata?.refreshQueueId as string
     queue.shiftRequest
       .mockResolvedValueOnce({ request, timestamp: pushedEntry?.timestamp, metadata: { refreshQueueId: id } })
       .mockResolvedValueOnce(undefined)
+    const failureTime = 789
+    dateSpy.mockReturnValueOnce(failureTime)
     fetchMock.mockResolvedValue(new Response(null, { status: 500 }))
     await expect(swModule.processRefreshQueue(queue as never)).rejects.toThrow('Server error: 500')
     expect(recordAttempt).toHaveBeenCalledWith({ id })
-    expect(recordFailure).toHaveBeenCalledWith({ id })
+    expect(recordAttempt.mock.invocationCallOrder[0]).toBeLessThan(
+      recordFailure.mock.invocationCallOrder[0],
+    )
+    expect(recordFailure).toHaveBeenCalledWith({
+      id,
+      error: expect.objectContaining({ message: 'Server error: 500' }),
+      timestamp: failureTime,
+    })
     expect(queue.unshiftRequest).toHaveBeenCalled()
+    dateSpy.mockRestore()
   })
 })
 

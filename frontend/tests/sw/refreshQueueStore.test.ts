@@ -82,7 +82,7 @@ describe('refreshQueueStore', () => {
     })
   })
 
-  it('removes entries after success or failure', async () => {
+  it('removes entries after success or failure metadata persists on failure', async () => {
     const id = 'entry-2'
     const request = new Request('https://example.test/api/refresh', {
       method: 'POST',
@@ -96,8 +96,18 @@ describe('refreshQueueStore', () => {
 
     const failureId = 'entry-3'
     await recordEnqueue({ id: failureId, request, timestamp: 200 })
-    await recordFailure({ id: failureId })
+    const failure = new Error('network failure')
+    await recordFailure({ id: failureId, error: failure, timestamp: 300 })
 
-    expect(await adapter.get(failureId)).toBeUndefined()
+    const failedRecord = await adapter.get(failureId)
+
+    expect(failedRecord).toMatchObject({
+      id: failureId,
+      attempt: 0,
+      createdAt: 200,
+      failedAt: 300,
+      lastError: failure.message,
+    })
+    expect(failedRecord?.lastErrorStack ?? '').toContain('network failure')
   })
 })

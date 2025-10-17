@@ -8,6 +8,9 @@ export interface RefreshQueueRecord {
   headers: Record<string, string>
   createdAt: number
   attempt: number
+  failedAt?: number
+  lastError?: string
+  lastErrorStack?: string
 }
 
 export interface RefreshQueueStoreAdapter {
@@ -152,7 +155,51 @@ export const recordSuccess = async ({ id }: { id: string }) => {
   await adapter.delete(id)
 }
 
-export const recordFailure = async ({ id }: { id: string }) => {
+const normalizeError = (error: unknown): { message?: string; stack?: string } => {
+  if (!error) {
+    return {}
+  }
+
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack ?? String(error),
+    }
+  }
+
+  if (typeof error === 'string') {
+    return { message: error, stack: error }
+  }
+
+  try {
+    return { message: JSON.stringify(error), stack: undefined }
+  } catch {
+    return { message: String(error), stack: undefined }
+  }
+}
+
+export const recordFailure = async ({
+  id,
+  error,
+  timestamp = Date.now(),
+}: {
+  id: string
+  error?: unknown
+  timestamp?: number
+}) => {
   const adapter = getAdapter()
-  await adapter.delete(id)
+  const record = await adapter.get(id)
+
+  if (!record) {
+    return
+  }
+
+  const { message, stack } = normalizeError(error)
+
+  await adapter.put({
+    ...record,
+    failedAt: timestamp,
+    lastError: message ?? record.lastError,
+    lastErrorStack: stack ?? record.lastErrorStack,
+  })
 }

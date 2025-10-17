@@ -149,7 +149,7 @@ export const processRefreshQueue = async (queue: Queue) => {
         requestId,
       )
       if (refreshQueueId) {
-        await recordFailure({ id: refreshQueueId })
+        await recordFailure({ id: refreshQueueId, error, timestamp: Date.now() })
       }
       await queue.unshiftRequest(entry)
       throw error
