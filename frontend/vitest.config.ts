@@ -10,6 +10,7 @@ export default defineConfig({
       'tests/e2e/**',
       'tests/ci/bundle-size.test.mjs',
       'tests/ci/index-html-preload.test.mjs',
+      'tests/ci/index-html.preload.test.mjs',
     ],
   },
 })
