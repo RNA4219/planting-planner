@@ -43,7 +43,17 @@ const resolveLocale = (): Locale => {
 
   const flag = (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS?.I18N_EN
 
-  return flag === true ? 'en' : 'ja'
+  if (typeof flag === 'boolean') {
+    return flag ? 'en' : 'ja'
+  }
+
+  const envFlag = import.meta.env?.VITE_I18N_EN
+
+  if (typeof envFlag === 'string') {
+    return envFlag.toLowerCase() === 'true' ? 'en' : 'ja'
+  }
+
+  return 'ja'
 }
 
 interface Props {

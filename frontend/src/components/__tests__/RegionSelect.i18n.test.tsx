@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { FeatureFlagConfig } from '../../constants/messages'
 
@@ -11,9 +11,11 @@ declare global {
   var FEATURE_FLAGS: FeatureFlagConfig | undefined
 }
 
-const setLocale = (lang: string, flag: boolean | undefined) => {
+const setLocale = (lang: string) => {
   document.documentElement.lang = lang
+}
 
+const setRuntimeFlag = (flag: boolean | undefined) => {
   if (typeof flag === 'undefined') {
     delete (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS
     return
@@ -27,11 +29,14 @@ const setLocale = (lang: string, flag: boolean | undefined) => {
 describe('RegionSelect i18n', () => {
   afterEach(() => {
     cleanup()
-    setLocale('ja', undefined)
+    setLocale('ja')
+    setRuntimeFlag(undefined)
+    vi.unstubAllEnvs()
   })
 
   it('日本語設定時は日本語ラベルと選択肢を表示する', () => {
-    setLocale('ja', false)
+    setLocale('ja')
+    setRuntimeFlag(false)
 
     render(<RegionSelect onChange={() => {}} />)
 
@@ -44,7 +49,8 @@ describe('RegionSelect i18n', () => {
   })
 
   it('英語設定時は英語ラベルと選択肢を表示する', () => {
-    setLocale('en', true)
+    setLocale('en')
+    setRuntimeFlag(true)
 
     render(<RegionSelect onChange={() => {}} />)
 
@@ -53,6 +59,23 @@ describe('RegionSelect i18n', () => {
     expect(select).toHaveAttribute('aria-label', 'Region')
     expect(screen.getByRole('option', { name: 'Cold region' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Temperate region' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Warm region' })).toBeInTheDocument()
+  })
+
+  it('環境変数で英語が有効な場合は英語ラベルを表示する', () => {
+    setLocale('en')
+    setRuntimeFlag(undefined)
+    vi.stubEnv('VITE_I18N_EN', 'true')
+
+    render(<RegionSelect onChange={() => {}} />)
+
+    expect(screen.getByText('Region')).toBeInTheDocument()
+    const select = screen.getByRole('combobox')
+    expect(select).toHaveAttribute('aria-label', 'Region')
+    expect(screen.getByRole('option', { name: 'Cold region' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: 'Temperate region' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Warm region' })).toBeInTheDocument()
   })
 })
