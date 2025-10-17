@@ -13,7 +13,8 @@ registerRoute(isRefreshPost, new NetworkOnly({ plugins: [bgSync] }), 'POST');
 ```
 
 ## データ
-- IDB: `sync-queue`（id, url, body, headers, createdAt, attempt）
+- IDB: `sync-queue`（id, url, body, headers, createdAt, attempt, lastFailureAt, lastFailureMessage, failedAt, lastError）
+  - `lastFailureAt` / `lastFailureMessage` は直近失敗の監査ログ、`failedAt` / `lastError` は再送抑制の判定に使用
 
 ## セキュリティ
 - CSP 例: `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'`
