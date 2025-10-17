@@ -126,8 +126,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     )
   }
 
-  const firstWeek = labels[0]
-  const lastWeek = labels[labels.length - 1]
+  const firstWeek = labels[0]!
+  const lastWeek = labels[labels.length - 1]!
   const periodText =
     firstWeek === lastWeek ? firstWeek : chart.periodRange(firstWeek, lastWeek)
   const summary = chart.summary(title, periodText, labels.length)
