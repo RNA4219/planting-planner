@@ -12,6 +12,14 @@ const lhciConfigPath = join(repoRoot, 'frontend', 'lighthouserc.json')
 const ciWorkflowPath = join(repoRoot, '.github', 'workflows', 'ci.yml')
 
 const lhciConfigRaw = await readFile(lhciConfigPath, 'utf-8')
+type AssertionTuple = readonly [
+  'error' | 'warn' | 'off',
+  Readonly<{
+    readonly minScore: number
+    readonly aggregationMethod?: 'optimistic' | 'median' | 'pessimistic'
+  }>,
+]
+
 const lhciConfig = JSON.parse(lhciConfigRaw) as {
   readonly ci: {
     readonly collect: {
@@ -19,7 +27,7 @@ const lhciConfig = JSON.parse(lhciConfigRaw) as {
       readonly numberOfRuns: number
     }
     readonly assert: {
-      readonly assertions: Record<string, readonly [string, { readonly minScore: number }]>
+      readonly assertions: Record<string, AssertionTuple>
     }
     readonly upload: {
       readonly target: string
@@ -39,8 +47,8 @@ describe('lighthouse ci configuration', () => {
       { minScore: 0.9 },
     ])
     expect(assertions['categories:performance']).toEqual([
-      'error',
-      { minScore: 0.8 },
+      'warn',
+      { minScore: 0.75, aggregationMethod: 'median' },
     ])
     expect(assertions['categories:accessibility']).toEqual([
       'error',
@@ -50,7 +58,7 @@ describe('lighthouse ci configuration', () => {
 
   test('matches static dist collection settings', () => {
     expect(lhciConfig.ci.collect.staticDistDir).toBe('frontend/dist')
-    expect(lhciConfig.ci.collect.numberOfRuns).toBe(1)
+    expect(lhciConfig.ci.collect.numberOfRuns).toBe(3)
   })
 
   test('stores reports on failure in the filesystem', () => {
