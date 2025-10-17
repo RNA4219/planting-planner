@@ -28,6 +28,9 @@ test('web vitals tracking is started asynchronously to avoid blocking hydration'
 
   await Promise.resolve()
   await Promise.resolve()
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0)
+  })
 
   expect(startWebVitalsTracking).toHaveBeenCalledTimes(1)
 })
