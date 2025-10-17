@@ -121,6 +121,9 @@ describe('refresh background sync plugin', () => {
     const failureCall = recordFailure.mock.calls[0]?.[0]
     expect(failureCall).toMatchObject({ id, timestamp: failureTimestamp })
     expect(failureCall?.error).toBeInstanceOf(Error)
+    expect(recordAttempt.mock.invocationCallOrder[0]).toBeLessThan(
+      recordFailure.mock.invocationCallOrder[0],
+    )
     expect(queue.unshiftRequest).toHaveBeenCalled()
   })
 })
