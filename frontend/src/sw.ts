@@ -14,6 +14,41 @@ import {
   buildTelemetryContext,
 } from './config/pwa'
 import { sendTelemetry } from './lib/telemetry'
+import {
+  recordAttempt,
+  recordEnqueue,
+  recordFailure,
+  recordSuccess,
+} from './sw/refreshQueueStore'
+
+interface RefreshQueueMetadata {
+  refreshQueueId?: string
+}
+
+type QueueEntry = {
+  request: Request
+  timestamp?: number
+  metadata?: RefreshQueueMetadata
+}
+
+const ensureMetadata = (entry: QueueEntry): RefreshQueueMetadata => {
+  if (!entry.metadata) {
+    entry.metadata = {}
+  }
+
+  return entry.metadata
+}
+
+const getOrCreateEntryId = (entry: QueueEntry): string => {
+  const metadata = ensureMetadata(entry)
+  if (metadata.refreshQueueId) {
+    return metadata.refreshQueueId
+  }
+
+  const id = self.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  metadata.refreshQueueId = id
+  return id
+}
 
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<{ url: string; revision: string | null }>
@@ -96,15 +131,26 @@ export const processRefreshQueue = async (queue: Queue) => {
 
   while (entry) {
     const requestId = entry.request.headers.get('x-request-id') ?? undefined
+    const metadata = entry.metadata as RefreshQueueMetadata | undefined
+    const refreshQueueId = metadata?.refreshQueueId
+    if (refreshQueueId) {
+      await recordAttempt({ id: refreshQueueId })
+    }
     try {
       await processRequestWithRetries(entry.request)
       await sendTelemetry('bg.sync.succeeded', { queue: REFRESH_QUEUE_NAME }, requestId)
+      if (refreshQueueId) {
+        await recordSuccess({ id: refreshQueueId })
+      }
     } catch (error) {
       await sendTelemetry(
         'bg.sync.failed',
         { attempt: MAX_BACKGROUND_SYNC_ATTEMPTS, queue: REFRESH_QUEUE_NAME },
         requestId,
       )
+      if (refreshQueueId) {
+        await recordFailure({ id: refreshQueueId })
+      }
       await queue.unshiftRequest(entry)
       throw error
     }
@@ -135,6 +181,24 @@ const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin(REFRESH_QUEUE_NAME,
   maxRetentionTime: 60 * 24,
   onSync: ({ queue }) => processRefreshQueue(queue),
 })
+
+const attachRefreshQueueInstrumentation = (plugin: BackgroundSyncPlugin) => {
+  const internalQueue = (plugin as unknown as { _queue?: Queue })._queue
+  if (!internalQueue) {
+    return
+  }
+
+  plugin.fetchDidFail = async ({ request }) => {
+    const entry: QueueEntry = { request }
+    const id = getOrCreateEntryId(entry)
+    const timestamp = Date.now()
+    entry.timestamp = timestamp
+    await recordEnqueue({ id, request, timestamp })
+    await internalQueue.pushRequest(entry)
+  }
+}
+
+attachRefreshQueueInstrumentation(refreshBackgroundSyncPlugin)
 
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
