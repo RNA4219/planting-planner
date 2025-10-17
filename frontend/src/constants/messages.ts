@@ -89,6 +89,68 @@ const TOAST_MESSAGES_DICTIONARY = {
   },
 } as const
 
+type PriceChartMessages = {
+  readonly section: {
+    readonly heading: string
+    readonly instruction: string
+    readonly suspense: string
+  }
+  readonly status: {
+    readonly selectPrompt: string
+    readonly loading: string
+    readonly empty: string
+  }
+  readonly chart: {
+    readonly ariaLabel: (title: string) => string
+    readonly datasetLabel: string
+    readonly formatPeriod: (first: string, last: string) => string
+    readonly summary: (title: string, period: string, count: number) => string
+  }
+}
+
+const PRICE_CHART_MESSAGES_DICTIONARY: Record<LanguageCode, PriceChartMessages> = {
+  ja: {
+    section: {
+      heading: '価格推移',
+      instruction: '作物一覧で行をクリックすると、価格推移が表示されます。',
+      suspense: '価格チャートを準備中です…',
+    },
+    status: {
+      selectPrompt: '作物を選択すると価格推移が表示されます。',
+      loading: '価格データを読み込み中です…',
+      empty: '価格データがありません。',
+    },
+    chart: {
+      ariaLabel: (title: string) => `${title} の価格推移`,
+      datasetLabel: '週平均価格',
+      formatPeriod: (first: string, last: string) =>
+        first === last ? first : `${first} 〜 ${last}`,
+      summary: (title: string, period: string, count: number) =>
+        `${title} の週平均価格。期間: ${period}。データ点数: ${count}件。`,
+    },
+  },
+  en: {
+    section: {
+      heading: 'Price trend',
+      instruction: 'Select a row in the crop list to view its price trend.',
+      suspense: 'Preparing the price chart…',
+    },
+    status: {
+      selectPrompt: 'Select a crop to view its price trend.',
+      loading: 'Loading price data…',
+      empty: 'No price data available.',
+    },
+    chart: {
+      ariaLabel: (title: string) => `Price trend for ${title}`,
+      datasetLabel: 'Weekly average price',
+      formatPeriod: (first: string, last: string) =>
+        first === last ? first : `${first} – ${last}`,
+      summary: (title: string, period: string, count: number) =>
+        `Weekly average price for ${title}. Period: ${period}. Data points: ${count}.`,
+    },
+  },
+} as const
+
 type RecommendationTableMessages = {
   readonly regionNames: Record<Region, string>
   readonly categoryLabels: Record<CropCategory, string>
@@ -324,6 +386,7 @@ export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const PRICE_CHART_MESSAGES = selectMessages(PRICE_CHART_MESSAGES_DICTIONARY)
 export const RECOMMENDATIONS_TABLE_MESSAGES = selectMessages(
   RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY,
 )
