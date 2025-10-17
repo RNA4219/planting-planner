@@ -36,6 +36,37 @@ const setLocale = (lang: string, flag: boolean | undefined) => {
   }
 }
 
+type Scenario = {
+  readonly name: string
+  readonly initialLang: 'ja' | 'en'
+  readonly featureFlag: boolean | undefined
+  readonly href: string
+  readonly cropName: string
+  readonly expectedAddLabel: string
+  readonly expectedRemoveLabel: string
+}
+
+const SCENARIOS: readonly Scenario[] = [
+  {
+    name: '日本語設定',
+    initialLang: 'ja',
+    featureFlag: false,
+    href: DEFAULT_URL,
+    cropName: 'トマト',
+    expectedAddLabel: 'トマトをお気に入りに追加',
+    expectedRemoveLabel: 'トマトをお気に入りから外す',
+  },
+  {
+    name: '英語設定',
+    initialLang: 'en',
+    featureFlag: true,
+    href: 'http://localhost/?lang=en',
+    cropName: 'Tomato',
+    expectedAddLabel: 'Add Tomato to favorites',
+    expectedRemoveLabel: 'Remove Tomato from favorites',
+  },
+]
+
 describe('FavStar i18n', () => {
   afterEach(() => {
     cleanup()
@@ -48,61 +79,31 @@ describe('FavStar i18n', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: ORIGINAL_LOCATION })
   })
 
-  it('日本語設定時は日本語のラベルを表示する', async () => {
-    setLocale('ja', false)
-    stubLocation(DEFAULT_URL)
+  describe.each(SCENARIOS)('$name', ({
+    initialLang,
+    featureFlag,
+    href,
+    cropName,
+    expectedAddLabel,
+    expectedRemoveLabel,
+  }) => {
+    it('トグル時の aria-label が適切に切り替わる', async () => {
+      setLocale(initialLang, featureFlag)
+      stubLocation(href)
 
-    const { FavStar } = await import('../FavStar')
+      const { FavStar } = await import('../FavStar')
 
-    const { rerender } = render(
-      <FavStar
-        active={false}
-        cropName="トマト"
-        onToggle={() => {}}
-      />,
-    )
+      const { rerender } = render(
+        <FavStar active={false} cropName={cropName} onToggle={() => {}} />,
+      )
 
-    expect(screen.getByRole('button', { name: 'トマトをお気に入りに追加' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: expectedAddLabel })).toBeInTheDocument()
 
-    rerender(
-      <FavStar
-        active
-        cropName="トマト"
-        onToggle={() => {}}
-      />,
-    )
+      rerender(<FavStar active cropName={cropName} onToggle={() => {}} />)
 
-    expect(screen.getByRole('button', { name: 'トマトをお気に入りから外す' })).toBeInTheDocument()
-  })
-
-  it('英語設定時は英語のラベルを表示する', async () => {
-    setLocale('en', true)
-    stubLocation('http://localhost/?lang=en')
-
-    const { FavStar } = await import('../FavStar')
-
-    const { rerender } = render(
-      <FavStar
-        active={false}
-        cropName="Tomato"
-        onToggle={() => {}}
-      />,
-    )
-
-    expect(
-      screen.getByRole('button', { name: 'Add Tomato to favorites' }),
-    ).toBeInTheDocument()
-
-    rerender(
-      <FavStar
-        active
-        cropName="Tomato"
-        onToggle={() => {}}
-      />,
-    )
-
-    expect(
-      screen.getByRole('button', { name: 'Remove Tomato from favorites' }),
-    ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: expectedRemoveLabel }),
+      ).toBeInTheDocument()
+    })
   })
 })
