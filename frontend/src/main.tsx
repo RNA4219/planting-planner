@@ -69,7 +69,10 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-startWebVitalsTracking()
+setTimeout(() => {
+  startWebVitalsTracking()
+}, 0)
+
 
 let serviceWorkerRegistrationScheduled = false
 
