@@ -148,9 +148,9 @@ export const SearchControls = ({
     >
       <RegionSelect onChange={onRegionChange} />
       <label className="flex w-full flex-col gap-2 text-sm font-medium text-slate-700 sm:w-auto">
-        <span>市場</span>
+        <span>{SEARCH_CONTROLS_TEXT.marketLabel}</span>
         <select
-          aria-label="市場"
+          aria-label={SEARCH_CONTROLS_TEXT.marketAriaLabel}
           className={`w-full rounded-md border border-slate-300 ${marketTheme.backgroundClass} px-3 py-2 text-sm shadow-sm transition focus:border-market-accent focus:outline-none focus:ring-2 focus:ring-market-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100`}
           data-theme={marketTheme.dataTheme}
           name="marketScope"

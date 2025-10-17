@@ -119,6 +119,8 @@ const scheduleServiceWorkerRegistration = () => {
   })
 }
 
+scheduleWebVitalsTracking()
+
 if (document.readyState === 'complete') {
   scheduleServiceWorkerRegistration()
 } else {
