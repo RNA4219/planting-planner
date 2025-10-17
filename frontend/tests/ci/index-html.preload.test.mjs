@@ -8,14 +8,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const indexHtmlPath = path.resolve(__dirname, '../../index.html')
 
-const preloadPattern = /<link\s+rel="modulepreload"\s+href="\/src\/main\.tsx"/u
+const modulePreloadPattern =
+  /<link[^>]*rel=["']modulepreload["'][^>]*href=["']\/src\/main\.tsx["'][^>]*>/iu
 
-test('index.html preloads the main module entry', () => {
+test('index.html does not manually modulepreload the main module entry', () => {
   const contents = fs.readFileSync(indexHtmlPath, 'utf8')
-  assert.match(
-    contents,
-    preloadPattern,
-    'Expected index.html to include a modulepreload link for /src/main.tsx'
+  assert.ok(
+    !modulePreloadPattern.test(contents),
+    'Remove <link rel="modulepreload"> tags that point to /src/main.tsx. Vite will inject modulepreload hints as needed.'
   )
 })
 
