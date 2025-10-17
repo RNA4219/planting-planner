@@ -64,6 +64,8 @@ describe('refreshQueueStore', () => {
       },
       createdAt: timestamp,
       attempt: 0,
+      lastFailureAt: null,
+      lastFailureMessage: null,
     })
 
     await recordAttempt({ id })
@@ -82,7 +84,7 @@ describe('refreshQueueStore', () => {
     })
   })
 
-  it('removes entries after success or failure', async () => {
+  it('removes entries after success and retains failed entries for retry', async () => {
     const id = 'entry-2'
     const request = new Request('https://example.test/api/refresh', {
       method: 'POST',
@@ -96,8 +98,24 @@ describe('refreshQueueStore', () => {
 
     const failureId = 'entry-3'
     await recordEnqueue({ id: failureId, request, timestamp: 200 })
-    await recordFailure({ id: failureId })
+    await recordAttempt({ id: failureId })
+    await recordFailure({ id: failureId, timestamp: 300, error: new Error('boom') })
 
-    expect(await adapter.get(failureId)).toBeUndefined()
+    const failedRecord = await adapter.get(failureId)
+    expect(failedRecord).toMatchObject({
+      id: failureId,
+      attempt: 1,
+      lastFailureAt: 300,
+      lastFailureMessage: 'boom',
+    })
+
+    await recordAttempt({ id: failureId })
+    const retriedRecord = await adapter.get(failureId)
+    expect(retriedRecord).toMatchObject({
+      id: failureId,
+      attempt: 2,
+      lastFailureAt: 300,
+      lastFailureMessage: 'boom',
+    })
   })
 })

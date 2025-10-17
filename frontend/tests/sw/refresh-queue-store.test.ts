@@ -113,9 +113,14 @@ describe('refresh background sync plugin', () => {
       .mockResolvedValueOnce({ request, timestamp: pushedEntry?.timestamp, metadata: { refreshQueueId: id } })
       .mockResolvedValueOnce(undefined)
     fetchMock.mockResolvedValue(new Response(null, { status: 500 }))
+    const failureTimestamp = 789
+    const failureDateSpy = vi.spyOn(Date, 'now').mockReturnValue(failureTimestamp)
     await expect(swModule.processRefreshQueue(queue as never)).rejects.toThrow('Server error: 500')
+    failureDateSpy.mockRestore()
     expect(recordAttempt).toHaveBeenCalledWith({ id })
-    expect(recordFailure).toHaveBeenCalledWith({ id })
+    const failureCall = recordFailure.mock.calls[0]?.[0]
+    expect(failureCall).toMatchObject({ id, timestamp: failureTimestamp })
+    expect(failureCall?.error).toBeInstanceOf(Error)
     expect(queue.unshiftRequest).toHaveBeenCalled()
   })
 })

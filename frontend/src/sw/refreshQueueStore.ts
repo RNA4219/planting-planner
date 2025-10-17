@@ -8,6 +8,8 @@ export interface RefreshQueueRecord {
   headers: Record<string, string>
   createdAt: number
   attempt: number
+  lastFailureAt: number | null
+  lastFailureMessage: string | null
 }
 
 export interface RefreshQueueStoreAdapter {
@@ -128,6 +130,8 @@ export const recordEnqueue = async ({
     headers,
     createdAt: timestamp,
     attempt: 0,
+    lastFailureAt: null,
+    lastFailureMessage: null,
   }
 
   await adapter.put(record)
@@ -152,7 +156,28 @@ export const recordSuccess = async ({ id }: { id: string }) => {
   await adapter.delete(id)
 }
 
-export const recordFailure = async ({ id }: { id: string }) => {
+export const recordFailure = async ({
+  id,
+  timestamp = Date.now(),
+  error,
+}: {
+  id: string
+  timestamp?: number
+  error?: unknown
+}) => {
   const adapter = getAdapter()
-  await adapter.delete(id)
+  const record = await adapter.get(id)
+
+  if (!record) {
+    return
+  }
+
+  const errorMessage =
+    error instanceof Error ? error.message : error == null ? null : String(error)
+
+  await adapter.put({
+    ...record,
+    lastFailureAt: timestamp,
+    lastFailureMessage: errorMessage,
+  })
 }
