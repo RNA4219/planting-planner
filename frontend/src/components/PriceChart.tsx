@@ -12,7 +12,7 @@ import { Line } from 'react-chartjs-2'
 
 import { fetchPrice } from '../lib/api'
 import type { MarketScope } from '../types'
-import { TOAST_MESSAGES } from '../constants/messages'
+import { PRICE_CHART_MESSAGES, TOAST_MESSAGES } from '../constants/messages'
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend)
 
@@ -37,6 +37,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   range,
   marketScope = 'national',
 }) => {
+  const { chart } = PRICE_CHART_MESSAGES
   const [labels, setLabels] = React.useState<string[]>([])
   const [values, setValues] = React.useState<number[]>([])
   const [title, setTitle] = React.useState('')
@@ -102,7 +103,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     return (
       <>
         {fallbackNotice}
-        <StatusMessage>作物を選択すると価格推移が表示されます。</StatusMessage>
+        <StatusMessage>{chart.status.idle}</StatusMessage>
       </>
     )
   }
@@ -111,7 +112,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     return (
       <>
         {fallbackNotice}
-        <StatusMessage>価格データを読み込み中です…</StatusMessage>
+        <StatusMessage>{chart.status.loading}</StatusMessage>
       </>
     )
   }
@@ -120,15 +121,16 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     return (
       <>
         {fallbackNotice}
-        <StatusMessage>価格データがありません。</StatusMessage>
+        <StatusMessage>{chart.status.empty}</StatusMessage>
       </>
     )
   }
 
   const firstWeek = labels[0]
   const lastWeek = labels[labels.length - 1]
-  const periodText = firstWeek === lastWeek ? firstWeek : `${firstWeek} 〜 ${lastWeek}`
-  const summary = `${title} の週平均価格。期間: ${periodText}。データ点数: ${labels.length}件。`
+  const periodText =
+    firstWeek === lastWeek ? firstWeek : chart.periodRange(firstWeek, lastWeek)
+  const summary = chart.summary(title, periodText, labels.length)
 
   return (
     <>
@@ -137,10 +139,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         <h4 className="text-base font-semibold text-slate-900">{title}</h4>
         <div className="mt-6">
           <Line
-            aria-label={`${title} の価格推移`}
+            aria-label={chart.ariaLabel(title)}
             data={{
               labels,
-              datasets: [{ label: '週平均価格', data: values, tension: 0.2 }],
+              datasets: [
+                { label: chart.legendLabel, data: values, tension: 0.2 },
+              ],
             }}
             options={{
               responsive: true,
