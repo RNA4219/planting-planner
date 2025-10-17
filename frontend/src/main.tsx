@@ -104,7 +104,7 @@ function scheduleWebVitalsTracking(): void {
     const startWebVitalsTracking = module.startWebVitalsTracking
 
     startWebVitalsTracking((task) => {
-      queueMicrotask(() => {
+      scheduleAfterIdle(() => {
         void task()
       })
     })
@@ -117,7 +117,9 @@ const scheduleServiceWorkerRegistration = () => {
   }
   serviceWorkerRegistrationScheduled = true
 
-  scheduleWebVitalsTracking()
+  scheduleAfterIdle(() => {
+    scheduleWebVitalsTracking()
+  })
 
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
