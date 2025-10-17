@@ -41,9 +41,17 @@ const scheduleAfterIdle = (callback: () => void) => {
     return
   }
 
-  timeoutHandle = setTimeout(() => {
-    runOnce()
-  }, 0)
+  if (typeof globalThis.queueMicrotask === 'function') {
+    globalThis.queueMicrotask(runOnce)
+
+    timeoutHandle = setTimeout(() => {
+      runOnce()
+    }, 0)
+
+    return
+  }
+
+  void Promise.resolve().then(runOnce)
 }
 
 const queryClient = new QueryClient({
@@ -68,8 +76,10 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-  startWebVitalsTracking()
+scheduleAfterIdle(() => {
+  void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+    startWebVitalsTracking()
+  })
 })
 
 let serviceWorkerRegistrationScheduled = false
