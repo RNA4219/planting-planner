@@ -8,9 +8,12 @@
 [^prefetch-reset]: `clearPrefetchSnapshots` は `frontend/src/lib/prefetchStore.ts` に実装されており、IndexedDB `prefetch` を初期化するユーティリティ。DevTools Console で `await import('/src/lib/prefetchStore.ts').then((m) => m.clearPrefetchSnapshots())` を実行しても同様にリセットできる。
 
 ## 2) DB マイグ失敗
-- 症状: `/api/health` のレスポンスに `migrations.pending > 0`
-- 対処: `poetry run python -c "from backend.app.db.migrations import init_db; init_db()"` を実行してスキーマを再作成し、必要なら後続のシードを待機（`prepare_database` を経由する通常起動でも同処理が自動実行される）。実行後に `/api/health` で `migrations.pending == 0` を確認。
-- 監視: `migrations.pending` が 5 分継続でアラート
+- 症状: `/api/health` が 200 以外、またはレスポンス JSON が `{"status": "ok"}` にならない。
+- 対処: `poetry run python -c "from backend.app.db.migrations import init_db; init_db()"` を実行してスキーマを再作成し、必要なら後続のシードを待機（`prepare_database` を経由する通常起動でも同処理が自動実行される）。
+- 復旧確認:
+  - `/api/health` にアクセスし、`{"status": "ok"}` が返ることを確認。
+  - 代替策: `/api/refresh/status` が `ready` であること、またはアプリケーションログに `init_db completed`（もしくは同義の完了メッセージ）が出力されていることを確認。
+- 監視: `/api/health` が 5 分以上 `{"status": "ok"}` を返せない場合にアラート
 
 ## 3) PWA 更新停滞
 - 症状: 新版に上がらない
