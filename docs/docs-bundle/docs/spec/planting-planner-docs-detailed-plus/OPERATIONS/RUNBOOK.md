@@ -2,8 +2,10 @@
 
 ## 1) 先読み破損
 - 症状: オフライン時に一覧が空
-- 対処: 設定→先読みリセット→再読み込み→オンラインで1回アクセス
+- 対処: ブラウザ DevTools → Application → IndexedDB → `prefetch` を選択し「Delete database」で削除 → 再読み込み → オンラインで 1 回アクセス（DB 名は `frontend/src/lib/prefetchStore.ts` の `DB_NAME` に一致）。[^prefetch-reset]
 - 監視: 先読みヒット率 < 20% でアラート
+
+[^prefetch-reset]: `clearPrefetchSnapshots` は `frontend/src/lib/prefetchStore.ts` に実装されており、IndexedDB `prefetch` を初期化するユーティリティ。DevTools Console で `await import('/src/lib/prefetchStore.ts').then((m) => m.clearPrefetchSnapshots())` を実行しても同様にリセットできる。
 
 ## 2) DB マイグ失敗
 - 症状: `/healthz` に `migrations.pending > 0`
