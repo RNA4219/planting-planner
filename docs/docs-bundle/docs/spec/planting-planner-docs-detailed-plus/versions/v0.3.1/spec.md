@@ -20,8 +20,10 @@
 - **SW 更新**: `waiting` → `postMessage({type:'SW_WAITING', version})` → UI トースト → `postMessage({type:'SKIP_WAITING'})`
 
 ## 4. テレメトリ
-- `sw.install` / `sw.fetch.cache_hit` / `bg.sync.retry` / `offline.banner_shown`
-- すべて `x-request-id` をヘッダから受け取り、ログ相関
+- `sw.fetch.cache_hit` / `bg.sync.retry` / `bg.sync.succeeded` / `bg.sync.failed`
+  - API クライアントが付与した `x-request-id` ヘッダを Service Worker が保持し、イベントに `requestId` を渡す。
+- `sw.install` / `offline.banner_shown`
+  - 通信が発生しないイベントのためヘッダが存在せず、`requestId` は `undefined` のまま送信される。
 
 ## 5. エラー
 - `fetch` 失敗: キャッシュ有→表示 / 無→「取得不可」トースト
