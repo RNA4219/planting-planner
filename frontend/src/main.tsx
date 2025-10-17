@@ -104,22 +104,44 @@ createRoot(container).render(
 
 let serviceWorkerRegistrationScheduled = false
 
+let webVitalsTrackingScheduled = false
+
+const scheduleWebVitalsTracking = () => {
+  if (webVitalsTrackingScheduled) {
+    return
+  }
+  webVitalsTrackingScheduled = true
+
+  scheduleAfterIdle(() => {
+    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+      startWebVitalsTracking()
+    })
+  })
+}
+
 const scheduleServiceWorkerRegistration = () => {
   if (serviceWorkerRegistrationScheduled) {
     return
   }
   serviceWorkerRegistrationScheduled = true
 
-  scheduleAfterIdle(() => {
-    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-      startWebVitalsTracking()
+  scheduleWebVitalsTracking()
+
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => number
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    scheduleAfterIdle(() => {
+      void registerServiceWorker()
     })
+    return
+  }
 
+  setTimeout(() => {
     void registerServiceWorker()
-  })
+  }, 0)
 }
-
-scheduleWebVitalsTracking()
 
 if (document.readyState === 'complete') {
   scheduleServiceWorkerRegistration()
