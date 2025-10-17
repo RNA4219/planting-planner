@@ -15,6 +15,8 @@ const SEARCH_CONTROLS_TEXT_DICTIONARY = {
   ja: {
     searchPlaceholder: '作物名・カテゴリで検索',
     searchAriaLabel: '作物検索',
+    marketLabel: '市場',
+    marketAriaLabel: '市場',
     weekLabel: '週',
     submitButton: 'この条件で見る',
     refreshButton: '更新',
@@ -24,6 +26,8 @@ const SEARCH_CONTROLS_TEXT_DICTIONARY = {
   en: {
     searchPlaceholder: 'Search by crop name or category',
     searchAriaLabel: 'Crop search',
+    marketLabel: 'Market',
+    marketAriaLabel: 'Market',
     weekLabel: 'Week',
     submitButton: 'View with these filters',
     refreshButton: 'Refresh',
