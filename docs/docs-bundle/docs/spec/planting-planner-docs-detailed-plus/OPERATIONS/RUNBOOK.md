@@ -19,5 +19,5 @@
 
 ## 4) BG Sync 失敗
 - 症状: `POST /api/refresh` が再送されずリフレッシュが反映されない
-- 対処: IndexedDB の `sync-queue` で対象エントリを確認し、`lastFailureAt` と `lastFailureMessage` を Runbook 記録に転記。原因が解消されたら `bg.sync.retry` ログを監視しながら再送を待つ。
-- 監視: `bg.sync.retry` の失敗が 3 回連続で計測されたらアラート
+- 対処: IndexedDB の `sync-queue` で対象エントリを確認し、`lastFailureAt` と `lastFailureMessage` を Runbook 記録に転記。原因が解消されたら `bg.sync.retry` ログ（attempt=1,2 のみ発火）を追い、再送を待つ。
+- 監視: `bg.sync.failed` が観測されたらアラート（`frontend/src/sw.ts` の `MAX_BACKGROUND_SYNC_ATTEMPTS = 3` で最終試行が失敗すると発火）。
