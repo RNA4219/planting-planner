@@ -10,6 +10,8 @@ export interface RefreshQueueRecord {
   attempt: number
   lastFailureAt: number | null
   lastFailureMessage: string | null
+  failedAt: number | null
+  lastError: string | null
 }
 
 export interface RefreshQueueStoreAdapter {
@@ -132,6 +134,8 @@ export const recordEnqueue = async ({
     attempt: 0,
     lastFailureAt: null,
     lastFailureMessage: null,
+    failedAt: null,
+    lastError: null,
   }
 
   await adapter.put(record)
@@ -179,5 +183,7 @@ export const recordFailure = async ({
     ...record,
     lastFailureAt: timestamp,
     lastFailureMessage: errorMessage,
+    failedAt: timestamp,
+    lastError: errorMessage,
   })
 }

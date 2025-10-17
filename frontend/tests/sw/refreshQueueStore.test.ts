@@ -66,6 +66,8 @@ describe('refreshQueueStore', () => {
       attempt: 0,
       lastFailureAt: null,
       lastFailureMessage: null,
+      failedAt: null,
+      lastError: null,
     })
 
     await recordAttempt({ id })
@@ -107,6 +109,8 @@ describe('refreshQueueStore', () => {
       attempt: 1,
       lastFailureAt: 300,
       lastFailureMessage: 'boom',
+      failedAt: 300,
+      lastError: 'boom',
     })
 
     await recordAttempt({ id: failureId })
@@ -116,6 +120,8 @@ describe('refreshQueueStore', () => {
       attempt: 2,
       lastFailureAt: 300,
       lastFailureMessage: 'boom',
+      failedAt: 300,
+      lastError: 'boom',
     })
   })
 })
