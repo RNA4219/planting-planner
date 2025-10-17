@@ -9,12 +9,17 @@ vi.mock('../../src/lib/telemetry', () => ({
 }))
 
 let messageListener: ((event: MessageEvent) => void) | undefined
+let controllerChangeListeners: EventListener[]
+let reloadMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.resetModules()
   trackMock.mockReset()
   trackMock.mockResolvedValue(undefined)
   messageListener = undefined
+
+  controllerChangeListeners = []
+  reloadMock = vi.fn()
 
   const waitingWorker = {
     state: 'installed',
@@ -32,6 +37,13 @@ beforeEach(() => {
       if (event === 'message') {
         messageListener = listener as (event: MessageEvent) => void
       }
+      if (event === 'controllerchange') {
+        controllerChangeListeners.push(
+          typeof listener === 'function'
+            ? listener
+            : (eventArg: Event) => listener.handleEvent?.(eventArg),
+        )
+      }
     }),
     controller: {},
   }
@@ -48,6 +60,9 @@ beforeEach(() => {
     value: {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
+      location: {
+        reload: reloadMock,
+      },
     },
     configurable: true,
   })
@@ -92,5 +107,22 @@ describe('swClient handleMessage', () => {
     expect(event.type === 'waiting' ? event.registration.waiting : null).toBe(waitingBefore)
 
     unsubscribe()
+  })
+
+  test('reloads the page only once on first controllerchange after skipWaiting', async () => {
+    const module = await import('../../src/lib/swClient')
+    const { registerServiceWorker, skipWaiting } = module
+
+    await registerServiceWorker()
+
+    expect(controllerChangeListeners).toHaveLength(1)
+
+    skipWaiting()
+
+    controllerChangeListeners[0](new Event('controllerchange'))
+    expect(reloadMock).toHaveBeenCalledTimes(1)
+
+    controllerChangeListeners[0](new Event('controllerchange'))
+    expect(reloadMock).toHaveBeenCalledTimes(1)
   })
 })

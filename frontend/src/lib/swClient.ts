@@ -26,11 +26,13 @@ const state: {
   isOffline: boolean
   lastSyncAt: string | null
   initialized: boolean
+  pendingReload: boolean
 } = {
   waiting: null,
   isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
   lastSyncAt: null,
   initialized: false,
+  pendingReload: false,
 }
 
 const notify = (event: ServiceWorkerClientEvent) => {
@@ -57,6 +59,7 @@ export const isForceUpdateEnabled = () => {
 const attachRegistrationListeners = (registration: ServiceWorkerRegistration) => {
   if (registration.waiting) {
     state.waiting = registration.waiting
+    state.pendingReload = false
     notify({ type: 'waiting', registration, forceUpdate: isForceUpdateEnabled() })
   }
   registration.addEventListener('updatefound', () => {
@@ -67,6 +70,7 @@ const attachRegistrationListeners = (registration: ServiceWorkerRegistration) =>
     installing.addEventListener('statechange', () => {
       if (installing.state === 'installed' && navigator.serviceWorker.controller) {
         state.waiting = installing
+        state.pendingReload = false
         notify({ type: 'waiting', registration, forceUpdate: isForceUpdateEnabled() })
       }
     })
@@ -133,6 +137,14 @@ export const registerServiceWorker = async () => {
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     state.waiting = null
+    if (state.pendingReload) {
+      state.pendingReload = false
+      try {
+        window.location.reload()
+      } catch {
+        // ignore reload failures
+      }
+    }
     notify({ type: 'waiting-cleared' })
   })
   navigator.serviceWorker.addEventListener('message', handleMessage)
@@ -159,6 +171,9 @@ export const skipWaiting = () => {
     state.waiting?.postMessage({ type: 'SKIP_WAITING' })
   } catch {
     // ignore
+  }
+  if (state.waiting && !state.pendingReload) {
+    state.pendingReload = true
   }
   state.waiting = null
   notify({ type: 'waiting-cleared' })
