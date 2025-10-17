@@ -44,6 +44,7 @@ type Scenario = {
   readonly cropName: string
   readonly expectedAddLabel: string
   readonly expectedRemoveLabel: string
+  readonly expectedResolvedLang: 'ja' | 'en'
 }
 
 const SCENARIOS: readonly Scenario[] = [
@@ -55,6 +56,7 @@ const SCENARIOS: readonly Scenario[] = [
     cropName: 'トマト',
     expectedAddLabel: 'トマトをお気に入りに追加',
     expectedRemoveLabel: 'トマトをお気に入りから外す',
+    expectedResolvedLang: 'ja',
   },
   {
     name: '英語設定',
@@ -64,6 +66,17 @@ const SCENARIOS: readonly Scenario[] = [
     cropName: 'Tomato',
     expectedAddLabel: 'Add Tomato to favorites',
     expectedRemoveLabel: 'Remove Tomato from favorites',
+    expectedResolvedLang: 'en',
+  },
+  {
+    name: '英語無効時は日本語にフォールバック',
+    initialLang: 'en',
+    featureFlag: false,
+    href: 'http://localhost/?lang=en',
+    cropName: 'トマト',
+    expectedAddLabel: 'トマトをお気に入りに追加',
+    expectedRemoveLabel: 'トマトをお気に入りから外す',
+    expectedResolvedLang: 'ja',
   },
 ]
 
@@ -86,6 +99,7 @@ describe('FavStar i18n', () => {
     cropName,
     expectedAddLabel,
     expectedRemoveLabel,
+    expectedResolvedLang,
   }) => {
     it('トグル時の aria-label が適切に切り替わる', async () => {
       setLocale(initialLang, featureFlag)
@@ -96,6 +110,8 @@ describe('FavStar i18n', () => {
       const { rerender } = render(
         <FavStar active={false} cropName={cropName} onToggle={() => {}} />,
       )
+
+      expect(document.documentElement.lang).toBe(expectedResolvedLang)
 
       expect(screen.getByRole('button', { name: expectedAddLabel })).toBeInTheDocument()
 
