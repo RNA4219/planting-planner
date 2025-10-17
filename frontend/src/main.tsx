@@ -41,17 +41,9 @@ const scheduleAfterIdle = (callback: () => void) => {
     return
   }
 
-  if (typeof globalThis.queueMicrotask === 'function') {
-    globalThis.queueMicrotask(runOnce)
-
-    timeoutHandle = setTimeout(() => {
-      runOnce()
-    }, 0)
-
-    return
-  }
-
-  void Promise.resolve().then(runOnce)
+  timeoutHandle = setTimeout(() => {
+    runOnce()
+  }, 0)
 }
 
 const queryClient = new QueryClient({
@@ -76,7 +68,7 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-const scheduleWebVitalsTracking = () => {
+function scheduleWebVitalsTracking() {
   void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
     startWebVitalsTracking((task) => {
       queueMicrotask(() => {
