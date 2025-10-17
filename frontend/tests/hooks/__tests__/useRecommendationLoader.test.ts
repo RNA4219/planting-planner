@@ -8,6 +8,7 @@ import {
 } from '../../utils/recommendations'
 
 const fetchQueryMock = vi.fn()
+const flushSpy = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
@@ -19,6 +20,17 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
       setQueryData: vi.fn(),
       invalidateQueries: vi.fn(),
     }),
+  }
+})
+vi.mock('react-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-dom')>()
+  const actualFlushSync = actual.flushSync
+  return {
+    ...actual,
+    flushSync: (...args: Parameters<typeof actualFlushSync>) => {
+      flushSpy(...args)
+      return actualFlushSync(...args)
+    },
   }
 })
 import type { RecommendationItem } from '../../utils/recommendations'
@@ -140,5 +152,22 @@ describe('hooks / useRecommendationLoader', () => {
     ])
     expect(result.current.selectedMarket).toBe('city:kyoto')
     expect(result.current.selectedCategory).toBe('root')
+  })
+
+  it('does not rely on flushSync when applying fetched results', async () => {
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
+
+    const { result } = renderHook(() =>
+      useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.currentWeek).toBe('2024-W30')
+    })
+
+    expect(flushSpy).not.toHaveBeenCalled()
   })
 })
