@@ -62,6 +62,18 @@ const scheduleAfterIdle = (() => {
       return
     }
 
+    if (typeof globalThis.queueMicrotask === 'function') {
+      globalThis.queueMicrotask(() => {
+        runQueue()
+      })
+
+      timeoutHandle = setTimeout(() => {
+        runQueue()
+      }, 0)
+
+      return
+    }
+
     timeoutHandle = setTimeout(() => {
       runQueue()
     }, 0)
