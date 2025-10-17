@@ -50,7 +50,7 @@ describe('App weather tab', () => {
     fetchRecommendations.mockResolvedValue(createRecommendResponse())
     fetchRecommend.mockResolvedValue({ week: '2024-W30', region: 'temperate', items: [] })
     fetchCrops.mockResolvedValue([])
-    ;(globalThis as { __APP_FEATURE_FLAGS__?: Record<string, boolean> }).__APP_FEATURE_FLAGS__ = {
+    ;(globalThis as { FEATURE_FLAGS?: Record<string, boolean> }).FEATURE_FLAGS = {
       WEATHER_TAB: true,
     }
   })
@@ -73,7 +73,7 @@ describe('App weather tab', () => {
   })
 
   it('WEATHER_TAB が無効な場合は天気タブを表示しない', async () => {
-    ;(globalThis as { __APP_FEATURE_FLAGS__?: Record<string, boolean> }).__APP_FEATURE_FLAGS__ = {
+    ;(globalThis as { FEATURE_FLAGS?: Record<string, boolean> }).FEATURE_FLAGS = {
       WEATHER_TAB: false,
     }
     fetchWeather.mockResolvedValue(createWeatherResponse())

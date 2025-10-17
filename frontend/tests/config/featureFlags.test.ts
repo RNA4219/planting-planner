@@ -4,6 +4,9 @@ import { isWeatherTabEnabled } from '../../src/config/featureFlags'
 
 const originalEnv = { ...(import.meta.env ?? {}) } as Record<string, string | undefined>
 const originalProcessEnvWeatherTab = process.env.VITE_FEATURE_WEATHER_TAB
+const originalFeatureFlags = (globalThis as {
+  FEATURE_FLAGS?: Record<string, unknown>
+}).FEATURE_FLAGS
 
 const setImportMetaEnv = (env: Record<string, string | undefined>): void => {
   Object.defineProperty(import.meta, 'env', {
@@ -15,7 +18,16 @@ const setImportMetaEnv = (env: Record<string, string | undefined>): void => {
 
 describe('isWeatherTabEnabled', () => {
   beforeEach(() => {
-    delete (globalThis as { __APP_FEATURE_FLAGS__?: Record<string, unknown> }).__APP_FEATURE_FLAGS__
+    const globals = globalThis as {
+      FEATURE_FLAGS?: Record<string, unknown>
+      __APP_FEATURE_FLAGS__?: Record<string, unknown>
+    }
+    if (typeof originalFeatureFlags === 'undefined') {
+      delete globals.FEATURE_FLAGS
+    } else {
+      globals.FEATURE_FLAGS = originalFeatureFlags
+    }
+    delete globals.__APP_FEATURE_FLAGS__
     const envCopy = { ...originalEnv }
     delete envCopy.VITE_FEATURE_WEATHER_TAB
     setImportMetaEnv(envCopy)
@@ -23,7 +35,16 @@ describe('isWeatherTabEnabled', () => {
   })
 
   afterEach(() => {
-    delete (globalThis as { __APP_FEATURE_FLAGS__?: Record<string, unknown> }).__APP_FEATURE_FLAGS__
+    const globals = globalThis as {
+      FEATURE_FLAGS?: Record<string, unknown>
+      __APP_FEATURE_FLAGS__?: Record<string, unknown>
+    }
+    if (typeof originalFeatureFlags === 'undefined') {
+      delete globals.FEATURE_FLAGS
+    } else {
+      globals.FEATURE_FLAGS = originalFeatureFlags
+    }
+    delete globals.__APP_FEATURE_FLAGS__
     setImportMetaEnv({ ...originalEnv })
     if (typeof originalProcessEnvWeatherTab === 'undefined') {
       delete process.env.VITE_FEATURE_WEATHER_TAB
@@ -32,17 +53,17 @@ describe('isWeatherTabEnabled', () => {
     }
   })
 
-  it('未設定の場合は天気タブを無効化する', () => {
-    expect(isWeatherTabEnabled()).toBe(false)
+  it('未設定の場合は天気タブを有効化する', () => {
+    expect(isWeatherTabEnabled()).toBe(true)
   })
 
-  it('グローバル設定で天気タブの有効・無効を切り替えられる', () => {
-    const globals = globalThis as { __APP_FEATURE_FLAGS__?: Record<string, boolean> }
+  it('FEATURE_FLAGS で天気タブの有効・無効を切り替えられる', () => {
+    const globals = globalThis as { FEATURE_FLAGS?: Record<string, boolean> }
 
-    globals.__APP_FEATURE_FLAGS__ = { WEATHER_TAB: false }
+    globals.FEATURE_FLAGS = { WEATHER_TAB: false }
     expect(isWeatherTabEnabled()).toBe(false)
 
-    globals.__APP_FEATURE_FLAGS__ = { WEATHER_TAB: true }
+    globals.FEATURE_FLAGS = { WEATHER_TAB: true }
     expect(isWeatherTabEnabled()).toBe(true)
   })
 
