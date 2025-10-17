@@ -5,7 +5,6 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
-import { startWebVitalsTracking } from './lib/webVitals'
 
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
@@ -42,9 +41,17 @@ const scheduleAfterIdle = (callback: () => void) => {
     return
   }
 
-  timeoutHandle = setTimeout(() => {
-    runOnce()
-  }, 0)
+  if (typeof globalThis.queueMicrotask === 'function') {
+    globalThis.queueMicrotask(runOnce)
+
+    timeoutHandle = setTimeout(() => {
+      runOnce()
+    }, 0)
+
+    return
+  }
+
+  void Promise.resolve().then(runOnce)
 }
 
 const queryClient = new QueryClient({
@@ -69,7 +76,11 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-startWebVitalsTracking()
+scheduleAfterIdle(() => {
+  void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+    startWebVitalsTracking()
+  })
+})
 
 let serviceWorkerRegistrationScheduled = false
 
