@@ -6,53 +6,79 @@ import App from './App'
 import './index.css'
 import { registerServiceWorker } from './lib/swClient'
 
-const scheduleAfterIdle = (callback: () => void) => {
+const scheduleAfterIdle = (() => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
     cancelIdleCallback?: (handle: number) => void
   }
 
-  let didRun = false
+  let queue: Array<() => void> = []
+  let scheduled = false
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+  let idleHandle: number | undefined
 
-  const runOnce = () => {
-    if (didRun) {
+  const runQueue = () => {
+    if (!scheduled) {
       return
     }
-    didRun = true
+
+    scheduled = false
+
     if (timeoutHandle !== undefined) {
       clearTimeout(timeoutHandle)
+      timeoutHandle = undefined
     }
-    callback()
+
+    const tasks = queue
+    queue = []
+
+    for (const task of tasks) {
+      task()
+    }
   }
 
-  if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    const idleHandle = globalWithIdle.requestIdleCallback(() => {
-      runOnce()
-    })
+  return (callback: () => void) => {
+    queue.push(callback)
+
+    if (scheduled) {
+      return
+    }
+    scheduled = true
+
+    if (typeof globalWithIdle.requestIdleCallback === 'function') {
+      idleHandle = globalWithIdle.requestIdleCallback(() => {
+        idleHandle = undefined
+        runQueue()
+      })
+
+      timeoutHandle = setTimeout(() => {
+        if (idleHandle !== undefined && typeof globalWithIdle.cancelIdleCallback === 'function') {
+          globalWithIdle.cancelIdleCallback(idleHandle)
+          idleHandle = undefined
+        }
+        runQueue()
+      }, 0)
+
+      return
+    }
+
+    if (typeof globalThis.queueMicrotask === 'function') {
+      globalThis.queueMicrotask(() => {
+        runQueue()
+      })
+
+      timeoutHandle = setTimeout(() => {
+        runQueue()
+      }, 0)
+
+      return
+    }
 
     timeoutHandle = setTimeout(() => {
-      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
-        globalWithIdle.cancelIdleCallback(idleHandle)
-      }
-      runOnce()
+      runQueue()
     }, 0)
-
-    return
   }
-
-  if (typeof globalThis.queueMicrotask === 'function') {
-    globalThis.queueMicrotask(runOnce)
-
-    timeoutHandle = setTimeout(() => {
-      runOnce()
-    }, 0)
-
-    return
-  }
-
-  void Promise.resolve().then(runOnce)
-}
+})()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,11 +102,6 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-setTimeout(() => {
-  startWebVitalsTracking()
-}, 0)
-
-
 let serviceWorkerRegistrationScheduled = false
 
 const scheduleServiceWorkerRegistration = () => {
@@ -90,6 +111,10 @@ const scheduleServiceWorkerRegistration = () => {
   serviceWorkerRegistrationScheduled = true
 
   scheduleAfterIdle(() => {
+    void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
+      startWebVitalsTracking()
+    })
+
     void registerServiceWorker()
   })
 }
