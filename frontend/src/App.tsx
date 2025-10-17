@@ -266,7 +266,7 @@ export const AppContent = () => {
   const weatherSection = weatherTabEnabled
     ? shouldRenderWeatherTab
       ? (
-          <Suspense fallback={<WeatherSectionFallback />}>
+          <Suspense fallback={null}>
             <LazyWeatherTab
               latest={weatherLatest}
               previous={weatherPrevious}
