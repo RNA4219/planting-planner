@@ -89,6 +89,66 @@ const TOAST_MESSAGES_DICTIONARY = {
   },
 } as const
 
+type PriceChartMessages = {
+  readonly section: {
+    readonly heading: string
+    readonly hint: string
+    readonly loading: string
+  }
+  readonly chart: {
+    readonly status: {
+      readonly idle: string
+      readonly loading: string
+      readonly empty: string
+    }
+    readonly legendLabel: string
+    readonly ariaLabel: (title: string) => string
+    readonly periodRange: (from: string, to: string) => string
+    readonly summary: (title: string, period: string, count: number) => string
+  }
+}
+
+const PRICE_CHART_MESSAGES_DICTIONARY: Record<LanguageCode, PriceChartMessages> = {
+  ja: {
+    section: {
+      heading: '価格推移',
+      hint: '作物一覧で行をクリックすると、価格推移が表示されます。',
+      loading: '価格チャートを準備中です…',
+    },
+    chart: {
+      status: {
+        idle: '作物を選択すると価格推移が表示されます。',
+        loading: '価格データを読み込み中です…',
+        empty: '価格データがありません。',
+      },
+      legendLabel: '週平均価格',
+      ariaLabel: (title) => `${title} の価格推移`,
+      periodRange: (from, to) => `${from} 〜 ${to}`,
+      summary: (title, period, count) =>
+        `${title} の週平均価格。期間: ${period}。データ点数: ${count}件。`,
+    },
+  },
+  en: {
+    section: {
+      heading: 'Price trend',
+      hint: 'Click a row in the crop list to view price trends.',
+      loading: 'Preparing price chart…',
+    },
+    chart: {
+      status: {
+        idle: 'Select a crop to view price trends.',
+        loading: 'Loading price data…',
+        empty: 'No price data available.',
+      },
+      legendLabel: 'Weekly average price',
+      ariaLabel: (title) => `Price trend for ${title}`,
+      periodRange: (from, to) => `${from} to ${to}`,
+      summary: (title, period, count) =>
+        `Weekly average price for ${title}. Period: ${period}. Data points: ${count}.`,
+    },
+  },
+} as const
+
 type RecommendationTableMessages = {
   readonly regionNames: Record<Region, string>
   readonly categoryLabels: Record<CropCategory, string>
@@ -324,6 +384,7 @@ export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
+export const PRICE_CHART_MESSAGES = selectMessages(PRICE_CHART_MESSAGES_DICTIONARY)
 export const RECOMMENDATIONS_TABLE_MESSAGES = selectMessages(
   RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY,
 )
