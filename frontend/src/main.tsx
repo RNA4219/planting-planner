@@ -76,15 +76,10 @@ createRoot(container).render(
   </React.StrictMode>,
 )
 
-const scheduleWebVitalsTracking = () => {
-  void import('./lib/webVitals').then(({ startWebVitalsTracking }) => {
-    startWebVitalsTracking((task) => {
-      queueMicrotask(() => {
-        void task()
-      })
-    })
-  })
-}
+setTimeout(() => {
+  startWebVitalsTracking()
+}, 0)
+
 
 let serviceWorkerRegistrationScheduled = false
 

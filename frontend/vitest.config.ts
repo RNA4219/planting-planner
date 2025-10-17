@@ -9,6 +9,7 @@ export default defineConfig({
       'playwright/**',
       'tests/e2e/**',
       'tests/ci/bundle-size.test.mjs',
+      'tests/ci/index-html-preload.test.mjs',
     ],
   },
 })
