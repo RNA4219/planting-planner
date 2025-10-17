@@ -14,10 +14,10 @@ registerRoute(isRefreshPost, new NetworkOnly({ plugins: [bgSync] }), 'POST');
 
 ## データ
 - IDB: `sync-queue`（id, url, body, headers, createdAt, attempt, lastFailureAt, lastFailureMessage, failedAt, lastError）
-  - `lastFailureAt` / `lastFailureMessage` は直近失敗の監査ログ、`failedAt` / `lastError` は現状監査目的で保持しているのみ（再送抑制は未実装）
+  - `lastFailureAt` / `lastFailureMessage` は直近失敗の監査ログ、`failedAt` / `lastError` は監査用途として保持するのみ（再送抑制処理は未実装・非連動）
 
 ## 実装差分
-- TODO: 再送抑制を導入する際は `failedAt` / `lastError` を判定ロジックへ接続し、仕様と実装の差分がないよう更新する
+- TODO: 将来的に再送抑制を導入する場合は `failedAt` / `lastError` を判定ロジックへ接続し、仕様と実装の差分がないよう更新する。実装後は本ドキュメントのデータ説明および抑制条件を追記して誤解を避けること
 
 ## セキュリティ
 - CSP 例: `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'`
