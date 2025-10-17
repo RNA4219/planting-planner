@@ -41,9 +41,17 @@ const scheduleAfterIdle = (callback: () => void) => {
     return
   }
 
-  timeoutHandle = setTimeout(() => {
-    runOnce()
-  }, 0)
+  if (typeof globalThis.queueMicrotask === 'function') {
+    globalThis.queueMicrotask(runOnce)
+
+    timeoutHandle = setTimeout(() => {
+      runOnce()
+    }, 0)
+
+    return
+  }
+
+  void Promise.resolve().then(runOnce)
 }
 
 const queryClient = new QueryClient({
