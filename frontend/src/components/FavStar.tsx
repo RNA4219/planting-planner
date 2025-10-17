@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
+import { FAVORITES_TOGGLE_MESSAGES } from '../constants/messages'
 import { loadFavorites, saveFavorites } from '../lib/storage'
 
 interface Props {
@@ -15,7 +16,9 @@ const ACTIVE_CLASS = 'text-amber-400'
 const INACTIVE_CLASS = 'text-slate-300'
 
 export const FavStar = ({ active, cropName, onToggle }: Props) => {
-  const label = active ? `${cropName}をお気に入りから外す` : `${cropName}をお気に入りに追加`
+  const label = active
+    ? FAVORITES_TOGGLE_MESSAGES.remove(cropName)
+    : FAVORITES_TOGGLE_MESSAGES.add(cropName)
   const stateClass = active ? ACTIVE_CLASS : INACTIVE_CLASS
 
   return (
