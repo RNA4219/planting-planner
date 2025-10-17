@@ -38,7 +38,9 @@ const registerWebVitals = async () => {
   onCLS(createHandler('web_vitals.cls'))
 }
 
-const runWhenIdle = (task: () => void | Promise<void>) => {
+type WebVitalsScheduler = (task: () => void | Promise<void>) => void
+
+const runWhenIdle: WebVitalsScheduler = (task) => {
   const { requestIdleCallback } = globalThis as IdleGlobal
 
   const invoke = () => {
@@ -55,6 +57,8 @@ const runWhenIdle = (task: () => void | Promise<void>) => {
   setTimeout(invoke, 0)
 }
 
-export const startWebVitalsTracking = (): void => {
-  runWhenIdle(registerWebVitals)
+export const startWebVitalsTracking = (
+  schedule: WebVitalsScheduler = runWhenIdle,
+): void => {
+  schedule(registerWebVitals)
 }
