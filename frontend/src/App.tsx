@@ -1,5 +1,5 @@
 
-import { ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { AppScreen } from './app/AppScreen'
@@ -7,7 +7,6 @@ import { useAppNotifications } from './app/useAppNotifications'
 import { useCategoryTabs } from './app/useCategoryTabs'
 import { CategoryTabs } from './components/CategoryTabs'
 import { PriceChartSection } from './components/PriceChartSection'
-import { WeatherTab } from './components/WeatherTab'
 import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
@@ -17,7 +16,7 @@ import { isShareSupported, shareCurrentView } from './lib/share'
 import { useRecommendations } from './hooks/recommendations/controller'
 import { useWeather } from './hooks/weather/useWeather'
 import type { CropCategory, MarketScope, Region } from './types'
-import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
+import { APP_TEXT, TOAST_MESSAGES, WEATHER_MESSAGES } from './constants/messages'
 import { getRegionCoordinates } from './constants/weather'
 import { isWeatherTabEnabled } from './config/featureFlags'
 
@@ -32,6 +31,49 @@ const createQueryClient = () =>
       },
     },
   })
+
+const LazyWeatherTab = lazy(async () => {
+  const module = await import('./components/WeatherTab')
+  return { default: module.WeatherTab }
+})
+
+const scheduleWeatherSection = (task: () => void): (() => void) => {
+  const globalWithIdle = globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => number
+    cancelIdleCallback?: (handle: number) => void
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
+    const handle = globalWithIdle.requestIdleCallback(() => {
+      task()
+    })
+    return () => {
+      globalWithIdle.cancelIdleCallback?.(handle)
+    }
+  }
+
+  const timeout = setTimeout(() => {
+    task()
+  }, 120)
+
+  return () => {
+    clearTimeout(timeout)
+  }
+}
+
+const WeatherSectionFallback = () => (
+  <section
+    aria-label={WEATHER_MESSAGES.title}
+    className="space-y-6 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-lg backdrop-blur"
+    role="status"
+    aria-live="polite"
+  >
+    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <h2 className="text-2xl font-bold text-market-neutral-strong">{WEATHER_MESSAGES.title}</h2>
+    </div>
+    <p className="text-sm text-market-neutral/70">{WEATHER_MESSAGES.loading}</p>
+  </section>
+)
 
 export const AppContent = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
@@ -200,14 +242,43 @@ export const AppContent = () => {
       : null)
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
-  const weatherSection = weatherTabEnabled ? (
-    <WeatherTab
-      latest={weatherLatest}
-      previous={weatherPrevious}
-      isLoading={isWeatherLoading}
-      error={weatherError}
-    />
-  ) : null
+  const [shouldRenderWeatherTab, setShouldRenderWeatherTab] = useState(false)
+
+  useEffect(() => {
+    if (!weatherTabEnabled) {
+      setShouldRenderWeatherTab(false)
+      return
+    }
+
+    if (shouldRenderWeatherTab) {
+      return
+    }
+
+    const cancel = scheduleWeatherSection(() => {
+      setShouldRenderWeatherTab(true)
+    })
+
+    return () => {
+      cancel()
+    }
+  }, [shouldRenderWeatherTab, weatherTabEnabled])
+
+  const weatherSection = weatherTabEnabled
+    ? shouldRenderWeatherTab
+      ? (
+          <Suspense fallback={<WeatherSectionFallback />}>
+            <LazyWeatherTab
+              latest={weatherLatest}
+              previous={weatherPrevious}
+              isLoading={isWeatherLoading}
+              error={weatherError}
+            />
+          </Suspense>
+        )
+      : (
+          <WeatherSectionFallback />
+        )
+    : null
 
   return (
     <AppScreen
