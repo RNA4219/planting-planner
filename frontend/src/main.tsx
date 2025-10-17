@@ -104,7 +104,7 @@ function scheduleWebVitalsTracking(): void {
     const startWebVitalsTracking = module.startWebVitalsTracking
 
     startWebVitalsTracking((task) => {
-      queueMicrotask(() => {
+      scheduleAfterIdle(() => {
         void task()
       })
     })
