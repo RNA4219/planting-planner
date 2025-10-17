@@ -18,3 +18,10 @@ test('index.html preloads the main module entry', () => {
     'Expected index.html to include a modulepreload link for /src/main.tsx'
   )
 })
+
+if (typeof globalThis.test === 'function') {
+  globalThis.test.skip?.(
+    'node:test-only: index-html-main-module-preload',
+    () => {}
+  )
+}
