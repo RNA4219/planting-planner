@@ -10,71 +10,41 @@ import { startWebVitalsTracking } from './lib/webVitals'
 const scheduleAfterIdle = (callback: () => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
     requestIdleCallback?: (callback: IdleRequestCallback) => number
-  }
-
-  if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    let fallbackTimeoutId: ReturnType<typeof globalThis.setTimeout> | null =
-      globalThis.setTimeout(callback, 3000)
-
-    globalWithIdle.requestIdleCallback(() => {
-      if (fallbackTimeoutId !== null) {
-        globalThis.clearTimeout(fallbackTimeoutId)
-        fallbackTimeoutId = null
-      }
-
-      callback()
-    })
-
-    return
-  }
-
-  globalThis.setTimeout(callback, 1500)
-}
-
-const scheduleAfterIdle = (callback: () => void) => {
-  let hasExecuted = false
-
-  const runOnce = () => {
-    if (hasExecuted) {
-      return
-    }
-    hasExecuted = true
-    callback()
-  }
-
-  const globalWithIdle = globalThis as typeof globalThis & {
-    requestIdleCallback?: (callback: IdleRequestCallback) => number
     cancelIdleCallback?: (handle: number) => void
   }
 
-  if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    const timerWithMetadata = setTimeout as typeof setTimeout & { clock?: unknown }
-    const supportsTimerFallback = Object.prototype.hasOwnProperty.call(
-      timerWithMetadata,
-      'clock',
-    )
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+  let didRun = false
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
 
+  const runOnce = () => {
+    if (didRun) {
+      return
+    }
+    didRun = true
+    if (timeoutHandle !== undefined) {
+      clearTimeout(timeoutHandle)
+    }
+    callback()
+  }
+
+  if (typeof globalWithIdle.requestIdleCallback === 'function') {
     const idleHandle = globalWithIdle.requestIdleCallback(() => {
-      if (fallbackTimer !== undefined) {
-        clearTimeout(fallbackTimer)
-      }
       runOnce()
     })
 
-    if (supportsTimerFallback) {
-      fallbackTimer = setTimeout(() => {
-        if (typeof globalWithIdle.cancelIdleCallback === 'function') {
-          globalWithIdle.cancelIdleCallback(idleHandle)
-        }
-        runOnce()
-      }, 1000)
-    }
+    timeoutHandle = setTimeout(() => {
+      if (typeof globalWithIdle.cancelIdleCallback === 'function') {
+        globalWithIdle.cancelIdleCallback(idleHandle)
+      }
+      runOnce()
+    }, 0)
 
     return
   }
 
-  setTimeout(runOnce, 0)
+  timeoutHandle = setTimeout(() => {
+    runOnce()
+  }, 0)
 }
 
 const queryClient = new QueryClient({
@@ -101,28 +71,27 @@ createRoot(container).render(
 
 startWebVitalsTracking()
 
-const scheduleServiceWorkerRegistration = () => {
-  const invokeRegistration = () => {
-    void registerServiceWorker()
-  }
+let serviceWorkerRegistrationScheduled = false
 
-  if (typeof window === 'undefined') {
-    invokeRegistration()
+const scheduleServiceWorkerRegistration = () => {
+  if (serviceWorkerRegistrationScheduled) {
     return
   }
+  serviceWorkerRegistrationScheduled = true
 
-  const runAfterWindowLoad = (callback: () => void) => {
-    if (document.readyState === 'complete') {
-      callback()
-      return
-    }
-
-    window.addEventListener('load', () => callback(), { once: true })
-  }
-
-  runAfterWindowLoad(() => {
-    scheduleAfterIdle(invokeRegistration)
+  scheduleAfterIdle(() => {
+    void registerServiceWorker()
   })
 }
 
-scheduleServiceWorkerRegistration()
+if (document.readyState === 'complete') {
+  scheduleServiceWorkerRegistration()
+} else {
+  window.addEventListener(
+    'load',
+    () => {
+      scheduleServiceWorkerRegistration()
+    },
+    { once: true },
+  )
+}
