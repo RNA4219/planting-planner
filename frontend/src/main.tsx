@@ -66,11 +66,16 @@ const scheduleAfterIdle = (() => {
       globalThis.queueMicrotask(() => {
         runQueue()
       })
+      return
+    }
 
-  timeoutHandle = setTimeout(() => {
-    runOnce()
-  }, 0)
-}
+    timeoutHandle = setTimeout(() => {
+      runQueue()
+    }, 0)
+  }
+})()
+
+let serviceWorkerRegistrationScheduled = false
 
 const queryClient = new QueryClient({
   defaultOptions: {
