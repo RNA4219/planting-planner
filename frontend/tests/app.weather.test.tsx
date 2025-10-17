@@ -66,10 +66,10 @@ describe('App weather tab', () => {
     const latestCard = within(weatherRegion).getByTestId('weather-latest')
     const previousCard = within(weatherRegion).getByTestId('weather-previous')
 
-    expect(within(latestCard).getByText('2024-01-03')).toBeInTheDocument()
-    expect(within(previousCard).getByText('2024-01-02')).toBeInTheDocument()
-    expect(within(latestCard).getByText('30℃')).toBeInTheDocument()
-    expect(within(previousCard).getByText('28℃')).toBeInTheDocument()
+    await within(latestCard).findByText('2024-01-03')
+    await within(previousCard).findByText('2024-01-02')
+    await within(latestCard).findByText('30℃')
+    await within(previousCard).findByText('28℃')
   })
 
   it('WEATHER_TAB が無効な場合は天気タブを表示しない', async () => {
@@ -91,7 +91,7 @@ describe('App weather tab', () => {
     const { user } = await renderApp()
 
     const weatherRegion = await screen.findByRole('region', { name: '天気' })
-    expect(within(weatherRegion).getByText('2024-01-03')).toBeInTheDocument()
+    await within(weatherRegion).findByText('2024-01-03')
 
     fetchWeather.mockRejectedValueOnce(new Error('network failure'))
 
@@ -102,7 +102,11 @@ describe('App weather tab', () => {
       expect(fetchWeather).toHaveBeenCalledTimes(2)
     })
 
-    expect(within(weatherRegion).getByText('2024-01-03')).toBeInTheDocument()
-    expect(within(weatherRegion).getByText('30℃')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(within(weatherRegion).getByText('2024-01-03')).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(within(weatherRegion).getByText('30℃')).toBeInTheDocument()
+    })
   })
 })

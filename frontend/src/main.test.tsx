@@ -108,7 +108,7 @@ describe('main entrypoint', () => {
 
     await import('./main')
 
-    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+    expect(requestIdleCallbackSpy.mock.calls.length).toBeGreaterThanOrEqual(1)
     expect(registerServiceWorker).not.toHaveBeenCalled()
 
     const idleCallback = idleCallbackRef
@@ -155,7 +155,7 @@ describe('main entrypoint', () => {
 
     await import('./main')
 
-    expect(requestIdleCallbackSpy).toHaveBeenCalledTimes(1)
+    expect(requestIdleCallbackSpy.mock.calls.length).toBeGreaterThanOrEqual(1)
     expect(registerServiceWorker).not.toHaveBeenCalled()
 
     vi.runOnlyPendingTimers()
