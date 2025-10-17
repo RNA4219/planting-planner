@@ -28,4 +28,4 @@
 - BG Sync 不可: 再試行ボタンを表示
 
 ## 6. 未解決の実装差分
-- BG Sync 失敗時に `sync-queue` へ保存したエントリを残す実装が未完了（`recordFailure` が削除してしまうため、Runbook の「失敗 payload の点検」ができない）。
+- BG Sync 失敗時、`recordFailure` は `sync-queue` のエントリを削除せずに `lastFailureAt` / `lastFailureMessage` を記録する。Runbook の「BG Sync 失敗時の点検」で失敗 payload を監査できる。
