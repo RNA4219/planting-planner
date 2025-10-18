@@ -103,7 +103,7 @@ describe('AppContent multi-instance accessibility', () => {
     const { AppContent } = await import('./App')
     const queryClient = new QueryClient()
 
-    const { getAllByRole } = render(
+    const { getAllByRole, unmount } = render(
       <QueryClientProvider client={queryClient}>
         <div>
           <AppContent />
@@ -124,6 +124,9 @@ describe('AppContent multi-instance accessibility', () => {
     expect(firstControls).toBeTruthy()
     expect(secondControls).toBeTruthy()
     expect(firstControls).not.toBe(secondControls)
+
+    unmount()
+    queryClient.clear()
   })
 
   it('天気タブの遅延初期化で flushSync を使って同期描画する', async () => {

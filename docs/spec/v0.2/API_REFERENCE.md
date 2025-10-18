@@ -29,15 +29,17 @@
 
 - 直近の ETL 実行状態を返す。
 - レスポンス例:
-```json
-{
-  "state": "success",
-  "started_at": "2025-10-01T10:30:00Z",
-  "finished_at": "2025-10-01T10:32:45Z",
-  "updated_records": 120,
-  "last_error": null
-}
-```
+
+  ```json
+  {
+    "state": "success",
+    "started_at": "2025-10-01T10:30:00Z",
+    "finished_at": "2025-10-01T10:32:45Z",
+    "updated_records": 120,
+    "last_error": null
+  }
+  ```
+
 - `state` は `running` `success` `failure` `stale` のいずれか。
 - フロントエンドは `updated_records` をトースト文言に利用する。
 
