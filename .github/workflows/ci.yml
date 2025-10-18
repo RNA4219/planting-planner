@@ -24,12 +24,15 @@ jobs:
           pipx install poetry
           poetry self add poetry-plugin-export
       - name: install dependencies
+        working-directory: ${{ github.workspace }}
         run: poetry install --with backend,dev
       - name: export backend requirements
+        working-directory: ${{ github.workspace }}
         run: |
           poetry export --without-hashes -f requirements.txt --with backend -o backend/requirements.txt
           poetry export --without-hashes -f requirements.txt --with backend,dev -o backend/requirements-dev.txt
       - name: verify exported requirements
+        working-directory: ${{ github.workspace }}
         run: git diff --exit-code backend/requirements*.txt
 
   frontend-typecheck:
