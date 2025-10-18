@@ -15,7 +15,7 @@ def _to_jsonable(payload: Any) -> Any:
         return payload.model_dump(mode="json")
     if hasattr(payload, "model_dump"):
         try:
-            return payload.model_dump(mode="json")  # type: ignore[no-any-return]
+            return payload.model_dump(mode="json")
         except TypeError:  # pragma: no cover - fallback for unexpected signatures
             pass
     return payload
