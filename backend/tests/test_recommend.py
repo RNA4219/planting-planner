@@ -11,6 +11,8 @@ from app.main import app
 
 client = TestClient(app)
 ISO_WEEK_PATTERN = re.compile(r"^(\d{4})-W(\d{2})$")
+ETAG_PATTERN = re.compile(r'^W/"[0-9a-f]{64}"$')
+CACHE_CONTROL_VALUE = "public, max-age=300, stale-while-revalidate=60"
 REFERENCE_WEEK = "2024-W40"
 REGION_GROWTH_DAYS: dict[str, dict[str, int]] = {
     "temperate": {
@@ -96,6 +98,15 @@ def test_recommend_ignores_price_sources_for_metadata() -> None:
 
     sources = {item["source"] for item in items}
     assert sources == {"internal"}
+
+
+def test_recommend_sets_cache_headers() -> None:
+    response = client.get("/api/recommend", params={"week": REFERENCE_WEEK})
+
+    assert response.headers.get("Cache-Control") == CACHE_CONTROL_VALUE
+    etag = response.headers.get("ETag")
+    assert etag is not None
+    assert ETAG_PATTERN.fullmatch(etag)
 
 
 def _write_market_prices(records: list[tuple[str, int, str, float | None]] | None = None) -> None:

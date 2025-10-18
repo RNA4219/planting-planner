@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.db.connection import get_conn
 from app.main import app
 from app.seed import seed
+
+CACHE_CONTROL_VALUE = "public, max-age=300, stale-while-revalidate=60"
+ETAG_PATTERN = r'^W/"[0-9a-f]{64}"$'
 
 seed()
 client = TestClient(app)
@@ -125,3 +130,12 @@ def test_price_series_invalid_market_scope_returns_422(market_scope: str) -> Non
     )
     assert response.status_code == 422
     assert response.json() == {"detail": "Invalid market scope"}
+
+
+def test_price_series_sets_cache_headers() -> None:
+    response = client.get("/api/price", params={"crop_id": 1})
+
+    assert response.headers.get("Cache-Control") == CACHE_CONTROL_VALUE
+    etag = response.headers.get("ETag")
+    assert etag is not None
+    assert re.fullmatch(ETAG_PATTERN, etag)

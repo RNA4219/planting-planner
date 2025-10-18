@@ -10,6 +10,7 @@ from ..dependencies import (
     RecommendRegionQuery,
     RecommendWeekQuery,
 )
+from ..utils_cache import apply_cache_headers
 
 router = APIRouter()
 
@@ -105,4 +106,6 @@ def recommend(
             )
         )
 
-    return schemas.RecommendResponse(week=reference_week, region=region, items=items)
+    result = schemas.RecommendResponse(week=reference_week, region=region, items=items)
+    apply_cache_headers(response, result)
+    return result

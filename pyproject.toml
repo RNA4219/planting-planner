@@ -26,7 +26,11 @@ ruff = "0.6.4"
 black = "24.8.0"
 mypy = "1.11.2"
 types-requests = "2.32.0.20240914"
+pytest-cov = "^7.0.0"
 
 [tool.black]
 line-length = 100
 target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
