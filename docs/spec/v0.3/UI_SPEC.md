@@ -1,4 +1,5 @@
 # UI 仕様 — v0.3
+<!-- markdownlint-disable MD013 -->
 
 - 市場切替: ヘッダー右上に `Select` コンポーネントを配置し、`national` と `city:*` を Tailwind `bg-market-*` で色分け。未選択時は全国。
 - カテゴリタブ: 上部水平タブで `aria-selected` 管理。`sm` 未満は縦積みカード、`md` 以上はタブ+グリッド。選択カテゴリのみリスト表示。

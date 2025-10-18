@@ -1,4 +1,5 @@
 # テスト計画 — v0.3
+<!-- markdownlint-disable MD013 -->
 
 - 単体: Python は市場スコープ引数の分岐とフォールバック検証、TypeScript は store reducer と Tailwind クラス付与のスナップショット。
 - 結合: React Testing Library で市場切替→API 呼出→レンダリングをモックサーバーと共に確認。カテゴリタブのフィルタリングも同一シナリオで網羅。
