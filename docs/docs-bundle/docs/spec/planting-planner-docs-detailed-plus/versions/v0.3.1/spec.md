@@ -1,25 +1,34 @@
 # v0.3.1 PWA 基盤 – 仕様
 
 ## 1. Manifest
+
 - name, short_name, start_url="/", display="standalone", background_color, theme_color
 - icons: 192 / 512 / maskable PNG
 
 ## 2. Service Worker / Caching
+
 ### 2.1 Precache
+
 - ビルド生成物（`*.js`, `*.css`, フォント/ロゴ）を manifest に含める
+
 ### 2.2 Runtime Cache
+
 - 静的資産: Stale-While-Revalidate
 - `GET /api/*`: Network-First（失敗時 `cache.match` フォールバック）
 - キャッシュキー: `api:{method}:{url.pathname}{url.search}:v{schemaVersion}:e{dataEpoch}`（クエリパラメータは `?foo=bar` などの形式で `pathname` の直後に連結する）
+
 ### 2.3 Background Sync（`POST /api/refresh`）
+
 - 失敗時 payload を IndexedDB('sync-queue') に保存、Workbox が登録する `tag='workbox-background-sync:refresh-queue'`（キュー名を名前空間化するため接頭辞が付与される）
 - `sync` イベントで再送、指数バックオフ（最大 3 回）
 
 ## 3. 冪等性 / 更新通知
+
 - **Idempotency-Key**: `/api/refresh` に必須（再送時に同一値）
 - **SW 更新**: `waiting` → `postMessage({type:'SW_WAITING', version})` → UI トースト → `postMessage({type:'SKIP_WAITING'})`
 
 ## 4. テレメトリ
+
 - `api.request`
   - `frontend/src/lib/api.ts` の API クライアントが HTTP 応答を受け取ったタイミングで発火する。成功時は `method`・`path`・`status`・`durationMs` と `requestId` を送信し、HTTP エラー時はそれらに加えて `errorMessage` も送信する。`fetch` が失敗して HTTP 応答が得られなかった場合は `status` が付与されず、`errorMessage` とともに送信される。
 - `prefetch.hit` / `prefetch.miss`
@@ -36,8 +45,10 @@
   - `frontend/src/lib/webVitals.ts` が `web-vitals` ライブラリの計測結果を受け取った際に発火する。`requestId` は付与されず、ペイロードとして `id`・`value`・`delta` と、`metric.rating` が文字列の場合のみ `rating` を送信する。
 
 ## 5. エラー
+
 - `fetch` 失敗: キャッシュ有→表示 / 無→「取得不可」トースト
 - BG Sync 不可: 再試行ボタンを表示
 
 ## 6. 未解決の実装差分
+
 - BG Sync 失敗時、`recordFailure` は `sync-queue` のエントリを削除せずに `lastFailureAt` / `lastFailureMessage` を記録する。Runbook の「BG Sync 失敗時の点検」で失敗 payload を監査できる。
