@@ -47,8 +47,8 @@ describe('lighthouse ci configuration', () => {
       { minScore: 0.9 },
     ])
     expect(assertions['categories:performance']).toEqual([
-      'warn',
-      { minScore: 0.75, aggregationMethod: 'median' },
+      'error',
+      { minScore: 0.8, aggregationMethod: 'median' },
     ])
     expect(assertions['categories:accessibility']).toEqual([
       'error',
