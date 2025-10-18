@@ -10,22 +10,22 @@
 - 「更新」ボタンひとつで最新データを取得し、週次のおすすめ作物をチェック。
 
 ## ローカルで試す
-1. Node.js 20 以上と Python 3.11 以上を準備します。
-2. フロントエンドを起動：
+1. Node.js 20 以上、Python 3.11 以上、Poetry 1.6 以上を準備します。
+2. 依存関係をまとめてインストールします。
+   ```bash
+   poetry install --with backend,dev
+   ```
+3. バックエンド API を起動します。
+   ```bash
+   poetry run uvicorn backend.app.main:app --reload
+   ```
+4. 別ターミナルでフロントエンドを起動します。
    ```bash
    cd frontend
    npm ci
    npm run dev
    ```
-3. 別ターミナルでバックエンドを起動：
-   ```bash
-   cd backend
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt -r requirements-dev.txt
-   uvicorn app.main:app --reload
-   ```
-4. ブラウザで表示されたローカル URL を開き、地域を選んで「今週の作付け計画」を確認します。
+5. 表示されたローカル URL を開き、地域を選んで「今週の作付け計画」を確認します。
 
 > 💡 SQLite の既存データを使うので、基本設定のままでお試しできます。ETL を走らせる場合は `data/` ディレクトリや `/api/refresh` をご覧ください。
 
@@ -42,6 +42,21 @@
 ## ドキュメントと参加のしかた
 - プロダクト仕様やAPI設計など、詳細資料は `/docs` フォルダに集約しています。
 - バグ報告や改善提案は Issue/PR で歓迎です。開発フローやスタイルは Docs の CONTRIBUTING/DEVELOPMENT をご確認ください。
-- CI ではフロントエンド/バックエンドの検証に加えて Playwright によるE2Eテストと Lighthouse スモークを実行し、失敗時はレポートをアーティファクトとして保存します。
+- CI ではフロントエンド/バックエンドの検証に加えて Playwright によるE2Eテストと Lighthouse スモークを実行し、失敗時はレポートをアーティファクトとして保存します。ジョブ定義は[`.github/workflows/ci.yml`](.github/workflows/ci.yml)を参照し、GitHub Actions の Summary 画面から Artifacts を開くことで各種レポート（Playwright/Lighthouse 等）を取得できます。
+
+## QA / 検証
+- Lint / 型 / テスト
+  ```bash
+  poetry run ruff check
+  poetry run mypy
+  poetry run pytest --cov
+  ```
+- Lighthouse スコア
+  ```bash
+  npm run build
+  npm run preview
+  lhci autorun
+  ```
+  - 主要メトリクス（Performance/Accessibility/Best Practices/SEO）はいずれも 80 点以上を維持すること。
 
 家庭菜園の計画づくりに、Planting Planner をぜひお役立てください。
