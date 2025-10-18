@@ -117,9 +117,11 @@
 
 ### `GET /refresh/status`
 
-- **概要**: 最新の更新ジョブの状態を返す
+- **概要**: 最新の更新ジョブの状態を返す。
 - **レスポンス**
-  - 履歴が存在しない場合は `state: "stale"` となり、`started_at`/`finished_at`/`last_error` は `null`、`updated_records` は `0` が返る。
+  - 履歴が存在しない場合は `state: "stale"` を返す。
+  - その際 `started_at` と `finished_at`、`last_error` は `null`。
+  - `updated_records` は `0` を返す。
 
 ```json
 {
