@@ -12,6 +12,7 @@ from ..dependencies import (
     PriceCropQuery,
     ToWeekQuery,
 )
+from ..utils_cache import apply_cache_headers
 
 router = APIRouter(prefix="/api/price")
 
@@ -131,10 +132,12 @@ def price_series(
         )
         for row in rows
     ]
-    return schemas.PriceSeries(
+    result = schemas.PriceSeries(
         crop_id=crop_row["id"],
         crop=crop_row["name"],
         unit=unit,
         source=source,
         prices=prices,
     )
+    apply_cache_headers(response, result)
+    return result

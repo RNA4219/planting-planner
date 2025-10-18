@@ -30,3 +30,6 @@ types-requests = "2.32.0.20240914"
 [tool.black]
 line-length = 100
 target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]

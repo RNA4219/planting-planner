@@ -3,15 +3,16 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from ..dependencies import ConnDependency
+from ..utils_cache import apply_cache_headers
 
 router = APIRouter(prefix="/api/markets")
 
 
 @router.get("")
-def market_metadata(conn: ConnDependency) -> dict[str, Any]:
+def market_metadata(response: Response, conn: ConnDependency) -> dict[str, Any]:
     row = conn.execute(
         """
         SELECT payload
@@ -37,4 +38,5 @@ def market_metadata(conn: ConnDependency) -> dict[str, Any]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="market metadata cache invalid",
         )
+    apply_cache_headers(response, payload)
     return payload

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator
 from typing import Any
 
@@ -13,6 +14,9 @@ from app.seed import seed
 
 seed()
 client = TestClient(app)
+
+CACHE_CONTROL_VALUE = "public, max-age=300, stale-while-revalidate=60"
+ETAG_PATTERN = r'^W/"[0-9a-f]{64}"$'
 
 
 def _clear_cache() -> None:
@@ -75,3 +79,23 @@ def test_get_markets_returns_503_when_cache_missing() -> None:
 
     assert response.status_code == 503
     assert response.json() == {"detail": "market metadata cache not ready"}
+
+
+def test_get_markets_sets_cache_headers() -> None:
+    payload = {
+        "generated_at": "2024-01-01T00:00:00Z",
+        "markets": [
+            {
+                "scope": "national",
+                "display_name": "全国平均",
+            }
+        ],
+    }
+    _write_cache(payload)
+
+    response = client.get("/api/markets")
+
+    assert response.headers.get("Cache-Control") == CACHE_CONTROL_VALUE
+    etag = response.headers.get("ETag")
+    assert etag is not None
+    assert re.fullmatch(ETAG_PATTERN, etag)
