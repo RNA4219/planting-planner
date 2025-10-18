@@ -35,7 +35,8 @@ ETL (Extract, Transform, Load) により、公的市場データを週単位に�
 ## ログ
 
 - `etl_runs` テーブルに記録
-  - `state`: ジョブの現在ステータス（`running`/`success`/`failure`/`stale`）を保持し、履歴が存在しない場合は UI からの照会時に `stale` を返す
+  - `state`: ジョブの現在ステータス（`running`/`success`/`failure`/`stale`）を保持し、
+    履歴が存在しない場合は UI からの照会時に `stale` を返す
   - `status`: 実行開始時に `running` に更新され、UI の進行中表示に利用する
   - `started_at`: ジョブ開始時刻。マイグレーション後は従来の `run_at` と同値で初期化
   - `finished_at`: 正常終了・失敗時の完了時刻。実行中は `NULL`

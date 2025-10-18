@@ -3,13 +3,16 @@
 > ⚠️ PNG アセットに関する PR は CI 制約により作成できません。該当項目は計画に含めないでください。
 
 ## 進捗メモ (2025-10-05)
-- ✅ FastAPIバックエンド: `/api/health`, `/api/crops`, `/api/recommend`, `/api/refresh`, `/api/refresh/status`, `/api/price` を確認。ETLは直近3件平均で欠損補完済み。
+
+- ✅ FastAPIバックエンド: `/api/health`, `/api/crops`, `/api/recommend`, `/api/refresh`,
+  `/api/refresh/status`, `/api/price` を確認。ETLは直近3件平均で欠損補完済み。
 - ✅ Reactフロント: 地域・週選択フォーム、推薦テーブル、価格チャート、☆お気に入り保存が動作。
 - ✅ 花きカテゴリ（例: マリーゴールド）のシードデータ投入済みで、価格チャートまで一貫して表示可能。
 - ✅ UI/PRDドキュメントは価格チャートとステータス表示仕様を反映済み。
 - ⚠️ 更新ボタン押下後の自動ステータス取得/トースト通知は未実装。固定メッセージのみ表示。
 
 ## Day 1〜3: MVP開発
+
 - [x] リポジトリ初期化（README, License, .gitignore）
 - [x] CI 構築（Frontend/Backend lint, test, build）
 - [x] Frontend 雛形 (React+TS+Vite)
@@ -19,16 +22,20 @@
 - [x] フロントUI（リスト表示・☆お気に入り）
 - [x] 更新ボタン → `/refresh` API 呼び出し
 - [x] MVP版公開（Pages/Render）
+
   - デプロイ設定（Render/GitHub Pages）の雛形を追加し、Secrets/環境変数の整理を行う。
 
 ---
 
 ## v0.2: 実用化拡張
+
 - [x] 花きデータ取り込み追加
 - [x] `/refresh/status` 実装
 - [ ] `/refresh/status` を用いたポーリング&トースト通知（UI）
 - [x] 欠損データ処理（過去平均補完）
+
   - 直近3週平均で欠損補完済み。
+
 - [x] API `/price` 実装（価格履歴表示）
 - [x] Backend ユニットテスト充実
 - [ ] UI 検索フィルタ追加
@@ -36,6 +43,7 @@
 ---
 
 ## v0.3: ユーザビリティ強化
+
 - 市場別切替（全国平均 ↔ 都市別）
 - カテゴリ別タブ（葉菜/根菜/花き）
 - UI デザイン改善（Tailwind対応）
@@ -44,6 +52,7 @@
 ---
 
 ## v0.4 以降: 将来計画
+
 - Supabase/PostgreSQL 移行オプション
 - Docker Compose 化
 - 国際化（i18n, 英語UI）
@@ -53,6 +62,7 @@
 ---
 
 ## 優先順位
+
 - 短期: **花きデータ対応とリフレッシュ通知UI**
 - 中期: **検索フィルタなどUI拡張**
 - 長期: **DB移行や国際化**

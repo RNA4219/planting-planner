@@ -7,6 +7,7 @@
 
 - [x] 5 秒後の自動クローズと `dismissToast` 手動クローズをフェイクタイマーで
   検証するケースを追加。
+
 - [x] `stale` レスポンスとフェッチエラー時のトースト種別・重複抑止を検証する
   ケースを追加。
 
@@ -14,6 +15,7 @@
 
 - [x] テスト追加後、トーストごとにタイマーを保持して自動クローズし、
   `dismissToast` がタイマーを片付けるよう実装を更新。
+
 - [x] リフレッシュ成功時にコールバックで `reloadCurrentWeek` を起動できるよう
   オプションを追加し、既存シグネチャ互換を維持。
 
@@ -35,13 +37,13 @@
 
 ## frontend/src/components/ToastStack.tsx
 
-- [x] テスト追加後、ARIA 属性と閉じるボタンを備えたトーストスタックを実装し、5 秒
-  タイマーと `onDismiss` ハンドラを受け付けるようにする。
+- [x] テスト追加後、ARIA 属性と閉じるボタンを備えたトーストスタックを実装し、
+  5 秒タイマーと `onDismiss` ハンドラを受け付けるようにする。
 
 ## frontend/tests/app.refresh.test.tsx
 
-- [x] フェイクタイマーで `/refresh` 成功→`/refresh/status` ポーリング→成功トースト表
-  示→`reloadCurrentWeek` 呼び出しを検証する統合テストを追加。自動クローズ確認は
+- [x] フェイクタイマーで `/refresh` 成功→`/refresh/status` ポーリング→成功トースト表示→
+  `reloadCurrentWeek` 呼び出しを検証する統合テストを追加。自動クローズ確認は
   `ToastStack` の単体テストへ委譲。
 
 ## frontend/tests/utils/renderApp.tsx
@@ -52,25 +54,26 @@
 
 ## frontend/tests/recommendations/favoritesPrioritization.test.tsx
 
-- [x] 新トースト制御の導入後もお気に入り優先ロジックが壊れないよう、不要な手動
-  `setInterval` を除去して `fetchRefreshStatus` ポーリング挙動を検証するテストに書き
-  換え。
+- [x] 新トースト制御の導入後もお気に入り優先ロジックが壊れないよう、不要な
+  手動 `setInterval` を除去して `fetchRefreshStatus` ポーリング挙動を検証するテストに
+  書き換え。
 
 ## frontend/src/App.tsx
 
 - [x] テスト追加後、ローカル実装の `useRefreshStatus` を削除し
-  `hooks/useRefreshStatus` と `ToastStack` を利用、成功時に `reloadCurrentWeek` を呼ぶ
-  ように実装更新。
+  `hooks/useRefreshStatus` と `ToastStack` を利用、成功時に `reloadCurrentWeek` を呼ぶように
+  実装更新。
 
 ## frontend/package.json
 
-- [x] Vitest の単一ファイル実行をサポートする `"test:file"` スクリプトを追加し、CI
-  用 `test` スクリプトは `vitest run` に統一する。
+- [x] Vitest の単一ファイル実行をサポートする `"test:file"` スクリプトを追加し、
+  CI 用 `test` スクリプトは `vitest run` に統一する。
 
 ## docs/spec/v0.2/TESTING.md
 
 - [x] `npm test` の利用手順を更新し、`npm run test:file -- <pattern>` の例と Vitest CLI
   オプション対応状況を追記。
+
   - `SearchControls`（旧 `SearchBox`）、`RecommendationsTable`（旧 `CropList`）、
     `useRefreshStatusController`／`createRefreshStatusPoller`
     （旧 `RefreshStatusPoller`）の名称同期を明示し、対応するテストスイートの参照先を
@@ -84,5 +87,5 @@
 ## frontend/src/hooks/useRecommendations.test.ts
 
 - [x] ファイルを `hooks/__tests__/useRecommendations.controller.test.ts` などに分割し、共通
-  モックを `tests/utils/recommendations` へ抽出して 200 行未満にするリファクタリング
-  を実施。
+  モックを `tests/utils/recommendations` へ抽出して 200 行未満にするリファクタリングを
+  実施。

@@ -10,14 +10,15 @@
 ## フロントエンド
 
 - `SearchControls`
-  （`frontend/src/components/__tests__/SearchControls.test.tsx`）が名前・カテゴリの部分
-  一致フィルタを実行し、大文字小文字を無視するテスト。
+  （`frontend/src/components/__tests__/SearchControls.test.tsx`）が名前・カテゴリの
+  部分一致フィルタを実行し、大文字小文字を無視するテスト。
 - `useRefreshStatusController` と `createRefreshStatusPoller` の組み合わせが状態遷移で
   ポーリングを停止し、トースト表示を制御するテスト。
-- `RecommendationsTable`（`frontend/tests/recommendations/*.test.tsx`）が検索結果とお
-  気に入りの優先順位を満たすことを確認。
-- `frontend/tests/app.refresh.test.tsx` による `/refresh` フロー統合テストで、成功時
-  の `reloadCurrentWeek` 呼び出しと自動クローズを検証。
+- `RecommendationsTable`
+  （`frontend/tests/recommendations/*.test.tsx`）が検索結果とお気に入りの優先順位を
+  満たすことを確認。
+- `frontend/tests/app.refresh.test.tsx` による `/refresh` フロー統合テストで、成功時の
+  `reloadCurrentWeek` 呼び出しと自動クローズを検証。
 
 ### テストコマンド
 
