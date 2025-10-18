@@ -48,13 +48,13 @@
   - 既定の `data/` ディレクトリから JSON を読み込み、ローカル SQLite にシードできることを確認する。
 - スキーマ・整合性チェック：
   ```bash
-  poetry run pytest tests/backend/app/test_seed.py
-  poetry run pytest tests/backend/app/test_db_schema.py
+  poetry run pytest backend/tests/test_seed_data.py
+  poetry run pytest backend/tests/test_db_schema.py
   ```
-  - 主要テーブル・制約が変更されていないことを保証する。
+  - `backend/tests/` 配下のシードおよびスキーマ検証用テストを実行し、主要テーブル・制約が変更されていないことを保証する。
 - ETL の健全性確認：
   ```bash
-  poetry run pytest tests/backend/app/test_etl.py
+  poetry run pytest backend/tests/test_etl.py
   ```
   - 週次価格や市場メタデータの再計算が期待通りであることを検証する。
 
