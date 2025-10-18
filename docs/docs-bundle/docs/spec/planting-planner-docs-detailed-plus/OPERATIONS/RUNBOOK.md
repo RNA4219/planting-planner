@@ -10,9 +10,9 @@
 ## 2) DB マイグ失敗
 - 症状: `/api/health` が 200 以外、またはレスポンス JSON が `{"status": "ok"}` にならない。
 - 対処:
-  1. `poetry run python -c "from backend.app.db.migrations import init_db; init_db()"` を実行してスキーマを再作成し、必要なら後続のシードを待機（`prepare_database` を経由する通常起動でも同処理が自動実行される）。
+  1. `poetry run python -c "from backend.app.db.migrations import init_db; init_db()"` を実行してスキーマを再作成し、必要なら後続のシードを待機しつつ、実行時に例外が出ていないことを確認（`prepare_database` を経由する通常起動でも同処理が自動実行される）。
   2. `/api/health` にアクセスし、`{"status": "ok"}` が返ることを確認。
-  3. 代替策: `/api/health` の応答が復旧しない場合は `/api/refresh/status` の `state` が `success`（初期状態では `stale`）になっているか、もしくはアプリケーションログに `init_db completed`（または同義の完了メッセージ）が記録されているかを確認し、いずれかで正常化を判断する。
+  3. 代替策: `/api/health` の応答が復旧しない場合は `/api/refresh/status` の `state` が `success` または `stale` であること、併せて `last_error` が空であることを確認し、いずれかで正常化を判断する。
 - 監視: `/api/health` が 5 分以上 `{"status": "ok"}` を返せない場合にアラート
 
 ## 3) PWA 更新停滞
