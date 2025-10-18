@@ -1,5 +1,6 @@
 import {
   ChangeEvent,
+  FormEvent,
   Suspense,
   lazy,
   useCallback,
@@ -22,7 +23,10 @@ import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { isShareSupported, shareCurrentView } from './lib/share'
-import { useRecommendations } from './hooks/recommendations/controller'
+import {
+  useRecommendations,
+  type UseRecommendationsResult,
+} from './hooks/recommendations/controller'
 import { useWeather } from './hooks/weather/useWeather'
 import type { CropCategory, MarketScope, Region } from './types'
 import { APP_TEXT, TOAST_MESSAGES, WEATHER_MESSAGES } from './constants/messages'
@@ -84,6 +88,38 @@ const WeatherSectionFallback = () => (
   </section>
 )
 
+const noop = () => {}
+
+const createFallbackRecommendationsSnapshot = ({
+  initialRegion,
+  initialMarketScope,
+  initialCategory,
+}: {
+  initialRegion: Region
+  initialMarketScope: MarketScope
+  initialCategory: CropCategory
+}): UseRecommendationsResult => ({
+  region: initialRegion,
+  setRegion: noop,
+  marketScope: initialMarketScope,
+  setMarketScope: noop,
+  selectedMarket: initialMarketScope,
+  category: initialCategory,
+  setCategory: noop,
+  selectedCategory: initialCategory,
+  queryWeek: '',
+  setQueryWeek: noop,
+  currentWeek: '',
+  displayWeek: '',
+  sortedRows: [],
+  handleSubmit: (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+  },
+  reloadCurrentWeek: async () => {},
+  isMarketFallback: false,
+  recommendationError: null,
+})
+
 export const AppContent = () => {
   const [selectedCropId, setSelectedCropId] = useState<number | null>(null)
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
@@ -92,6 +128,25 @@ export const AppContent = () => {
   const initialRegionRef = useRef<Region>(loadRegion())
   const initialMarketScopeRef = useRef<MarketScope>(loadMarketScope())
   const initialCategoryRef = useRef<CropCategory>(loadSelectedCategory())
+  const isMountedRef = useRef(true)
+
+  const fallbackRecommendationsRef = useRef<UseRecommendationsResult | null>(null)
+
+  if (fallbackRecommendationsRef.current === null) {
+    fallbackRecommendationsRef.current = createFallbackRecommendationsSnapshot({
+      initialRegion: initialRegionRef.current,
+      initialMarketScope: initialMarketScopeRef.current,
+      initialCategory: initialCategoryRef.current,
+    })
+  }
+
+  const recommendationsResult =
+    (useRecommendations({
+      favorites,
+      initialRegion: initialRegionRef.current,
+      initialMarketScope: initialMarketScopeRef.current,
+      initialCategory: initialCategoryRef.current,
+    }) as UseRecommendationsResult | undefined) ?? fallbackRecommendationsRef.current
 
   const {
     region,
@@ -110,12 +165,7 @@ export const AppContent = () => {
     reloadCurrentWeek,
     isMarketFallback,
     recommendationError,
-  } = useRecommendations({
-    favorites,
-    initialRegion: initialRegionRef.current,
-    initialMarketScope: initialMarketScopeRef.current,
-    initialCategory: initialCategoryRef.current,
-  })
+  } = recommendationsResult
   const weatherTabEnabled = isWeatherTabEnabled()
   const regionCoordinates = useMemo(() => getRegionCoordinates(region), [region])
   const {
@@ -228,6 +278,13 @@ export const AppContent = () => {
     }
   }, [category, ensureValidCategory, marketScope, setCategory])
 
+  useEffect(
+    () => () => {
+      isMountedRef.current = false
+    },
+    [],
+  )
+
   const activeCategoryTabId = `category-tab-${category}`
 
   const fallbackNoticeContent =
@@ -257,6 +314,9 @@ export const AppContent = () => {
     }
 
     const cancel = scheduleWeatherSection(() => {
+      if (!isMountedRef.current) {
+        return
+      }
       setShouldRenderWeatherTab(true)
     })
 
