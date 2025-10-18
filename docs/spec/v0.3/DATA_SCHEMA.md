@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # データスキーマ — v0.3
 
 - `market_prices` は `scope`（`national` or `city:<id>`）列を既存のまま使用し、UI へ渡す市場リストは `market_metadata` ビューで提供。

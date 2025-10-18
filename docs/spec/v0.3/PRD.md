@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # プロダクト要件定義（PRD） — v0.3
 
 ## 概要
