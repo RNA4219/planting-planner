@@ -2,10 +2,12 @@
 
 ## 1) 先読み破損
 - 症状: オフライン時に一覧が空
-- 対処: ブラウザ DevTools → Application → IndexedDB → `prefetch` を選択し「Delete database」で削除 → 再読み込み → オンラインで 1 回アクセス（DB 名は `frontend/src/lib/prefetchStore.ts` の `DB_NAME` に一致）。[^prefetch-reset]
+- 対処:
+  1. ブラウザ DevTools → Application → Cache Storage を開き、`frontend/src/sw.ts` の `API_CACHE_NAME`（既定値: `api-get-cache`）と `STATIC_CACHE_NAME`（既定値: `static-assets`）に一致するキャッシュを選択する。
+  2. 各キャッシュで「Delete」または同等操作を実行して削除し、ページを再読み込み → オンラインで 1 回アクセスして再同期させる。[^prefetch-reset]
 - 監視: 先読みヒット率 < 20% でアラート
 
-[^prefetch-reset]: `clearPrefetchSnapshots` は `frontend/src/lib/prefetchStore.ts` に実装されており、IndexedDB `prefetch` を初期化するユーティリティ。DevTools Console で `indexedDB.deleteDatabase('prefetch')` を実行すると DB ごと削除され、次回アクセス時に同関数と同様の初期化が走る（`DB_NAME` が `prefetch` で、カウンタも `DEFAULT_COUNTERS` に戻る）。
+[^prefetch-reset]: DevTools Console で `await caches.keys().then(keys => Promise.all(keys.filter(name => name.startsWith('api-get-cache') || name.startsWith('static-assets')).map(name => caches.delete(name))))` を実行すると、該当キャッシュをまとめて削除できる。
 
 ## 2) DB マイグ失敗
 - 症状: `/api/health` が 200 以外、またはレスポンス JSON が `{"status": "ok"}` にならない。
