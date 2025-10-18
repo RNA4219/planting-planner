@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { AppScreen } from './app/AppScreen'
@@ -317,7 +318,12 @@ export const AppContent = () => {
       if (!isMountedRef.current) {
         return
       }
-      setShouldRenderWeatherTab(true)
+      if (typeof globalThis.window === 'undefined') {
+        return
+      }
+      flushSync(() => {
+        setShouldRenderWeatherTab(true)
+      })
     })
 
     return () => {
