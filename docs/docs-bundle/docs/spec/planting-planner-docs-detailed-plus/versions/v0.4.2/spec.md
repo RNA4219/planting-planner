@@ -3,7 +3,7 @@
 ## キー命名
 
 - `screen.<name>.<part>` / `common.<term>` / `action.<verb>`
-- 例: screen.dashboard.title, action.refresh, common.region
+- 例: `screen.dashboard.title`, `action.refresh`, `common.region`
 
 ## ロケール決定
 
