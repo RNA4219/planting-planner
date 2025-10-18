@@ -72,8 +72,9 @@
 - [x] `npm test` の利用手順を更新し、`npm run test:file -- <pattern>` の例と Vitest CLI
   オプション対応状況を追記。
   - `SearchControls`（旧 `SearchBox`）、`RecommendationsTable`（旧 `CropList`）、
-    `useRefreshStatusController`／`createRefreshStatusPoller`（旧 `RefreshStatusPoller`）の
-    名称同期を明示し、対応するテストスイートの参照先を一覧化。
+    `useRefreshStatusController`／`createRefreshStatusPoller`
+    （旧 `RefreshStatusPoller`）の名称同期を明示し、対応するテストスイートの参照先を
+    一覧化。
 
 ## frontend/src/hooks/useRefreshStatus.test.ts
 
