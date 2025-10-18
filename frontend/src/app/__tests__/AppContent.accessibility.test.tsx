@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -189,7 +189,14 @@ describe('AppContent accessibility', () => {
       await Promise.resolve()
     })
 
-    expect(await screen.findByRole('region', { name: '天気' })).toBeInTheDocument()
+    const weatherRegions = await screen.findAllByRole('region', { name: '天気' })
+    expect(weatherRegions).not.toHaveLength(0)
+
+    const weatherRegion = weatherRegions.find((region) =>
+      within(region).queryByTestId('weather-latest'),
+    )
+
+    expect(weatherRegion).toBeDefined()
     expect(screen.queryByRole('status', { name: '天気' })).not.toBeInTheDocument()
 
     queryClient.clear()
