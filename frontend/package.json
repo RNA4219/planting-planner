@@ -8,7 +8,7 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --config .eslintrc.json src --ext .ts,.tsx,.js,.jsx",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --config .eslintrc.json --max-warnings=0 src --ext .ts,.tsx,.js,.jsx",
     "test": "vitest run",
     "test:file": "vitest run --passWithNoTests",
     "test:e2e": "npm run build && npx playwright test playwright/app.spec.js tests/e2e/*.spec.ts",

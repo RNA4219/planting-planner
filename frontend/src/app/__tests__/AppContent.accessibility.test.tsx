@@ -11,8 +11,6 @@ import {
 import { useAppNotifications } from '../useAppNotifications'
 import { useWeather } from '../../hooks/weather/useWeather'
 
-type UseAppNotificationsResult = ReturnType<typeof useAppNotifications>
-
 const createMockWeatherResult = () => ({
   latest: null,
   previous: null,
@@ -22,21 +20,81 @@ const createMockWeatherResult = () => ({
   refresh: vi.fn(),
 })
 
+const createMockRecommendationsResult = (): UseRecommendationsResult => ({
+  region: 'temperate',
+  setRegion: vi.fn(),
+  marketScope: 'national',
+  setMarketScope: vi.fn(),
+  selectedMarket: 'national',
+  category: 'leaf',
+  setCategory: vi.fn(),
+  selectedCategory: 'leaf',
+  queryWeek: '2024-W01',
+  setQueryWeek: vi.fn(),
+  currentWeek: '2024-W01',
+  displayWeek: '2024-W01',
+  sortedRows: [],
+  handleSubmit: vi.fn(),
+  reloadCurrentWeek: vi.fn(),
+  isMarketFallback: false,
+  recommendationError: null,
+})
+
+const createMockAppNotificationsResult = () => ({
+  isRefreshing: false,
+  startRefresh: vi.fn(),
+  combinedToasts: [],
+  handleToastDismiss: vi.fn(),
+  handleToastAction: vi.fn(),
+  fallbackNotice: null,
+  offlineBanner: null,
+  isOffline: false,
+  lastSync: null,
+  notifyShareResult: vi.fn(),
+})
+
 vi.mock('../../hooks/recommendations/controller', () => ({
+  __esModule: true,
   useRecommendations: vi.fn(),
 }))
 
 vi.mock('../useAppNotifications', () => ({
+  __esModule: true,
   useAppNotifications: vi.fn(),
 }))
 
 vi.mock('../../hooks/weather/useWeather', () => ({
+  __esModule: true,
   useWeather: vi.fn(),
 }))
 
 describe('AppContent accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    const mockUseRecommendations = vi.mocked(useRecommendations)
+    const mockUseAppNotifications = vi.mocked(useAppNotifications)
+    const mockUseWeather = vi.mocked(useWeather)
+
+    mockUseRecommendations.mockReturnValue(createMockRecommendationsResult())
+    mockUseAppNotifications.mockReturnValue(createMockAppNotificationsResult())
+    mockUseWeather.mockReturnValue(createMockWeatherResult())
+  })
+
+  it('useRecommendations が未設定でも安全に描画できる', () => {
+    const queryClient = new QueryClient()
+
+    const renderApp = () =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>,
+      )
+
+    expect(() => {
+      const view = renderApp()
+      view.unmount()
+      queryClient.clear()
+    }).not.toThrow()
   })
 
   it('リンクされたタブパネルと価格チャート領域を描画する', () => {
@@ -44,42 +102,12 @@ describe('AppContent accessibility', () => {
     const mockUseAppNotifications = vi.mocked(useAppNotifications)
     const mockUseWeather = vi.mocked(useWeather)
 
-    const recommendationsResult: UseRecommendationsResult = {
-      region: 'temperate',
-      setRegion: vi.fn(),
-      marketScope: 'national',
-      setMarketScope: vi.fn(),
-      selectedMarket: 'national',
-      category: 'leaf',
-      setCategory: vi.fn(),
-      selectedCategory: 'leaf',
-      queryWeek: '2024-W01',
-      setQueryWeek: vi.fn(),
-      currentWeek: '2024-W01',
-      displayWeek: '2024-W01',
-      sortedRows: [],
-      handleSubmit: vi.fn(),
-      reloadCurrentWeek: vi.fn(),
-      isMarketFallback: false,
-      recommendationError: null,
-    }
+    const recommendationsResult = createMockRecommendationsResult()
+    const notificationsResult = createMockAppNotificationsResult()
 
-    const notificationsResult: UseAppNotificationsResult = {
-      isRefreshing: false,
-      startRefresh: vi.fn(),
-      combinedToasts: [],
-      handleToastDismiss: vi.fn(),
-      handleToastAction: vi.fn(),
-      fallbackNotice: null,
-      offlineBanner: null,
-      isOffline: false,
-      lastSync: null,
-      notifyShareResult: vi.fn(),
-    }
-
-    mockUseRecommendations.mockImplementation(() => recommendationsResult)
-    mockUseAppNotifications.mockImplementation(() => notificationsResult)
-    mockUseWeather.mockImplementation(() => createMockWeatherResult())
+    mockUseRecommendations.mockReturnValue(recommendationsResult)
+    mockUseAppNotifications.mockReturnValue(notificationsResult)
+    mockUseWeather.mockReturnValue(createMockWeatherResult())
 
     const queryClient = new QueryClient()
 
@@ -102,43 +130,12 @@ describe('AppContent accessibility', () => {
     const mockUseAppNotifications = vi.mocked(useAppNotifications)
     const mockUseWeather = vi.mocked(useWeather)
 
-    const recommendationsResult: UseRecommendationsResult = {
-      region: 'temperate',
-      setRegion: vi.fn(),
-      marketScope: 'national',
-      setMarketScope: vi.fn(),
-      selectedMarket: 'national',
-      category: 'leaf',
-      setCategory: vi.fn(),
-      selectedCategory: 'leaf',
-      queryWeek: '2024-W01',
-      setQueryWeek: vi.fn(),
-      currentWeek: '2024-W01',
-      displayWeek: '2024-W01',
-      sortedRows: [],
-      handleSubmit: vi.fn(),
-      reloadCurrentWeek: vi.fn(),
-      isMarketFallback: false,
-      recommendationError: null,
-    }
+    const recommendationsResult = createMockRecommendationsResult()
+    const notificationsResult = createMockAppNotificationsResult()
 
-    const notificationsResult: UseAppNotificationsResult = {
-      isRefreshing: false,
-      startRefresh: vi.fn(),
-      combinedToasts: [],
-      handleToastDismiss: vi.fn(),
-      handleToastAction: vi.fn(),
-      fallbackNotice: null,
-      offlineBanner: null,
-      isOffline: false,
-      lastSync: null,
-      notifyShareResult: vi.fn(),
-    }
-
-    mockUseRecommendations.mockImplementation(() => recommendationsResult)
-    mockUseAppNotifications.mockImplementation(() => notificationsResult)
-
-    mockUseWeather.mockImplementation(() => createMockWeatherResult())
+    mockUseRecommendations.mockReturnValue(recommendationsResult)
+    mockUseAppNotifications.mockReturnValue(notificationsResult)
+    mockUseWeather.mockReturnValue(createMockWeatherResult())
 
     const originalIdle = (globalThis as {
       requestIdleCallback?: typeof window.requestIdleCallback
