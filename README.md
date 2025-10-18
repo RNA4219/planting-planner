@@ -1,7 +1,10 @@
 # Planting Planner
 <!-- markdownlint-disable MD013 -->
 
-[![CI](https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml)
+[![CI][badge-ci]][workflow-ci]
+
+[badge-ci]: https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml/badge.svg?branch=main
+[workflow-ci]: https://github.com/R-N-A/planting-planner/actions/workflows/ci.yml
 
 趣味農家・家庭菜園向けに、収穫したい週から逆算して「今週植える作物」を提案するオープンソースの作付けナビです。
 
