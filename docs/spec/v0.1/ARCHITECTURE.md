@@ -1,7 +1,8 @@
 # アーキテクチャ設計 - planting-planner v0.1
 
 ## 全体構成
-- **Frontend (React + Vite + TypeScript)**  
+
+- **Frontend (React + Vite + TypeScript)**
   - UI 表示、操作（更新・お気に入り）、API 呼び出し
   - localStorage にお気に入りを保存し、並び替えを実現
 
@@ -24,6 +25,7 @@
 ---
 
 ## データフロー
+
 1. ETL が公的市場データをスクレイピングまたは CSV/API から取得
 2. 週単位に丸め、SQLite に UPSERT
 3. Backend API が DB を参照し、逆算ロジックを実行
@@ -32,6 +34,7 @@
 ---
 
 ## 失敗時の挙動
+
 - ETL が失敗した場合：前回の DB 内容を利用
 - API レスポンスが欠損または処理中：`state` フィールドで `running` / `success` / `failure` / `stale` を返す
 - フロント UI はメインエリアのメッセージでユーザーに失敗・処理中を通知
@@ -39,6 +42,7 @@
 ---
 
 ## スケーラビリティ
+
 - SQLite → 小規模 OSS 用の最適解
 - 将来的に PostgreSQL や Supabase に移行可能（DB アクセス層を抽象化しておく）
 - ETL は Airflow/Cron ベースに拡張可能
