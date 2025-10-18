@@ -22,7 +22,7 @@ vi.mock('../src/lib/swClient', () => ({
 test('web vitals tracking is started asynchronously to avoid blocking hydration', async () => {
   document.body.innerHTML = '<div id="root"></div>'
 
-  await import('../src/main')
+  const mainModule = await import('../src/main')
 
   expect(startWebVitalsTracking).not.toHaveBeenCalled()
 
@@ -33,4 +33,8 @@ test('web vitals tracking is started asynchronously to avoid blocking hydration'
   })
 
   expect(startWebVitalsTracking).toHaveBeenCalledTimes(1)
+
+  if (typeof mainModule.teardownApp === 'function') {
+    mainModule.teardownApp()
+  }
 })
