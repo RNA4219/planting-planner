@@ -22,6 +22,8 @@
 ## 4. テレメトリ
 - `api.request`
   - `frontend/src/lib/api.ts` の API クライアントが HTTP 応答を受け取ったタイミングで発火する。成功時は `method`・`path`・`status`・`durationMs` と `requestId` を送信し、HTTP エラー時はそれらに加えて `errorMessage` も送信する。`fetch` が失敗して HTTP 応答が得られなかった場合は `status` が付与されず、`errorMessage` とともに送信される。
+- `prefetch.hit` / `prefetch.miss`
+  - `frontend/src/hooks/recommendations/loader.ts` の `requestRecommendations` がネットワークエラーから復旧する際に発火する。`prefetch.hit` はキャッシュされた推奨結果を `queryClient` から再利用したとき、`prefetch.miss` はキャッシュにも結果がなく空配列でフォールバックしたときに送信される。ペイロードには `region`・`marketScope`・`category`・`requestedWeek`・`resolvedWeek`・`isMarketFallback`・`itemsCount` が含まれ、`requestId` はリクエストトラッカーの ID を文字列化した値となる。
 - `sw.fetch.cache_hit` / `bg.sync.retry` / `bg.sync.succeeded` / `bg.sync.failed`
   - API クライアントが付与した `x-request-id` ヘッダを Service Worker が保持し、イベントに `requestId` を渡す。
 - `sw.waiting`
@@ -30,6 +32,8 @@
   - `frontend/src/lib/swClient.ts` が `navigator.serviceWorker.register` の例外を捕捉した際に発火する。登録処理が HTTP リクエストに至る前に失敗するケースがあり、`requestId` を割り当てられないまま送信される。
 - `sw.install` / `offline.banner_shown`
   - 通信が発生しないイベントのためヘッダが存在せず、`requestId` は `undefined` のまま送信される。
+- `web_vitals.lcp` / `web_vitals.inp` / `web_vitals.cls`
+  - `frontend/src/lib/webVitals.ts` が `web-vitals` ライブラリの計測結果を受け取った際に発火する。`requestId` は付与されず、ペイロードとして `id`・`value`・`delta` と、`metric.rating` が文字列の場合のみ `rating` を送信する。
 
 ## 5. エラー
 - `fetch` 失敗: キャッシュ有→表示 / 無→「取得不可」トースト
