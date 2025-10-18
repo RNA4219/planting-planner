@@ -28,13 +28,18 @@ const sendWithBeacon = (body: string): boolean => {
   return beacon(TELEMETRY_ENDPOINT, blob)
 }
 
-const sendWithFetch = async (body: string) => {
+const sendWithFetch = async (body: string, requestId?: string) => {
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+  }
+  if (requestId) {
+    headers['x-request-id'] = requestId
+  }
+
   await fetch(TELEMETRY_ENDPOINT, {
     method: 'POST',
     body,
-    headers: {
-      'content-type': 'application/json',
-    },
+    headers,
     keepalive: true,
   })
 }
@@ -56,7 +61,7 @@ export const sendTelemetry = async (
   }
 
   try {
-    await sendWithFetch(body)
+    await sendWithFetch(body, requestId)
   } catch {
     // Telemetry failures should not break the main flow.
   }
