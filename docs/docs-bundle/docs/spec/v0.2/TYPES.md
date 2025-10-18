@@ -1,6 +1,7 @@
 # 型定義ガイド — v0.2
 
 ## バックエンド (Python)
+
 ```python
 class RefreshState(str, Enum):
     RUNNING = "running"
@@ -15,11 +16,13 @@ class RefreshStatus(BaseModel):
     updated_records: int
     last_error: str | None
 ```
+
 - `started_at` と `finished_at` は ISO8601 形式の文字列。未設定時は `None`。
 - `updated_records` は 0 以上の整数。
 - 花きデータ対応でも既存 Enum を再利用。
 
 ## フロントエンド (TypeScript)
+
 ```ts
 export type Crop = {
   id: number;
@@ -36,7 +39,9 @@ export type RefreshStatus = {
   lastError: string | null;
 };
 ```
+
 - `SearchFilter` 型を追加し将来の条件拡張に備える。
+
 ```ts
 export type SearchFilter = {
   keyword: string;
