@@ -11,8 +11,8 @@
 - [ ] CI 失敗時のアーティファクト保存先（例: `Actions → Summary → Artifacts`）を README にリンク付きで記載する。
 
 ### PWA 周りの最終チェック
-- [ ] `frontend/public/manifest.json` の `icons`（`purpose: ["any", "maskable"]`）、`start_url`、`display`、`scope` を Lighthouse の PWA 監査で確認する。
-- [ ] `frontend/src/main.tsx` の Service Worker 登録と `frontend/public/index.html` の `<link rel="manifest">` を突き合わせ、インストール可能判定が得られることを確認する。
+- [ ] `frontend/public/manifest.webmanifest` の `start_url` / `display` / `scope` と `icons`（特に `/icons/icon-maskable.png` の `purpose: "maskable"`）を Lighthouse の PWA 監査結果と突き合わせ、設定値を実装と揃える。
+- [ ] `frontend/src/main.tsx` の Service Worker 登録と `frontend/index.html` の `<link rel="manifest" href="/manifest.webmanifest">` を突き合わせ、インストール可能判定が得られることを確認する。
 - [ ] `npm run build && npm run preview` 後に Lighthouse PWA スコア 80 以上を CI またはローカルで記録し、README にスコア取得手順を追記する。
 
 ### データの再現性とバージョニング
@@ -21,7 +21,7 @@
 
 ### パフォーマンス / 回線耐性
 - [ ] 週次データ API の HTTP キャッシュ制御（`Cache-Control`, `ETag`）と Service Worker キャッシュ戦略（`api-get-cache`）の整合を設計書へ反映する。
-- [ ] 検索結果リストの仮想スクロール（例: `react-window`）導入方針とメモ化戦略（`useMemo`/`React.Query` のキャッシュキー）をタスク化し、ベンチマーク手順を用意する。
+- [ ] 検索結果リスト（`frontend/src/components/RecommendationsTable.tsx`）の仮想スクロール導入可否を `react-window` / `@tanstack/react-virtual` などで検証し、`@tanstack/react-query` の `queryKey` 設計や `QueryClient` キャッシュ TTL を含むメモ化戦略をタスク化、ベンチマーク手順を用意する。
 
 ### 型・静的検査の見える化
 - [ ] BE: `ruff`, `mypy`, `pytest --cov` を GitHub Actions に追加し、カバレッジ閾値 80% 以上で Fail Fast にする。
@@ -29,7 +29,7 @@
 
 ### 地域性・週番号の厳密さ
 - [ ] 日本の週起点（農林水産省指針）と祝日処理の出典 URL を docs に追記し、境界地域（寒冷地/温暖地/暖地）の説明を加える。
-- [ ] 週番号ロジック（`backend/app/utils/week_number.py` 等）のユニットテストを拡充し、境界日（年末週・祝日跨ぎ）で期待値を保証する。
+- [ ] 週番号ロジック（`backend/app/utils_week.py`）のユニットテストを拡充し、境界日（年末週・祝日跨ぎ）で期待値を保証する（→ [tests(backend): utils_week 境界テスト追加](#tests-backend-utils-week)）。
 
 ## 1.0 ゲート（提案チェックリスト）
 - [ ] 依存統一：Poetry か pip のどちらかに統一し、もう一方は `poetry export` 等の自動生成に限定する。
@@ -45,3 +45,5 @@
 - [ ] `ci`: `ruff` / `mypy` と `pytest --cov` の導入、閾値設定を issue として管理する。
 - [ ] `pwa`: manifest / Service Worker / Lighthouse PWA スコアの継続監視タスクを追加する。
 - [ ] `export`: 週次計画の ICS / CSV エクスポート機能を検討する issue を起票する。
+<a id="tests-backend-utils-week"></a>
+- [ ] `tests(backend)`: `backend/tests/test_utils_week.py`（仮）へ年末年始・祝日跨ぎの ISO 週番号ケースを追加し、`app/utils_week.py` の境界値を固定化する。
