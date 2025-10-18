@@ -12,7 +12,7 @@
 - `GET /api/*`: Network-First（失敗時 `cache.match` フォールバック）
 - キャッシュキー: `api:{method}:{url}:{query}:v{schemaVersion}:e{dataEpoch}`
 ### 2.3 Background Sync（`POST /api/refresh`）
-- 失敗時 payload を IndexedDB('sync-queue') に保存、`tag='refresh-queue'`
+- 失敗時 payload を IndexedDB('sync-queue') に保存、Workbox が登録する `tag='workbox-background-sync:refresh-queue'`（キュー名を名前空間化するため接頭辞が付与される）
 - `sync` イベントで再送、指数バックオフ（最大 3 回）
 
 ## 3. 冪等性 / 更新通知
