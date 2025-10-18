@@ -1,4 +1,5 @@
 # E2E テスト指針
+<!-- markdownlint-disable MD013 -->
 
 - Playwright で市場トグルとカテゴリ遷移を監視する。
 - `market-toggle.spec.ts` は API をモックし、全国→都市→フォールバックのリクエスト順序を検証する。
