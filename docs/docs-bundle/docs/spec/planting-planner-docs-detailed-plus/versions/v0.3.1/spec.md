@@ -20,6 +20,8 @@
 - **SW 更新**: `waiting` → `postMessage({type:'SW_WAITING', version})` → UI トースト → `postMessage({type:'SKIP_WAITING'})`
 
 ## 4. テレメトリ
+- `api.request`
+  - `frontend/src/lib/api.ts` の API クライアントが HTTP 応答を受け取ったタイミングで発火する。成功時は `method`・`path`・`status`・`durationMs` と `requestId` を送信し、HTTP エラー時はそれらに加えて `errorMessage` も送信する。`fetch` が失敗して HTTP 応答が得られなかった場合は `status` が付与されず、`errorMessage` とともに送信される。
 - `sw.fetch.cache_hit` / `bg.sync.retry` / `bg.sync.succeeded` / `bg.sync.failed`
   - API クライアントが付与した `x-request-id` ヘッダを Service Worker が保持し、イベントに `requestId` を渡す。
 - `sw.waiting`
