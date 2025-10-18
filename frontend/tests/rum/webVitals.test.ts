@@ -44,10 +44,11 @@ const mocks = vi.hoisted(() => {
   }
 })
 
-const originalRequestIdleCallback =
-  (globalThis as typeof globalThis & {
+const originalRequestIdleCallback = (
+  globalThis as typeof globalThis & {
     requestIdleCallback?: typeof window.requestIdleCallback
-  }).requestIdleCallback
+  }
+).requestIdleCallback
 
 vi.mock('../../src/lib/telemetry', () => ({
   track: mocks.trackSpy,
@@ -119,14 +120,16 @@ describe('startWebVitalsTracking', () => {
   beforeEach(() => {
     mocks.reset()
     originalRequestIdleCallback = globalThis.requestIdleCallback
-    delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback }).requestIdleCallback
+    delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback })
+      .requestIdleCallback
   })
 
   afterEach(() => {
     if (originalRequestIdleCallback) {
       vi.stubGlobal('requestIdleCallback', originalRequestIdleCallback)
     } else {
-      delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback }).requestIdleCallback
+      delete (globalThis as { requestIdleCallback?: typeof globalThis.requestIdleCallback })
+        .requestIdleCallback
     }
   })
 
@@ -145,9 +148,7 @@ describe('startWebVitalsTracking', () => {
     expect(mocks.onINPSpy).not.toHaveBeenCalled()
     expect(mocks.onCLSSpy).not.toHaveBeenCalled()
 
-    idleCallbacks.forEach((callback) =>
-      callback({ didTimeout: false, timeRemaining: () => 50 }),
-    )
+    idleCallbacks.forEach((callback) => callback({ didTimeout: false, timeRemaining: () => 50 }))
 
     await Promise.resolve()
     await new Promise((resolve) => {

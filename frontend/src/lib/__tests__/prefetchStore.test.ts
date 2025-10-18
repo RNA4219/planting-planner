@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type {
-  PrefetchCounters,
-  PrefetchKey,
-  PrefetchStoreAdapter,
-} from '../prefetchStore'
+import type { PrefetchCounters, PrefetchKey, PrefetchStoreAdapter } from '../prefetchStore'
 import type { RecommendationFetchResult } from '../../hooks/recommendationFetcher'
 
 const TTL_MS = 1000 * 60 * 60 * 24 * 14
@@ -58,7 +54,12 @@ const createMemoryAdapter = () => {
       const expiresAt = fetchedAt + TTL_MS
       const pruned = pruneExpired(now)
       const entry = {
-        key: { region: input.region, marketScope: input.marketScope, category: input.category, week: input.week },
+        key: {
+          region: input.region,
+          marketScope: input.marketScope,
+          category: input.category,
+          week: input.week,
+        },
         result: structuredClone(input.snapshot.result),
         isMarketFallback: input.snapshot.isMarketFallback,
         fetchedAt,

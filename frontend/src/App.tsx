@@ -1,5 +1,14 @@
-
-import { ChangeEvent, Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  ChangeEvent,
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { AppScreen } from './app/AppScreen'
@@ -119,8 +128,7 @@ export const AppContent = () => {
     lon: regionCoordinates?.lon ?? null,
     enabled: weatherTabEnabled,
   })
-  const { resolveCategoriesForScope, ensureValidCategory, handleMarketsUpdate } =
-    useCategoryTabs()
+  const { resolveCategoriesForScope, ensureValidCategory, handleMarketsUpdate } = useCategoryTabs()
   const {
     isRefreshing,
     startRefresh,
@@ -145,12 +153,9 @@ export const AppContent = () => {
     [setQueryWeek],
   )
 
-  const handleSearchChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setSearchKeyword(event.target.value)
-    },
-    [],
-  )
+  const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(event.target.value)
+  }, [])
 
   const handleRegionChange = useCallback(
     (next: Region) => {
@@ -207,8 +212,7 @@ export const AppContent = () => {
       const cropName = row.crop.normalize('NFKC').toLowerCase()
       const category = row.category?.normalize('NFKC').toLowerCase() ?? ''
       return (
-        cropName.includes(normalizedSearchKeyword) ||
-        category.includes(normalizedSearchKeyword)
+        cropName.includes(normalizedSearchKeyword) || category.includes(normalizedSearchKeyword)
       )
     })
   }, [normalizedSearchKeyword, sortedRows])
@@ -228,18 +232,16 @@ export const AppContent = () => {
 
   const fallbackNoticeContent =
     fallbackNotice ??
-    (isMarketFallback
-      ? (
-          <div
-            data-testid="market-fallback-notice"
-            role="status"
-            aria-live="polite"
-            className="flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm"
-          >
-            {TOAST_MESSAGES.recommendationFallbackWarning}
-          </div>
-        )
-      : null)
+    (isMarketFallback ? (
+      <div
+        data-testid="market-fallback-notice"
+        role="status"
+        aria-live="polite"
+        className="flex items-start gap-3 rounded-2xl border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning shadow-sm"
+      >
+        {TOAST_MESSAGES.recommendationFallbackWarning}
+      </div>
+    ) : null)
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
   const [shouldRenderWeatherTab, setShouldRenderWeatherTab] = useState(false)
@@ -263,22 +265,20 @@ export const AppContent = () => {
     }
   }, [shouldRenderWeatherTab, weatherTabEnabled])
 
-  const weatherSection = weatherTabEnabled
-    ? shouldRenderWeatherTab
-      ? (
-          <Suspense fallback={null}>
-            <LazyWeatherTab
-              latest={weatherLatest}
-              previous={weatherPrevious}
-              isLoading={isWeatherLoading}
-              error={weatherError}
-            />
-          </Suspense>
-        )
-      : (
-          <WeatherSectionFallback />
-        )
-    : null
+  const weatherSection = weatherTabEnabled ? (
+    shouldRenderWeatherTab ? (
+      <Suspense fallback={null}>
+        <LazyWeatherTab
+          latest={weatherLatest}
+          previous={weatherPrevious}
+          isLoading={isWeatherLoading}
+          error={weatherError}
+        />
+      </Suspense>
+    ) : (
+      <WeatherSectionFallback />
+    )
+  ) : null
 
   return (
     <AppScreen

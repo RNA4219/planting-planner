@@ -22,9 +22,7 @@ describe('request telemetry', () => {
   }
 
   it('成功時に track を呼び出す', async () => {
-    const payload: Crop[] = [
-      { id: 1, name: 'ほうれん草', category: 'leaf' },
-    ]
+    const payload: Crop[] = [{ id: 1, name: 'ほうれん草', category: 'leaf' }]
     context.fetchMock.mockResolvedValue(
       new Response(JSON.stringify(payload), {
         status: 200,

@@ -38,12 +38,7 @@ describe('CategoryTabs i18n', () => {
     setLocale('ja')
     setRuntimeFlag(undefined)
 
-    render(
-      <CategoryTabs
-        category="leaf"
-        onChange={() => {}}
-      />,
-    )
+    render(<CategoryTabs category="leaf" onChange={() => {}} />)
 
     const tablist = screen.getByRole('tablist')
     expect(tablist).toHaveAttribute('aria-label', 'カテゴリ')
@@ -56,12 +51,7 @@ describe('CategoryTabs i18n', () => {
     setLocale('en')
     setRuntimeFlag(true)
 
-    render(
-      <CategoryTabs
-        category="leaf"
-        onChange={() => {}}
-      />,
-    )
+    render(<CategoryTabs category="leaf" onChange={() => {}} />)
 
     const tablist = screen.getByRole('tablist')
     expect(tablist).toHaveAttribute('aria-label', 'Category')
@@ -75,12 +65,7 @@ describe('CategoryTabs i18n', () => {
     setRuntimeFlag(undefined)
     vi.stubEnv('VITE_I18N_EN', 'true')
 
-    render(
-      <CategoryTabs
-        category="leaf"
-        onChange={() => {}}
-      />,
-    )
+    render(<CategoryTabs category="leaf" onChange={() => {}} />)
 
     const tablist = screen.getByRole('tablist')
     expect(tablist).toHaveAttribute('aria-label', 'Category')
@@ -91,8 +76,6 @@ describe('CategoryTabs i18n', () => {
 
   it('後始末でロケール設定をリセットする', () => {
     expect(document.documentElement.lang).toBe('ja')
-    expect(
-      (globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS,
-    ).toBeUndefined()
+    expect((globalThis as { FEATURE_FLAGS?: FeatureFlagConfig }).FEATURE_FLAGS).toBeUndefined()
   })
 })

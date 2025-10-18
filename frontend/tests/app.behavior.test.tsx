@@ -94,9 +94,7 @@ describe('App behavior', () => {
 
     const toastStacks = await screen.findAllByTestId('toast-stack')
     await waitFor(() => {
-      const found = toastStacks.some((stack) =>
-        within(stack).queryByText(/取得不可/),
-      )
+      const found = toastStacks.some((stack) => within(stack).queryByText(/取得不可/))
       expect(found).toBe(true)
     })
   })

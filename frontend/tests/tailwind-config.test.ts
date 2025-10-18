@@ -10,7 +10,7 @@ type ThemeToken = {
 }
 
 const themeTokensModule = (await import('../../data/theme_tokens.json', {
-  assert: { type: 'json' }
+  assert: { type: 'json' },
 })) as { default: readonly ThemeToken[] }
 const themeTokens = themeTokensModule.default
 
@@ -63,9 +63,7 @@ describe('tailwind config', () => {
     expect.hasAssertions()
     const safelist = tailwindConfig.safelist
     expect(Array.isArray(safelist)).toBe(true)
-    const expectedClasses = Object.keys(expectedMarketColors).map(
-      (name) => `bg-market-${name}`,
-    )
+    const expectedClasses = Object.keys(expectedMarketColors).map((name) => `bg-market-${name}`)
 
     expectedClasses.forEach((className) => {
       expect(safelist).toContain(className)

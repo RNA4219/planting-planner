@@ -46,7 +46,8 @@ const notify = (event: ServiceWorkerClientEvent) => {
 }
 
 export const isForceUpdateEnabled = () => {
-  const envValue = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SW_FORCE_UPDATE : undefined
+  const envValue =
+    typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SW_FORCE_UPDATE : undefined
   if (typeof envValue === 'string') {
     return envValue === 'true'
   }

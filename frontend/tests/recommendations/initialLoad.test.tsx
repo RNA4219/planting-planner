@@ -36,9 +36,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
   it('保存済み地域で初回フェッチされる', async () => {
     storageState.region = 'cold'
     fetchCrops.mockResolvedValue([])
-    fetchRecommendations.mockResolvedValue(
-      createRecommendResponse({ region: 'cold' }),
-    )
+    fetchRecommendations.mockResolvedValue(createRecommendResponse({ region: 'cold' }))
 
     await renderApp()
 
@@ -94,9 +92,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     fetchRecommendations.mockRejectedValueOnce(new Error('unexpected error'))
     fetchRecommend.mockResolvedValue(
       createRecommendResponse({
-        items: [
-          createItem({ crop: '春菊', source: 'legacy' }),
-        ],
+        items: [createItem({ crop: '春菊', source: 'legacy' })],
       }),
     )
 
@@ -113,9 +109,7 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     fetchRecommendations.mockRejectedValueOnce(new Error('network error'))
     fetchRecommend.mockResolvedValue(
       createRecommendResponse({
-        items: [
-          createItem({ crop: '春菊', source: 'legacy' }),
-        ],
+        items: [createItem({ crop: '春菊', source: 'legacy' })],
       }),
     )
 

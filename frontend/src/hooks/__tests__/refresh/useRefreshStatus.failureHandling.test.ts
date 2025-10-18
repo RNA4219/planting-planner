@@ -75,7 +75,9 @@ describe('useRefreshStatusController / failure handling', () => {
     })
 
     const warnings = result.current.pendingToasts.filter(
-      (toast) => toast.variant === 'error' && toast.message === TOAST_MESSAGES.refreshStatusFetchFailureMessage,
+      (toast) =>
+        toast.variant === 'error' &&
+        toast.message === TOAST_MESSAGES.refreshStatusFetchFailureMessage,
     )
     expect(warnings).toHaveLength(1)
   })

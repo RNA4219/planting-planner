@@ -120,10 +120,7 @@ describe('RecommendationsTable (tailwind layout)', () => {
     })
     expect(tables).toHaveLength(1)
     const table = tables[0]!
-    expect(table).toHaveAttribute(
-      'aria-label',
-      '温暖地向けの推奨一覧（基準週: 2024-W10）',
-    )
+    expect(table).toHaveAttribute('aria-label', '温暖地向けの推奨一覧（基準週: 2024-W10）')
 
     const card = screen.getByTestId('recommendation-card')
     expect(card.tagName).toBe('TR')

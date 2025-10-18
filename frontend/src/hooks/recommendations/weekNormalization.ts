@@ -33,7 +33,10 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       八: '8',
       九: '9',
     }
-    const normalizedDigits = normalized.replace(/[〇零一二三四五六七八九]/g, (char) => digitMap[char] ?? char)
+    const normalizedDigits = normalized.replace(
+      /[〇零一二三四五六七八九]/g,
+      (char) => digitMap[char] ?? char,
+    )
     const getIsoWeekFromDateParts = (
       year: number,
       month: number,
@@ -60,25 +63,19 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       return undefined
     }
 
-    const japaneseDateLike = normalizedDigits.match(/^([0-9]{4})年\s*([0-9]{1,2})月\s*([0-9]{1,2})日$/)
+    const japaneseDateLike = normalizedDigits.match(
+      /^([0-9]{4})年\s*([0-9]{1,2})月\s*([0-9]{1,2})日$/,
+    )
     if (japaneseDateLike) {
       const [, yearPart, monthPart, dayPart] = japaneseDateLike
-      const isoWeek = getIsoWeekFromDateParts(
-        Number(yearPart),
-        Number(monthPart),
-        Number(dayPart),
-      )
+      const isoWeek = getIsoWeekFromDateParts(Number(yearPart), Number(monthPart), Number(dayPart))
       if (isoWeek) return isoWeek
     }
 
     const dateLike = normalizedDigits.match(/^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/)
     if (dateLike) {
       const [, yearPart, , monthPart, dayPart] = dateLike
-      const isoWeek = getIsoWeekFromDateParts(
-        Number(yearPart),
-        Number(monthPart),
-        Number(dayPart),
-      )
+      const isoWeek = getIsoWeekFromDateParts(Number(yearPart), Number(monthPart), Number(dayPart))
       if (isoWeek) return isoWeek
     }
 
@@ -87,14 +84,16 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
     if (weekFirstMatch) {
       const weekPart = weekFirstMatch[1]
       const yearPart = weekFirstMatch[2]
-      if (weekPart && yearPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
+      if (weekPart && yearPart)
+        return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
     }
 
     const englishLeadingMatch = upper.match(/^W(?:EEK|KS?)?\D*(\d{1,2})\D+(\d{4})$/)
     if (englishLeadingMatch) {
       const weekPart = englishLeadingMatch[1]
       const yearPart = englishLeadingMatch[2]
-      if (weekPart && yearPart) return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
+      if (weekPart && yearPart)
+        return normalizeIsoWeek(`${yearPart}-W${weekPart.padStart(2, '0')}`, activeWeek)
     }
 
     const digits = upper.replace(/[^0-9]/g, '')
@@ -109,7 +108,10 @@ export const normalizeWeekInput = (value: string, activeWeek: string): string =>
       const fromYearLeading = normalizeFromParts(digits.slice(0, 4), digits.slice(4))
       if (fromYearLeading) return fromYearLeading
 
-      const fromWeekLeading = normalizeFromParts(digits.slice(-4), digits.slice(0, digits.length - 4))
+      const fromWeekLeading = normalizeFromParts(
+        digits.slice(-4),
+        digits.slice(0, digits.length - 4),
+      )
       if (fromWeekLeading) return fromWeekLeading
     }
   }

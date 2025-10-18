@@ -22,9 +22,7 @@ const resolveLocale = (): string => {
     return DEFAULT_LOCALE
   }
   const documentLanguage =
-    typeof document === 'undefined'
-      ? null
-      : document.documentElement?.lang?.trim() || null
+    typeof document === 'undefined' ? null : document.documentElement?.lang?.trim() || null
   if (!documentLanguage?.toLowerCase().startsWith('en')) {
     return DEFAULT_LOCALE
   }
@@ -33,9 +31,7 @@ const resolveLocale = (): string => {
   }
   const navigatorWithLanguages = navigator as Navigator & { languages?: readonly string[] }
   const candidates = [
-    ...(Array.isArray(navigatorWithLanguages.languages)
-      ? navigatorWithLanguages.languages
-      : []),
+    ...(Array.isArray(navigatorWithLanguages.languages) ? navigatorWithLanguages.languages : []),
     navigator.language,
   ].filter((locale): locale is string => typeof locale === 'string' && locale.trim().length > 0)
   const englishCandidate = candidates.find((locale) => locale.toLowerCase().startsWith('en'))
@@ -103,19 +99,27 @@ const renderDaily = (
           <p className="mt-2 text-sm font-medium text-market-neutral/80">{day.date}</p>
           <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-market-neutral-strong">
             <div>
-              <dt className="font-medium text-market-neutral/80">{WEATHER_MESSAGES.metrics.tmax}</dt>
+              <dt className="font-medium text-market-neutral/80">
+                {WEATHER_MESSAGES.metrics.tmax}
+              </dt>
               <dd className="mt-1 text-base font-semibold">{formatTemperature(day.tmax)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-market-neutral/80">{WEATHER_MESSAGES.metrics.tmin}</dt>
+              <dt className="font-medium text-market-neutral/80">
+                {WEATHER_MESSAGES.metrics.tmin}
+              </dt>
               <dd className="mt-1 text-base font-semibold">{formatTemperature(day.tmin)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-market-neutral/80">{WEATHER_MESSAGES.metrics.rain}</dt>
+              <dt className="font-medium text-market-neutral/80">
+                {WEATHER_MESSAGES.metrics.rain}
+              </dt>
               <dd className="mt-1 text-base font-semibold">{formatRain(day.rain)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-market-neutral/80">{WEATHER_MESSAGES.metrics.wind}</dt>
+              <dt className="font-medium text-market-neutral/80">
+                {WEATHER_MESSAGES.metrics.wind}
+              </dt>
               <dd className="mt-1 text-base font-semibold">{formatWind(day.wind)}</dd>
             </div>
           </dl>

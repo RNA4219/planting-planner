@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PriceChart } from './PriceChart'
 
-type FetchPrice = typeof import('../lib/api')['fetchPrice']
+type FetchPrice = (typeof import('../lib/api'))['fetchPrice']
 type FetchPriceMock = ReturnType<typeof vi.fn<FetchPrice>>
 
 const fetchPrice = vi.hoisted(() => vi.fn<FetchPrice>()) as FetchPriceMock

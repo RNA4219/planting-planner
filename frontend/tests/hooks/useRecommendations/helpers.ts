@@ -19,9 +19,9 @@ export const fetchCropsMock = fetchMocks.fetchCropsMock
 export const fetchRecommendationsMock = fetchMocks.fetchRecommendationsMock
 
 vi.spyOn(apiModule, 'fetchCrops').mockImplementation(fetchCropsMock)
-vi
-  .spyOn(apiModule, 'fetchRecommendations')
-  .mockImplementation((region, week, options) => fetchRecommendationsMock(region, week, options))
+vi.spyOn(apiModule, 'fetchRecommendations').mockImplementation((region, week, options) =>
+  fetchRecommendationsMock(region, week, options),
+)
 
 export const createDeferred = <T>() => {
   let resolve!: (value: T | PromiseLike<T>) => void
@@ -44,4 +44,3 @@ export const setupFetchQueryMock = (fetchQueryMock: ReturnType<typeof vi.fn>) =>
     return typed.queryFn()
   })
 }
-

@@ -4,9 +4,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SearchControls } from '../SearchControls'
 import { SEARCH_CONTROLS_TEXT } from '../../constants/messages'
-import { MARKET_SCOPE_OPTIONS, toMarketScopeOption, type MarketScopeDefinition } from '../../constants/marketScopes'
+import {
+  MARKET_SCOPE_OPTIONS,
+  toMarketScopeOption,
+  type MarketScopeDefinition,
+} from '../../constants/marketScopes'
 const { fetchMarketsMock } = vi.hoisted(() => ({
-  fetchMarketsMock: vi.fn<() => Promise<{ markets: ReturnType<typeof toMarketScopeOption>[]; generated_at: string }>>(),
+  fetchMarketsMock:
+    vi.fn<
+      () => Promise<{ markets: ReturnType<typeof toMarketScopeOption>[]; generated_at: string }>
+    >(),
 }))
 vi.mock('../../lib/marketMetadata', () => ({ fetchMarkets: fetchMarketsMock }))
 const createProps = () => ({
@@ -48,8 +55,16 @@ describe('SearchControls', () => {
   })
   it('市場リストを React Query のレスポンスに合わせる', async () => {
     const definitions: MarketScopeDefinition[] = [
-      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#222222' } },
-      { scope: 'city:osaka', displayName: '大阪市中央卸売（API）', theme: { token: 'api-osaka', hex: '#654321', text: '#111111' } },
+      {
+        scope: 'national',
+        displayName: '全国平均（API）',
+        theme: { token: 'api-national', hex: '#123456', text: '#222222' },
+      },
+      {
+        scope: 'city:osaka',
+        displayName: '大阪市中央卸売（API）',
+        theme: { token: 'api-osaka', hex: '#654321', text: '#111111' },
+      },
     ]
     const markets = definitions.map((definition) => toMarketScopeOption(definition))
     fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })
@@ -65,8 +80,12 @@ describe('SearchControls', () => {
     expect(select.className).toContain('bg-market-national')
     expect(select).toHaveStyle({ color: '#222222' })
     const optionElements = within(select).getAllByRole('option')
-    expect(optionElements.map((element) => element.textContent)).toEqual(markets.map(({ label }) => label))
-    expect(optionElements.map((element) => (element as HTMLOptionElement).value)).toEqual(markets.map(({ value }) => value))
+    expect(optionElements.map((element) => element.textContent)).toEqual(
+      markets.map(({ label }) => label),
+    )
+    expect(optionElements.map((element) => (element as HTMLOptionElement).value)).toEqual(
+      markets.map(({ value }) => value),
+    )
     rerender(
       <QueryClientProvider client={queryClient}>
         <SearchControls {...props} marketScope="city:osaka" />
@@ -80,7 +99,11 @@ describe('SearchControls', () => {
   })
   it('市場テーマは API レスポンス後もフォールバック data-theme を維持する', async () => {
     const definitions: MarketScopeDefinition[] = [
-      { scope: 'national', displayName: '全国平均（API）', theme: { token: 'api-national', hex: '#123456', text: '#222222' } },
+      {
+        scope: 'national',
+        displayName: '全国平均（API）',
+        theme: { token: 'api-national', hex: '#123456', text: '#222222' },
+      },
     ]
     const markets = definitions.map((definition) => toMarketScopeOption(definition))
     fetchMarketsMock.mockResolvedValue({ markets, generated_at: '2024-05-01T00:00:00Z' })

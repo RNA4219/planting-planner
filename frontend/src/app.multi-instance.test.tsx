@@ -21,7 +21,13 @@ vi.mock('./components/ToastStack', () => ({
 
 vi.mock('./components/RecommendationsTable', () => ({
   __esModule: true,
-  RecommendationsTable: ({ headerSlot, tabpanelId }: { headerSlot?: ReactNode; tabpanelId?: string }) => (
+  RecommendationsTable: ({
+    headerSlot,
+    tabpanelId,
+  }: {
+    headerSlot?: ReactNode
+    tabpanelId?: string
+  }) => (
     <div data-testid="recommendations-table" id={tabpanelId}>
       {headerSlot}
     </div>

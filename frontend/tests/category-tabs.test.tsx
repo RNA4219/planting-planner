@@ -28,13 +28,7 @@ describe('CategoryTabs', () => {
   it('renders provided tabs without fruit and emits選択変更', async () => {
     const onChange = vi.fn()
 
-    render(
-      <CategoryTabs
-        category="leaf"
-        categories={CATEGORY_DEFINITIONS}
-        onChange={onChange}
-      />,
-    )
+    render(<CategoryTabs category="leaf" categories={CATEGORY_DEFINITIONS} onChange={onChange} />)
 
     expect(screen.queryByRole('tab', { name: FRUIT_LABEL })).not.toBeInTheDocument()
 
@@ -94,8 +88,7 @@ describe('CategoryTabs', () => {
     const { getAllByRole, findAllByRole } = render(<Wrapper />)
 
     const tabCount = CATEGORY_DEFINITIONS.length
-    const getTabs = () =>
-      getAllByRole('tab').slice(-tabCount) as HTMLButtonElement[]
+    const getTabs = () => getAllByRole('tab').slice(-tabCount) as HTMLButtonElement[]
     const [firstTab] = getTabs()
     firstTab.focus()
     expect(firstTab).toHaveFocus()

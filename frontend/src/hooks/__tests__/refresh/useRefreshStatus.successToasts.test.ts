@@ -144,7 +144,11 @@ describe('useRefreshStatusController / success toasts', () => {
   })
 
   it('onSuccess が拒否しても未処理拒否が発生しない', async () => {
-    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 1, last_error: null })
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'success',
+      updated_records: 1,
+      last_error: null,
+    })
 
     const catchSpy = vi.spyOn(Promise.prototype, 'catch')
     const onSuccess = vi.fn(() => Promise.reject(new Error('rejected')))
@@ -172,7 +176,11 @@ describe('useRefreshStatusController / success toasts', () => {
   })
 
   it('postRefresh の成功応答をトースト詳細へ反映する', async () => {
-    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 3, last_error: null })
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'success',
+      updated_records: 3,
+      last_error: null,
+    })
 
     const { result } = renderController()
 
@@ -189,7 +197,11 @@ describe('useRefreshStatusController / success toasts', () => {
   })
 
   it('postRefresh の失敗応答で last_error を表示する', async () => {
-    postRefreshMock.mockResolvedValueOnce({ state: 'failure', updated_records: 0, last_error: 'fatal' })
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'failure',
+      updated_records: 0,
+      last_error: 'fatal',
+    })
 
     const { result } = renderController()
 
@@ -206,7 +218,11 @@ describe('useRefreshStatusController / success toasts', () => {
   })
 
   it('トーストは 5 秒後に自動クローズされる', async () => {
-    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 2, last_error: null })
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'success',
+      updated_records: 2,
+      last_error: null,
+    })
 
     const { result } = renderController()
 
@@ -229,7 +245,11 @@ describe('useRefreshStatusController / success toasts', () => {
   })
 
   it('dismissToast で手動クローズできる', async () => {
-    postRefreshMock.mockResolvedValueOnce({ state: 'success', updated_records: 4, last_error: null })
+    postRefreshMock.mockResolvedValueOnce({
+      state: 'success',
+      updated_records: 4,
+      last_error: null,
+    })
 
     const { result } = renderController()
 

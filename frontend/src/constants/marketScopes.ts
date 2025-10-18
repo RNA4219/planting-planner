@@ -20,8 +20,7 @@ export interface MarketScopeCategory {
   readonly source?: string
 }
 
-export interface MarketScopeDefinition
-  extends MarketScopeMetadata<MarketScopeCategory> {
+export interface MarketScopeDefinition extends MarketScopeMetadata<MarketScopeCategory> {
   readonly scope: MarketScope
   readonly displayName: string
   readonly theme: MarketScopeTheme
@@ -40,8 +39,7 @@ export interface MarketScopeApiCategory {
   readonly source?: string
 }
 
-export interface MarketScopeApiDefinition
-  extends MarketScopeMetadata<MarketScopeApiCategory> {
+export interface MarketScopeApiDefinition extends MarketScopeMetadata<MarketScopeApiCategory> {
   readonly scope: MarketScope
   readonly display_name: string
   readonly theme: MarketScopeApiTheme
@@ -54,17 +52,13 @@ export type MarketScopeOption = MarketScopeDefinition & {
 
 export type MarketScopeSelectOption = Pick<MarketScopeOption, 'value' | 'label'>
 
-export const toMarketScopeOption = (
-  definition: MarketScopeDefinition,
-): MarketScopeOption => ({
+export const toMarketScopeOption = (definition: MarketScopeDefinition): MarketScopeOption => ({
   ...definition,
   value: definition.scope,
   label: definition.displayName,
 })
 
-const fromMarketScopeApiCategory = (
-  category: MarketScopeApiCategory,
-): MarketScopeCategory => ({
+const fromMarketScopeApiCategory = (category: MarketScopeApiCategory): MarketScopeCategory => ({
   category: category.category,
   displayName: category.display_name,
   priority: category.priority,

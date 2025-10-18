@@ -15,7 +15,8 @@ export interface RecommendationPreferencesActions {
   setSelectedCategory: (category: CropCategory) => void
 }
 
-export type RecommendationPreferencesStore = RecommendationPreferencesState & RecommendationPreferencesActions
+export type RecommendationPreferencesStore = RecommendationPreferencesState &
+  RecommendationPreferencesActions
 
 export const RECOMMENDATION_PREFERENCES_KEY = 'plantingPlanner.recommendations.preferences'
 
@@ -25,13 +26,15 @@ export const DEFAULT_RECOMMENDATION_PREFERENCES: RecommendationPreferencesState 
   selectedCategory: 'leaf',
 }
 
-const isRegion = (value: unknown): value is Region => value === 'cold' || value === 'temperate' || value === 'warm'
+const isRegion = (value: unknown): value is Region =>
+  value === 'cold' || value === 'temperate' || value === 'warm'
 
 const isMarketScope = (value: unknown): value is MarketScope =>
   value === 'national' ||
   (typeof value === 'string' && value.startsWith('city:') && value.length > 'city:'.length)
 
-const isCropCategory = (value: unknown): value is CropCategory => value === 'leaf' || value === 'root' || value === 'flower'
+const isCropCategory = (value: unknown): value is CropCategory =>
+  value === 'leaf' || value === 'root' || value === 'flower'
 
 const sanitizePreferences = (value: unknown): RecommendationPreferencesState => {
   if (typeof value !== 'object' || value === null) {
@@ -57,7 +60,8 @@ export const useRecommendationStore = create<RecommendationPreferencesStore>()(
         set((state) => (state.region === region ? state : { ...state, region }), false),
       setSelectedMarket: (market) =>
         set(
-          (state) => (state.selectedMarket === market ? state : { ...state, selectedMarket: market }),
+          (state) =>
+            state.selectedMarket === market ? state : { ...state, selectedMarket: market },
           false,
         ),
       setSelectedCategory: (category) =>

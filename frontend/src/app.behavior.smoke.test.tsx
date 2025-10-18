@@ -13,9 +13,7 @@ import {
 describe('App smoke behavior', () => {
   beforeEach(() => {
     resetAppSpies()
-    fetchCrops.mockResolvedValue([
-      { id: 1, name: '春菊', category: 'leaf' },
-    ])
+    fetchCrops.mockResolvedValue([{ id: 1, name: '春菊', category: 'leaf' }])
     fetchRecommendations.mockResolvedValue({
       week: '2024-W30',
       region: 'temperate',

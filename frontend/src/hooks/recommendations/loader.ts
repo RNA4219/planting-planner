@@ -42,10 +42,7 @@ export interface UseRecommendationLoaderResult {
   selectedCategory: CropCategory
   isMarketFallback: boolean
   loadError: RecommendationLoadError | null
-  requestRecommendations: (
-    inputWeek: string,
-    options?: RequestOptions,
-  ) => Promise<void>
+  requestRecommendations: (inputWeek: string, options?: RequestOptions) => Promise<void>
 }
 
 export type RecommendationLoadError = 'recommendations-unavailable'
@@ -110,15 +107,12 @@ export const useRecommendationLoader = ({
       pending()
     }
   })
-  const applyWeek = useCallback(
-    (weekValue: string, nextItems: RecommendationItem[]) => {
-      currentWeekRef.current = weekValue
-      itemsRef.current = nextItems
-      setItems(nextItems)
-      setActiveWeek(weekValue)
-    },
-    [],
-  )
+  const applyWeek = useCallback((weekValue: string, nextItems: RecommendationItem[]) => {
+    currentWeekRef.current = weekValue
+    itemsRef.current = nextItems
+    setItems(nextItems)
+    setActiveWeek(weekValue)
+  }, [])
 
   const normalizeWeek = useCallback(
     (value: string) => normalizeWeekInput(value, activeWeek),
@@ -234,15 +228,7 @@ export const useRecommendationLoader = ({
         await commitPromise
       }
     },
-    [
-      applyWeek,
-      category,
-      fetchRecommendations,
-      marketScope,
-      normalizeWeek,
-      queryClient,
-      region,
-    ],
+    [applyWeek, category, fetchRecommendations, marketScope, normalizeWeek, queryClient, region],
   )
 
   useEffect(() => {

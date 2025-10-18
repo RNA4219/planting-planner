@@ -12,10 +12,15 @@ const renderWithQueryClient = (
   ui: ReactElement,
   options?: { setup?: (client: QueryClient) => void },
 ) => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  })
   client.setQueryData(['markets'], { markets: [], generated_at: '1970-01-01T00:00:00Z' })
   options?.setup?.(client)
-  return { ...render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>), queryClient: client }
+  return {
+    ...render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>),
+    queryClient: client,
+  }
 }
 
 describe('RecommendationsTable (i18n)', () => {

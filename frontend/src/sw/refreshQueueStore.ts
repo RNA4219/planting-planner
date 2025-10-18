@@ -176,8 +176,7 @@ export const recordFailure = async ({
     return
   }
 
-  const errorMessage =
-    error instanceof Error ? error.message : error == null ? null : String(error)
+  const errorMessage = error instanceof Error ? error.message : error == null ? null : String(error)
 
   await adapter.put({
     ...record,

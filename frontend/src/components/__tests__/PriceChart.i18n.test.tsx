@@ -30,14 +30,15 @@ const setLocale = (lang: string, flag: boolean | undefined) => {
 }
 
 const { fetchPriceMock } = vi.hoisted(() => ({
-  fetchPriceMock: vi.fn<
-    (
-      cropId: number,
-      from?: string,
-      to?: string,
-      marketScope?: MarketScope,
-    ) => Promise<PriceSeriesResponse>
-  >(),
+  fetchPriceMock:
+    vi.fn<
+      (
+        cropId: number,
+        from?: string,
+        to?: string,
+        marketScope?: MarketScope,
+      ) => Promise<PriceSeriesResponse>
+    >(),
 }))
 
 vi.mock('../../lib/api', () => ({ fetchPrice: fetchPriceMock }))
@@ -98,7 +99,9 @@ describe('PriceChart i18n', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: '価格推移' })).toBeInTheDocument()
     expect(screen.getAllByText('作物を選択すると価格推移が表示されます。')).toHaveLength(2)
-    expect(screen.getByText('作物一覧で行をクリックすると、価格推移が表示されます。')).toBeInTheDocument()
+    expect(
+      screen.getByText('作物一覧で行をクリックすると、価格推移が表示されます。'),
+    ).toBeInTheDocument()
   })
 
   it('英語設定時は英語文言を表示する', async () => {

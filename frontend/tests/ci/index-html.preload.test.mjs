@@ -15,13 +15,10 @@ test('index.html does not manually modulepreload the main module entry', () => {
   const contents = fs.readFileSync(indexHtmlPath, 'utf8')
   assert.ok(
     !modulePreloadPattern.test(contents),
-    'Remove <link rel="modulepreload"> tags that point to /src/main.tsx. Vite will inject modulepreload hints as needed.'
+    'Remove <link rel="modulepreload"> tags that point to /src/main.tsx. Vite will inject modulepreload hints as needed.',
   )
 })
 
 if (typeof globalThis.test === 'function') {
-  globalThis.test.skip?.(
-    'node:test-only: index-html-main-module-preload',
-    () => {}
-  )
+  globalThis.test.skip?.('node:test-only: index-html-main-module-preload', () => {})
 }

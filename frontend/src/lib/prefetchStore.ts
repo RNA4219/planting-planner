@@ -115,7 +115,8 @@ const writeCounters = async (
 ): Promise<PrefetchCounters> => {
   const tx = db.transaction(META_STORE, 'readwrite')
   const store = tx.objectStore(META_STORE)
-  const current = (await promisify<PrefetchCounters | undefined>(store.get(STATS_KEY))) ?? DEFAULT_COUNTERS
+  const current =
+    (await promisify<PrefetchCounters | undefined>(store.get(STATS_KEY))) ?? DEFAULT_COUNTERS
   const next = updater(current)
   await promisify(store.put(next, STATS_KEY))
   await awaitTransaction(tx)
@@ -227,9 +228,7 @@ export const savePrefetchSnapshot = async (
   return saveViaIndexedDb(input)
 }
 
-export const loadPrefetchSnapshot = async (
-  key: PrefetchKey,
-): Promise<PrefetchLoadResult> => {
+export const loadPrefetchSnapshot = async (key: PrefetchKey): Promise<PrefetchLoadResult> => {
   if (adapterOverride) {
     return adapterOverride.load(key)
   }

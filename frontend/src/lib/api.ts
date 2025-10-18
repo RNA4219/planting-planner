@@ -90,10 +90,7 @@ class HttpError extends Error {
 const parseResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const message = await response.text()
-    throw new HttpError(
-      message || `Request failed with status ${response.status}`,
-      response.status,
-    )
+    throw new HttpError(message || `Request failed with status ${response.status}`, response.status)
   }
 
   if (response.status === 204) {
@@ -114,8 +111,7 @@ const randomUUID = (): string => {
 
 const resolveRequestUrl = (input: RequestInfo | URL): URL => {
   if (typeof input === 'string') {
-    const base =
-      API_ENDPOINT_ORIGIN || globalThis.location?.origin || 'http://localhost'
+    const base = API_ENDPOINT_ORIGIN || globalThis.location?.origin || 'http://localhost'
     return new URL(input, base)
   }
 
@@ -147,9 +143,7 @@ const resolveTelemetryPath = (url: URL): string => {
 
 const resolveMethod = (input: RequestInfo | URL, init?: RequestInit): string => {
   const methodFromInput =
-    typeof Request !== 'undefined' && input instanceof Request
-      ? input.method
-      : undefined
+    typeof Request !== 'undefined' && input instanceof Request ? input.method : undefined
   const method = init?.method ?? methodFromInput ?? 'GET'
   return method.toUpperCase()
 }
@@ -280,9 +274,7 @@ export const fetchMarkets = async (): Promise<MarketsResponse> => {
     const { data: payload } = await request<MarketsApiResponse>(url)
     return {
       generated_at: payload.generated_at,
-      markets: payload.markets
-        .map(fromMarketScopeApiDefinition)
-        .map(toMarketScopeOption),
+      markets: payload.markets.map(fromMarketScopeApiDefinition).map(toMarketScopeOption),
     }
   } catch (error) {
     if (error instanceof HttpError && error.status === 503) {
@@ -329,7 +321,8 @@ export const fetchRecommendations = async (
   const url = buildUrl('/recommend', params)
   const { data, response } = await request<RecommendResponse>(url)
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
-  const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
+  const isMarketFallback =
+    typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
   return { ...data, isMarketFallback }
 }
 
@@ -398,6 +391,7 @@ export const fetchPrice = async (
   const url = buildUrl('/price', params)
   const { data: series, response } = await request<PriceSeries>(url)
   const fallbackHeader = response.headers.get(MARKET_FALLBACK_HEADER)
-  const isMarketFallback = typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
+  const isMarketFallback =
+    typeof fallbackHeader === 'string' && fallbackHeader.toLowerCase() === 'true'
   return { series, isMarketFallback }
 }

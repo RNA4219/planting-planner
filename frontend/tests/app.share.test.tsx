@@ -52,13 +52,13 @@ describe('App share', () => {
     expect(shareMock).toHaveBeenCalledWith({
       title: 'Planting Planner',
       text: '地域: 温暖地 / 市場: 全国平均 / カテゴリ: 葉菜類 / 週: 2024-W30',
-      url: expect.stringContaining('region=temperate&marketScope=national&category=leaf&week=2024-W30'),
+      url: expect.stringContaining(
+        'region=temperate&marketScope=national&category=leaf&week=2024-W30',
+      ),
     })
 
     await waitFor(() => {
-      expect(
-        screen.getByText('共有リンクを送信しました'),
-      ).toBeVisible()
+      expect(screen.getByText('共有リンクを送信しました')).toBeVisible()
     })
   })
 
@@ -93,9 +93,7 @@ describe('App share', () => {
     )
 
     await waitFor(() => {
-      expect(
-        screen.getByText('共有リンクをコピーしました'),
-      ).toBeVisible()
+      expect(screen.getByText('共有リンクをコピーしました')).toBeVisible()
     })
   })
 })

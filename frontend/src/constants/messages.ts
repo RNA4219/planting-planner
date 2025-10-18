@@ -39,8 +39,7 @@ const SEARCH_CONTROLS_TEXT_DICTIONARY = {
 const TOAST_MESSAGES_DICTIONARY = {
   ja: {
     refreshSuccessMessage: 'データ更新が完了しました',
-    refreshSuccessDetail: (updatedRecords: number) =>
-      `${updatedRecords}件のデータを更新しました。`,
+    refreshSuccessDetail: (updatedRecords: number) => `${updatedRecords}件のデータを更新しました。`,
     refreshFailureMessage: 'データ更新に失敗しました',
     refreshUnknown: '更新ステータスが不明です。',
     refreshStatusUnknownDetail: '詳細不明のエラー',
@@ -49,10 +48,8 @@ const TOAST_MESSAGES_DICTIONARY = {
     refreshStatusTimeoutDetail: null,
     refreshRequestFailure: '更新リクエストに失敗しました。',
     refreshRequestStarted: '更新を開始しました。進行状況を確認しています…',
-    refreshRequestFailureWithDetail: (detail: string) =>
-      `更新リクエストに失敗しました: ${detail}`,
-    recommendationFallbackWarning:
-      '市場データが一時的に利用できないため、推定値を表示しています。',
+    refreshRequestFailureWithDetail: (detail: string) => `更新リクエストに失敗しました: ${detail}`,
+    recommendationFallbackWarning: '市場データが一時的に利用できないため、推定値を表示しています。',
     recommendationUnavailable: '推奨データを取得できませんでした（取得不可）',
     serviceWorkerUpdateAvailable: '新しいバージョンが利用可能です。',
     serviceWorkerUpdateDetail: '最新の変更を反映するには更新してください。',
@@ -74,8 +71,7 @@ const TOAST_MESSAGES_DICTIONARY = {
     refreshStatusTimeoutDetail: null,
     refreshRequestFailure: 'Failed to request refresh.',
     refreshRequestStarted: 'Refresh started. Checking progress…',
-    refreshRequestFailureWithDetail: (detail: string) =>
-      `Failed to request refresh: ${detail}`,
+    refreshRequestFailureWithDetail: (detail: string) => `Failed to request refresh: ${detail}`,
     recommendationFallbackWarning:
       'Market data is temporarily unavailable; showing estimated values.',
     recommendationUnavailable: 'Could not fetch recommendation data (unavailable)',
@@ -184,75 +180,73 @@ type RecommendationTableMessages = {
   readonly listLabel: (regionLabel: string, displayWeek: string) => string
 }
 
-const RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY: Record<
-  LanguageCode,
-  RecommendationTableMessages
-> = {
-  ja: {
-    regionNames: {
-      cold: '寒冷地',
-      temperate: '温暖地',
-      warm: '暖地',
+const RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY: Record<LanguageCode, RecommendationTableMessages> =
+  {
+    ja: {
+      regionNames: {
+        cold: '寒冷地',
+        temperate: '温暖地',
+        warm: '暖地',
+      },
+      categoryLabels: {
+        leaf: '葉菜類',
+        root: '根菜類',
+        flower: '花き',
+      },
+      labels: {
+        region: '対象地域',
+        baselineWeek: '基準週',
+        category: 'カテゴリ',
+        sowingWeek: '播種週',
+        harvestWeek: '収穫週',
+        source: '情報源',
+      },
+      tableHeaders: {
+        crop: '作物',
+        period: '期間',
+        source: '情報源',
+      },
+      status: {
+        loading: '読み込み中',
+        emptyTitle: '推奨データがありません',
+        emptyDescription: '市場やカテゴリを変更して再度お試しください。',
+      },
+      listLabel: (regionLabel, displayWeek) =>
+        `${regionLabel}向けの推奨一覧（基準週: ${displayWeek}）`,
     },
-    categoryLabels: {
-      leaf: '葉菜類',
-      root: '根菜類',
-      flower: '花き',
+    en: {
+      regionNames: {
+        cold: 'Cold region',
+        temperate: 'Temperate region',
+        warm: 'Warm region',
+      },
+      categoryLabels: {
+        leaf: 'Leafy vegetables',
+        root: 'Root vegetables',
+        flower: 'Flower crops',
+      },
+      labels: {
+        region: 'Region',
+        baselineWeek: 'Baseline week',
+        category: 'Category',
+        sowingWeek: 'Sowing week',
+        harvestWeek: 'Harvest week',
+        source: 'Source',
+      },
+      tableHeaders: {
+        crop: 'Crop',
+        period: 'Period',
+        source: 'Source',
+      },
+      status: {
+        loading: 'Loading',
+        emptyTitle: 'No recommendations available',
+        emptyDescription: 'Try adjusting the market or category filters.',
+      },
+      listLabel: (regionLabel, displayWeek) =>
+        `Recommendations for ${regionLabel} (Baseline week: ${displayWeek})`,
     },
-    labels: {
-      region: '対象地域',
-      baselineWeek: '基準週',
-      category: 'カテゴリ',
-      sowingWeek: '播種週',
-      harvestWeek: '収穫週',
-      source: '情報源',
-    },
-    tableHeaders: {
-      crop: '作物',
-      period: '期間',
-      source: '情報源',
-    },
-    status: {
-      loading: '読み込み中',
-      emptyTitle: '推奨データがありません',
-      emptyDescription: '市場やカテゴリを変更して再度お試しください。',
-    },
-    listLabel: (regionLabel, displayWeek) =>
-      `${regionLabel}向けの推奨一覧（基準週: ${displayWeek}）`,
-  },
-  en: {
-    regionNames: {
-      cold: 'Cold region',
-      temperate: 'Temperate region',
-      warm: 'Warm region',
-    },
-    categoryLabels: {
-      leaf: 'Leafy vegetables',
-      root: 'Root vegetables',
-      flower: 'Flower crops',
-    },
-    labels: {
-      region: 'Region',
-      baselineWeek: 'Baseline week',
-      category: 'Category',
-      sowingWeek: 'Sowing week',
-      harvestWeek: 'Harvest week',
-      source: 'Source',
-    },
-    tableHeaders: {
-      crop: 'Crop',
-      period: 'Period',
-      source: 'Source',
-    },
-    status: {
-      loading: 'Loading',
-      emptyTitle: 'No recommendations available',
-      emptyDescription: 'Try adjusting the market or category filters.',
-    },
-    listLabel: (regionLabel, displayWeek) =>
-      `Recommendations for ${regionLabel} (Baseline week: ${displayWeek})`,
-  },
-} as const
+  } as const
 
 const APP_STATUS_MESSAGES_DICTIONARY = {
   ja: {
@@ -268,8 +262,7 @@ const APP_STATUS_MESSAGES_DICTIONARY = {
   },
   en: {
     offlineBannerTitle: 'You are viewing offline',
-    offlineBannerDetail:
-      'Latest data will sync automatically once you are back online.',
+    offlineBannerDetail: 'Latest data will sync automatically once you are back online.',
     offlineBannerLastSync: (value: string) => `Last sync: ${value}`,
     offlineBannerLastSyncUnknown: 'Last sync: not synced',
     statusOnline: 'Online',
@@ -395,9 +388,7 @@ export const WEATHER_MESSAGES = selectMessages(WEATHER_MESSAGES_DICTIONARY)
 export const APP_TEXT = selectMessages(APP_TEXT_DICTIONARY)
 export const SEARCH_CONTROLS_TEXT = selectMessages(SEARCH_CONTROLS_TEXT_DICTIONARY)
 export const TOAST_MESSAGES = selectMessages(TOAST_MESSAGES_DICTIONARY)
-export const FAVORITES_TOGGLE_MESSAGES = selectMessages(
-  FAVORITES_TOGGLE_MESSAGES_DICTIONARY,
-)
+export const FAVORITES_TOGGLE_MESSAGES = selectMessages(FAVORITES_TOGGLE_MESSAGES_DICTIONARY)
 export const PRICE_CHART_MESSAGES = selectMessages(PRICE_CHART_MESSAGES_DICTIONARY)
 export const RECOMMENDATIONS_TABLE_MESSAGES = selectMessages(
   RECOMMENDATIONS_TABLE_MESSAGES_DICTIONARY,

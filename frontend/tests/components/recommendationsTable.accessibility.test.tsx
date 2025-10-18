@@ -13,9 +13,7 @@ const renderWithQueryClient = (ui: ReactElement) => {
     markets: [],
     generated_at: '1970-01-01T00:00:00Z',
   })
-  const result = render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  )
+  const result = render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
   return { ...result, queryClient }
 }
 

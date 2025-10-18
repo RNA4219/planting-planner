@@ -74,10 +74,7 @@ interface ShareTemplateContext {
   readonly week: string
 }
 
-const SHARE_TEXT_TEMPLATE: Record<
-  ShareLanguage,
-  (context: ShareTemplateContext) => string
-> = {
+const SHARE_TEXT_TEMPLATE: Record<ShareLanguage, (context: ShareTemplateContext) => string> = {
   ja: ({ regionLabel, marketLabel, categoryLabel, week }) =>
     `地域: ${regionLabel} / 市場: ${marketLabel} / カテゴリ: ${categoryLabel} / 週: ${week}`,
   en: ({ regionLabel, marketLabel, categoryLabel, week }) =>
@@ -117,12 +114,7 @@ const resolveShareText = (context: ShareContext, language: ShareLanguage): strin
   })
 }
 
-const buildShareUrl = ({
-  region,
-  marketScope,
-  category,
-  week,
-}: ShareContext): string => {
+const buildShareUrl = ({ region, marketScope, category, week }: ShareContext): string => {
   const url = new URL(window.location.href)
   const params = url.searchParams
   params.set('region', region)
@@ -156,9 +148,7 @@ interface ShareContext {
   readonly week: string
 }
 
-export const shareCurrentView = async (
-  context: ShareContext,
-): Promise<ShareResult> => {
+export const shareCurrentView = async (context: ShareContext): Promise<ShareResult> => {
   const language = resolveShareLanguage()
   const shareUrl = buildShareUrl(context)
   const shareData: ShareData = {

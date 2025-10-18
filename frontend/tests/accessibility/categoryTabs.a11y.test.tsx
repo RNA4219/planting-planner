@@ -3,12 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import {
-  fetchRecommend,
-  fetchRecommendations,
-  fetchCrops,
-  renderApp,
-} from '../utils/renderApp'
+import { fetchRecommend, fetchRecommendations, fetchCrops, renderApp } from '../utils/renderApp'
 
 const getActiveTab = async () => {
   const activeTabs = await screen.findAllByRole('tab', { selected: true })

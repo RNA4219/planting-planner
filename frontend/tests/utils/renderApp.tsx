@@ -100,9 +100,7 @@ export const renderApp = async (options: RenderAppOptions = {}) => {
         }
       : undefined,
   )
-  render(
-    <App />,
-  )
+  render(<App />)
   await waitFor(() => {
     if (!fetchRecommendations.mock.calls.length && !fetchRecommend.mock.calls.length) {
       throw new Error('recommendations not requested yet')

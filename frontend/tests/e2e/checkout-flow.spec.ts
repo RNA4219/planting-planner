@@ -118,7 +118,9 @@ test.describe('検索条件送信とカテゴリ切替', () => {
 
     const fallbackNotice = page.getByTestId('market-fallback-notice')
     await expect(fallbackNotice).toBeVisible()
-    await expect(fallbackNotice).toHaveText('市場データが一時的に利用できないため、推定値を表示しています。')
+    await expect(fallbackNotice).toHaveText(
+      '市場データが一時的に利用できないため、推定値を表示しています。',
+    )
     await expect(page.getByRole('row', { name: /さつまいも/ })).toBeVisible()
 
     expect.soft(recommendRequests).toHaveLength(4)
@@ -130,13 +132,18 @@ test.describe('検索条件送信とカテゴリ切替', () => {
       },
       isFallback: false,
     })
-    expect.soft(
-      recommendRequests.slice(1, -1).some((request) =>
-        request.params.region === 'warm' &&
-        request.params.marketScope === 'national' &&
-        request.params.category === 'leaf',
-      ),
-    ).toBe(true)
+    expect
+      .soft(
+        recommendRequests
+          .slice(1, -1)
+          .some(
+            (request) =>
+              request.params.region === 'warm' &&
+              request.params.marketScope === 'national' &&
+              request.params.category === 'leaf',
+          ),
+      )
+      .toBe(true)
     expect.soft(recommendRequests.at(-1)).toMatchObject({
       params: {
         region: 'warm',

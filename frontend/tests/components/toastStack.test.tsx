@@ -21,8 +21,8 @@ describe('ToastStack', () => {
     const stack = getByTestId('toast-stack')
     expect(stack).toHaveAttribute('role', 'status')
     expect(stack).toHaveAttribute('aria-live', 'polite')
-    expect(
-      Array.from(stack.classList).some((className) => className.startsWith('toast')),
-    ).toBe(false)
+    expect(Array.from(stack.classList).some((className) => className.startsWith('toast'))).toBe(
+      false,
+    )
   })
 })

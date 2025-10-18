@@ -92,34 +92,35 @@ describe('FavStar i18n', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: ORIGINAL_LOCATION })
   })
 
-  describe.each(SCENARIOS)('$name', ({
-    initialLang,
-    featureFlag,
-    href,
-    cropName,
-    expectedAddLabel,
-    expectedRemoveLabel,
-    expectedResolvedLang,
-  }) => {
-    it('トグル時の aria-label が適切に切り替わる', async () => {
-      setLocale(initialLang, featureFlag)
-      stubLocation(href)
+  describe.each(SCENARIOS)(
+    '$name',
+    ({
+      initialLang,
+      featureFlag,
+      href,
+      cropName,
+      expectedAddLabel,
+      expectedRemoveLabel,
+      expectedResolvedLang,
+    }) => {
+      it('トグル時の aria-label が適切に切り替わる', async () => {
+        setLocale(initialLang, featureFlag)
+        stubLocation(href)
 
-      const { FavStar } = await import('../FavStar')
+        const { FavStar } = await import('../FavStar')
 
-      const { rerender } = render(
-        <FavStar active={false} cropName={cropName} onToggle={() => {}} />,
-      )
+        const { rerender } = render(
+          <FavStar active={false} cropName={cropName} onToggle={() => {}} />,
+        )
 
-      expect(document.documentElement.lang).toBe(expectedResolvedLang)
+        expect(document.documentElement.lang).toBe(expectedResolvedLang)
 
-      expect(screen.getByRole('button', { name: expectedAddLabel })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: expectedAddLabel })).toBeInTheDocument()
 
-      rerender(<FavStar active cropName={cropName} onToggle={() => {}} />)
+        rerender(<FavStar active cropName={cropName} onToggle={() => {}} />)
 
-      expect(
-        screen.getByRole('button', { name: expectedRemoveLabel }),
-      ).toBeInTheDocument()
-    })
-  })
+        expect(screen.getByRole('button', { name: expectedRemoveLabel })).toBeInTheDocument()
+      })
+    },
+  )
 })

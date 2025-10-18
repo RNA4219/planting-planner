@@ -52,7 +52,10 @@ describe('hooks / useRecommendationLoader', () => {
   })
 
   it('normalizes week input before requesting recommendations', async () => {
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
     const { result } = renderHook(() =>
       useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
     )
@@ -62,7 +65,10 @@ describe('hooks / useRecommendationLoader', () => {
     })
 
     fetcherMock.mockClear()
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W24', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W24', items: [] },
+      isMarketFallback: false,
+    })
 
     await act(async () => {
       await result.current.requestRecommendations('2024/6/12')
@@ -111,7 +117,10 @@ describe('hooks / useRecommendationLoader', () => {
   })
 
   it('tracks selected market/category and uses them in the cache key', async () => {
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
 
     const { result } = renderHook(() =>
       useRecommendationLoader({ region: 'temperate', marketScope: 'national', category: 'leaf' }),
@@ -133,7 +142,10 @@ describe('hooks / useRecommendationLoader', () => {
     expect(result.current.selectedCategory).toBe('leaf')
 
     fetchQueryMock.mockClear()
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W31', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W31', items: [] },
+      isMarketFallback: false,
+    })
 
     await act(async () => {
       await result.current.requestRecommendations('2024-W31', {

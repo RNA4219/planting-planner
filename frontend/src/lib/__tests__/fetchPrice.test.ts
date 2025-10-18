@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { PriceSeries } from '../../types'
 import { createApiTestContext } from './apiTestContext'
 
-type FetchPrice = typeof import('../api')['fetchPrice']
+type FetchPrice = (typeof import('../api'))['fetchPrice']
 
 describe('fetchPrice', () => {
   const context = createApiTestContext()

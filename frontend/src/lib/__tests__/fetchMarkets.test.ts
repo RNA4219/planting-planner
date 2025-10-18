@@ -8,7 +8,7 @@ import {
 } from '../../constants/marketScopes'
 import { createApiTestContext } from './apiTestContext'
 
-type FetchMarkets = typeof import('../api')['fetchMarkets']
+type FetchMarkets = (typeof import('../api'))['fetchMarkets']
 
 describe('fetchMarkets', () => {
   const context = createApiTestContext()
@@ -54,9 +54,7 @@ describe('fetchMarkets', () => {
     expect(headers.get('x-request-id')).toBeTruthy()
     expect(result).toEqual({
       generated_at: payload.generated_at,
-      markets: payload.markets
-        .map(fromMarketScopeApiDefinition)
-        .map(toMarketScopeOption),
+      markets: payload.markets.map(fromMarketScopeApiDefinition).map(toMarketScopeOption),
     })
   })
 

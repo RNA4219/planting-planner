@@ -47,7 +47,10 @@ describe('hooks / useRecommendations controller', () => {
   })
 
   it('updates region via handleSubmit and requests override region', async () => {
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
     const { result } = renderHook(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate' }),
     )
@@ -58,7 +61,10 @@ describe('hooks / useRecommendations controller', () => {
       )
     })
     fetcherMock.mockClear()
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W32', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W32', items: [] },
+      isMarketFallback: false,
+    })
 
     const event = {
       preventDefault: () => {},
@@ -88,7 +94,10 @@ describe('hooks / useRecommendations controller', () => {
   })
 
   it('exposes selected market/category synced with controller setters', async () => {
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
 
     const { result } = renderHookWithQueryClient(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),
@@ -102,7 +111,10 @@ describe('hooks / useRecommendations controller', () => {
     expect(result.current.selectedCategory).toBe('leaf')
 
     fetcherMock.mockClear()
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W31', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W31', items: [] },
+      isMarketFallback: false,
+    })
 
     await act(async () => {
       result.current.setMarketScope('city:osaka')
@@ -123,7 +135,10 @@ describe('hooks / useRecommendations controller', () => {
   })
 
   it('persists controller selections only when they change', async () => {
-    fetcherMock.mockResolvedValue({ result: { week: '2024-W30', items: [] }, isMarketFallback: false })
+    fetcherMock.mockResolvedValue({
+      result: { week: '2024-W30', items: [] },
+      isMarketFallback: false,
+    })
 
     const { result } = renderHookWithQueryClient(() =>
       useRecommendations({ favorites: [], initialRegion: 'temperate', initialCategory: 'leaf' }),

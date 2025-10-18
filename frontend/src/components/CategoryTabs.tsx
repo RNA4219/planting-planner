@@ -81,19 +81,11 @@ const wrapIndex = (index: number, length: number) => {
 const TAB_CLASS =
   'rounded-full bg-transparent px-3 py-2 text-sm font-semibold text-market-neutral-strong transition-colors duration-200 hover:bg-market-neutral-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-market-accent aria-selected:bg-market-accent aria-selected:text-white'
 
-export const CategoryTabs = ({
-  category,
-  categories,
-  onChange,
-  controlsId,
-}: CategoryTabsProps) => {
+export const CategoryTabs = ({ category, categories, onChange, controlsId }: CategoryTabsProps) => {
   const locale = resolveLocale()
   const dictionary = CATEGORY_TABS_DICTIONARY[locale]
-  const useDictionaryTabs =
-    categories === undefined || categories === DEFAULT_CATEGORY_TABS
-  const tabs: readonly CategoryTabDefinition[] = useDictionaryTabs
-    ? dictionary.tabs
-    : categories
+  const useDictionaryTabs = categories === undefined || categories === DEFAULT_CATEGORY_TABS
+  const tabs: readonly CategoryTabDefinition[] = useDictionaryTabs ? dictionary.tabs : categories
 
   if (!tabs.length) {
     return null

@@ -53,16 +53,21 @@ const findPluginByName = <T extends { name?: string }>(
 describe('vite SRI configuration', () => {
   test('enables SRI plugin with secure integrity for HTML entry points', () => {
     expect.hasAssertions()
-    const plugin = findPluginByName<{ apply?: string; enforce?: string; api?: Record<string, unknown> }>(
-      config.plugins,
-      'vite-plugin-sri',
-    )
+    const plugin = findPluginByName<{
+      apply?: string
+      enforce?: string
+      api?: Record<string, unknown>
+    }>(config.plugins, 'vite-plugin-sri')
 
     expect(plugin).toBeDefined()
 
     const algorithms = (plugin?.api as { algorithms?: string[] } | undefined)?.algorithms ?? []
-    const normalized = algorithms.map((algorithm) => algorithm?.toLowerCase?.() ?? String(algorithm).toLowerCase())
-    const hasStrongAlgorithm = normalized.some((algorithm) => algorithm === 'sha384' || algorithm === 'sha512')
+    const normalized = algorithms.map(
+      (algorithm) => algorithm?.toLowerCase?.() ?? String(algorithm).toLowerCase(),
+    )
+    const hasStrongAlgorithm = normalized.some(
+      (algorithm) => algorithm === 'sha384' || algorithm === 'sha512',
+    )
 
     expect(hasStrongAlgorithm).toBe(true)
     expect(plugin?.apply).toBe('build')
