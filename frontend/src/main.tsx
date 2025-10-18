@@ -1,6 +1,6 @@
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createRoot } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 
 import App from './App'
 import './index.css'
@@ -91,7 +91,9 @@ if (!container) {
   throw new Error('#root element not found')
 }
 
-createRoot(container).render(
+const appRoot: Root = createRoot(container)
+
+appRoot.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
@@ -141,4 +143,10 @@ if (document.readyState === 'complete') {
   scheduleServiceWorkerRegistration()
 } else {
   window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true })
+}
+
+export const teardownApp = (): void => {
+  appRoot.unmount()
+  window.removeEventListener('load', scheduleServiceWorkerRegistration)
+  serviceWorkerRegistrationScheduled = false
 }
