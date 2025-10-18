@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # 開発運用 — v0.3
 
 - ブランチ戦略: `feature/v0.3-*` で作業し、Tailwind リファクタと市場切替を分離レビュー。PR は Playwright 追加後に CI 緑でマージ。
