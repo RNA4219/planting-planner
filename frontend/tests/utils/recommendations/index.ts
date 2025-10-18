@@ -11,15 +11,16 @@ import { fetchRecommend, fetchRecommendations, resetAppSpies } from '../renderAp
 type UseRecommendationsModule = typeof import('../../../src/hooks/recommendations/controller')
 export type RecommendationItem = RecommendResponse['items'][number]
 
-const fetcherMock = vi.fn<
-  (input: {
-    region: Region
-    week: string
-    preferLegacy?: boolean
-    marketScope: MarketScope
-    category: CropCategory
-  }) => Promise<RecommendationFetchResult>
->()
+const fetcherMock =
+  vi.fn<
+    (input: {
+      region: Region
+      week: string
+      preferLegacy?: boolean
+      marketScope: MarketScope
+      category: CropCategory
+    }) => Promise<RecommendationFetchResult>
+  >()
 const cropCatalogState = { catalog: new Map(), isLoading: false }
 
 vi.mock('../../../src/hooks/recommendationFetcher', () => ({
@@ -87,7 +88,10 @@ const applyDefaultRecommendationMocks = () => {
     },
   )
   cropCatalogState.catalog = new Map(
-    defaultCrops.map((crop) => [crop.name, { id: crop.id, name: crop.name, category: crop.category }]),
+    defaultCrops.map((crop) => [
+      crop.name,
+      { id: crop.id, name: crop.name, category: crop.category },
+    ]),
   )
   cropCatalogState.isLoading = false
 }

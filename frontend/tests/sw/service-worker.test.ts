@@ -231,10 +231,14 @@ describe('service worker', () => {
     })
 
     expect(response).toBe(cachedResponse)
-    expect(sendTelemetryMock).toHaveBeenCalledWith('sw.fetch.cache_hit', {
-      cacheName: 'api-cache',
-      url: 'https://example.test/api/list',
-    }, 'req-123')
+    expect(sendTelemetryMock).toHaveBeenCalledWith(
+      'sw.fetch.cache_hit',
+      {
+        cacheName: 'api-cache',
+        url: 'https://example.test/api/list',
+      },
+      'req-123',
+    )
   })
 
   test('install handler emits telemetry', async () => {
@@ -266,8 +270,9 @@ describe('service worker', () => {
 
     const postMessageMock = vi.fn()
     matchAllMock.mockResolvedValue([{ postMessage: postMessageMock }])
-    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting =
-      { state: 'installed' } as ServiceWorker
+    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting = {
+      state: 'installed',
+    } as ServiceWorker
 
     const waitUntil = vi.fn(async (promise: Promise<unknown>) => promise)
     await installHandler?.({
@@ -291,8 +296,9 @@ describe('service worker', () => {
 
     const postMessageMock = vi.fn()
     matchAllMock.mockResolvedValue([{ postMessage: postMessageMock }])
-    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting =
-      { state: 'installed' } as ServiceWorker
+    ;(globalThis.self.registration as ServiceWorkerRegistration).waiting = {
+      state: 'installed',
+    } as ServiceWorker
 
     const waitUntil = vi.fn(async (promise: Promise<unknown>) => promise)
     await installHandler?.({

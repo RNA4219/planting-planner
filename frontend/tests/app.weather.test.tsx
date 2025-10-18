@@ -30,9 +30,7 @@ interface WeatherApiResult {
   readonly requestId: string
 }
 
-const createWeatherResponse = (
-  overrides: Partial<WeatherApiResult> = {},
-): WeatherApiResult => ({
+const createWeatherResponse = (overrides: Partial<WeatherApiResult> = {}): WeatherApiResult => ({
   weather: {
     daily: [
       { date: '2024-01-03', tmax: 30, tmin: 20, rain: 5, wind: 4 },

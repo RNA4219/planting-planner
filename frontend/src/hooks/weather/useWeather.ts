@@ -80,13 +80,13 @@ export interface UseWeatherResult extends WeatherState {
   readonly refresh: (options?: RefreshOptions) => Promise<WeatherSnapshot | null>
 }
 
-export const useWeather = ({
-  lat,
-  lon,
-  enabled = true,
-}: UseWeatherParams): UseWeatherResult => {
+export const useWeather = ({ lat, lon, enabled = true }: UseWeatherParams): UseWeatherResult => {
   const coordinatesAvailable =
-    enabled && typeof lat === 'number' && Number.isFinite(lat) && typeof lon === 'number' && Number.isFinite(lon)
+    enabled &&
+    typeof lat === 'number' &&
+    Number.isFinite(lat) &&
+    typeof lon === 'number' &&
+    Number.isFinite(lon)
 
   const cacheKey = useMemo(() => {
     if (!coordinatesAvailable) {

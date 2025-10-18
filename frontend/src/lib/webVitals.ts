@@ -57,8 +57,6 @@ const runWhenIdle: WebVitalsScheduler = (task) => {
   setTimeout(invoke, 0)
 }
 
-export const startWebVitalsTracking = (
-  schedule: WebVitalsScheduler = runWhenIdle,
-): void => {
+export const startWebVitalsTracking = (schedule: WebVitalsScheduler = runWhenIdle): void => {
   schedule(registerWebVitals)
 }

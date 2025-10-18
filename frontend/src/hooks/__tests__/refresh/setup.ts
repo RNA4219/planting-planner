@@ -8,8 +8,7 @@ import { useRefreshStatusController } from '../../refresh/controller'
 
 const capturedOptionsRef = vi.hoisted<RefreshStatusPollerOptions[]>(() => [])
 
-type PostRefreshImmediate =
-  Pick<RefreshStatusResponse, 'state'> &
+type PostRefreshImmediate = Pick<RefreshStatusResponse, 'state'> &
   Partial<Pick<RefreshStatusResponse, 'updated_records' | 'last_error' | 'finished_at'>>
 
 type PostRefreshMock = () => Promise<PostRefreshImmediate>
@@ -39,7 +38,8 @@ export const fetchRefreshStatusMock = apiMocks.fetchRefreshStatusMock
 export const setLastSyncMock = swClientMocks.setLastSync
 
 vi.mock('../../refresh/poller', async () => {
-  const actual = await vi.importActual<typeof import('../../refresh/poller')>('../../refresh/poller')
+  const actual =
+    await vi.importActual<typeof import('../../refresh/poller')>('../../refresh/poller')
   return {
     ...actual,
     createRefreshStatusPoller: vi
@@ -53,9 +53,8 @@ vi.mock('../../refresh/poller', async () => {
 
 vi.mock('../../../lib/api', () => apiMocks.module)
 vi.mock('../../../lib/swClient', async () => {
-  const actual = await vi.importActual<typeof import('../../../lib/swClient')>(
-    '../../../lib/swClient',
-  )
+  const actual =
+    await vi.importActual<typeof import('../../../lib/swClient')>('../../../lib/swClient')
   return {
     ...actual,
     setLastSync: swClientMocks.setLastSync,

@@ -4,9 +4,11 @@ import { isWeatherTabEnabled } from '../../src/config/featureFlags'
 
 const originalEnv = { ...(import.meta.env ?? {}) } as Record<string, string | undefined>
 const originalProcessEnvWeatherTab = process.env.VITE_FEATURE_WEATHER_TAB
-const originalFeatureFlags = (globalThis as {
-  FEATURE_FLAGS?: Record<string, unknown>
-}).FEATURE_FLAGS
+const originalFeatureFlags = (
+  globalThis as {
+    FEATURE_FLAGS?: Record<string, unknown>
+  }
+).FEATURE_FLAGS
 
 const setImportMetaEnv = (env: Record<string, string | undefined>): void => {
   Object.defineProperty(import.meta, 'env', {

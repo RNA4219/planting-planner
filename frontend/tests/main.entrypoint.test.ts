@@ -4,11 +4,9 @@ const renderMock = vi.fn()
 const createRootMock = vi.fn(() => ({ render: renderMock }))
 
 const registerServiceWorker = vi.fn(async () => undefined)
-const startWebVitalsTracking = vi.fn(
-  (callback: (task: () => Promise<unknown> | void) => void) => {
-    callback(() => Promise.resolve())
-  },
-)
+const startWebVitalsTracking = vi.fn((callback: (task: () => Promise<unknown> | void) => void) => {
+  callback(() => Promise.resolve())
+})
 
 vi.mock('react-dom/client', () => ({
   createRoot: createRootMock,

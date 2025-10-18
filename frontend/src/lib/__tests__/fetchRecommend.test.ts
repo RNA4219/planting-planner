@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { RecommendResponse } from '../../types'
 import { createApiTestContext } from './apiTestContext'
 
-type FetchRecommend = typeof import('../api')['fetchRecommend']
+type FetchRecommend = (typeof import('../api'))['fetchRecommend']
 
 describe('fetchRecommend', () => {
   const context = createApiTestContext()
@@ -68,9 +68,7 @@ describe('fetchRecommend', () => {
     if (!call) {
       throw new Error('fetch が呼び出されていません')
     }
-    expect(call[0]).toBe(
-      'https://api.example.com/recommend?region=temperate&week=2024-W30',
-    )
+    expect(call[0]).toBe('https://api.example.com/recommend?region=temperate&week=2024-W30')
     const headers = new Headers(call[1]?.headers as HeadersInit)
     expect(headers.get('Content-Type')).toBe('application/json')
     expect(headers.get('x-request-id')).toBe('request-id-1')
@@ -104,17 +102,14 @@ describe('fetchRecommend', () => {
       if (!call) {
         throw new Error('fetch が呼び出されていません')
       }
-      expect(call[0]).toBe(
-        'https://api.example.com/recommend?region=temperate&week=2024-W30',
-      )
+      expect(call[0]).toBe('https://api.example.com/recommend?region=temperate&week=2024-W30')
       const headers = new Headers(call[1]?.headers as HeadersInit)
       expect(headers.get('Content-Type')).toBe('application/json')
       expect(headers.get('x-request-id')).toBe('request-id-1')
       expect(result).toEqual(payload)
     } finally {
       vi.resetModules()
-      ;(import.meta.env as Record<string, string | undefined>).VITE_API_ENDPOINT =
-        originalEndpoint
+      ;(import.meta.env as Record<string, string | undefined>).VITE_API_ENDPOINT = originalEndpoint
     }
   })
 

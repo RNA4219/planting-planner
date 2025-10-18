@@ -137,10 +137,10 @@ describe('AppContent accessibility', () => {
     mockUseAppNotifications.mockReturnValue(notificationsResult)
     mockUseWeather.mockReturnValue(createMockWeatherResult())
 
-    const originalIdle = (globalThis as {
+    const originalIdle = globalThis as {
       requestIdleCallback?: typeof window.requestIdleCallback
       cancelIdleCallback?: typeof window.cancelIdleCallback
-    })
+    }
     type IdleQueueEntry = { handle: number; callback: IdleRequestCallback }
     const idleQueue: IdleQueueEntry[] = []
     let handleSequence = 0
@@ -158,14 +158,18 @@ describe('AppContent accessibility', () => {
       }
     }
 
-    ;(globalThis as {
-      requestIdleCallback?: typeof window.requestIdleCallback
-      cancelIdleCallback?: typeof window.cancelIdleCallback
-    }).requestIdleCallback = idleStub
-    ;(globalThis as {
-      requestIdleCallback?: typeof window.requestIdleCallback
-      cancelIdleCallback?: typeof window.cancelIdleCallback
-    }).cancelIdleCallback = cancelIdleStub
+    ;(
+      globalThis as {
+        requestIdleCallback?: typeof window.requestIdleCallback
+        cancelIdleCallback?: typeof window.cancelIdleCallback
+      }
+    ).requestIdleCallback = idleStub
+    ;(
+      globalThis as {
+        requestIdleCallback?: typeof window.requestIdleCallback
+        cancelIdleCallback?: typeof window.cancelIdleCallback
+      }
+    ).cancelIdleCallback = cancelIdleStub
 
     const queryClient = new QueryClient()
 
@@ -189,14 +193,17 @@ describe('AppContent accessibility', () => {
     expect(screen.queryByRole('status', { name: '天気' })).not.toBeInTheDocument()
 
     queryClient.clear()
-
-    ;(globalThis as {
-      requestIdleCallback?: typeof window.requestIdleCallback
-      cancelIdleCallback?: typeof window.cancelIdleCallback
-    }).requestIdleCallback = originalIdle.requestIdleCallback
-    ;(globalThis as {
-      requestIdleCallback?: typeof window.requestIdleCallback
-      cancelIdleCallback?: typeof window.cancelIdleCallback
-    }).cancelIdleCallback = originalIdle.cancelIdleCallback
+    ;(
+      globalThis as {
+        requestIdleCallback?: typeof window.requestIdleCallback
+        cancelIdleCallback?: typeof window.cancelIdleCallback
+      }
+    ).requestIdleCallback = originalIdle.requestIdleCallback
+    ;(
+      globalThis as {
+        requestIdleCallback?: typeof window.requestIdleCallback
+        cancelIdleCallback?: typeof window.cancelIdleCallback
+      }
+    ).cancelIdleCallback = originalIdle.cancelIdleCallback
   })
 })

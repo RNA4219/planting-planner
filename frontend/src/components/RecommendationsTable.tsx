@@ -63,9 +63,9 @@ export const RecommendationsTable = ({
     queryFn: fetchMarkets,
   })
 
-  const activeMarketCategories = marketsResponse?.markets
-    .find((market) => market.scope === marketScope)
-    ?.categories
+  const activeMarketCategories = marketsResponse?.markets.find(
+    (market) => market.scope === marketScope,
+  )?.categories
 
   const resolveCategoryLabel = (category: CropCategory): string => {
     if (activeMarketCategories) {
@@ -80,10 +80,7 @@ export const RecommendationsTable = ({
     return CATEGORY_LABELS[category]
   }
 
-  const handleInteractiveKeyDown = (
-    event: KeyboardEvent<HTMLElement>,
-    cropId?: number,
-  ) => {
+  const handleInteractiveKeyDown = (event: KeyboardEvent<HTMLElement>, cropId?: number) => {
     if (event.defaultPrevented) {
       return
     }
@@ -116,11 +113,7 @@ export const RecommendationsTable = ({
         {headerSlot}
       </div>
       {isLoading ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
+        <div role="status" aria-live="polite" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
@@ -142,9 +135,7 @@ export const RecommendationsTable = ({
           aria-live="polite"
           className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-market-neutral/40 bg-market-neutral/10 p-8 text-center text-sm text-slate-500"
         >
-          <span className="font-semibold text-slate-600">
-            {TABLE_MESSAGES.status.emptyTitle}
-          </span>
+          <span className="font-semibold text-slate-600">{TABLE_MESSAGES.status.emptyTitle}</span>
           <span>{TABLE_MESSAGES.status.emptyDescription}</span>
         </div>
       ) : (
@@ -202,9 +193,7 @@ export const RecommendationsTable = ({
                     </div>
                   </td>
                   <td className="text-xs text-slate-600 align-top">
-                    <p className="font-medium text-slate-500">
-                      {TABLE_MESSAGES.labels.source}
-                    </p>
+                    <p className="font-medium text-slate-500">{TABLE_MESSAGES.labels.source}</p>
                     <p className="text-sm text-slate-700">{item.source}</p>
                   </td>
                 </tr>

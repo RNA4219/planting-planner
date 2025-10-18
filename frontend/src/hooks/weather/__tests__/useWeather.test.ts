@@ -24,11 +24,14 @@ interface WeatherApiResult {
 }
 
 const { fetchWeatherMock } = vi.hoisted(() => ({
-  fetchWeatherMock: vi.fn<(
-    lat: number,
-    lon: number,
-    options?: { readonly requestId?: string }
-  ) => Promise<WeatherApiResult>>(),
+  fetchWeatherMock:
+    vi.fn<
+      (
+        lat: number,
+        lon: number,
+        options?: { readonly requestId?: string },
+      ) => Promise<WeatherApiResult>
+    >(),
 }))
 
 vi.mock('../../../lib/api', () => ({
@@ -44,9 +47,7 @@ type WeatherResponseOverrides = {
   readonly weather?: Partial<WeatherPayload>
 } & Partial<Omit<WeatherApiResult, 'weather'>>
 
-const createWeatherResponse = (
-  overrides: WeatherResponseOverrides = {},
-): WeatherApiResult => {
+const createWeatherResponse = (overrides: WeatherResponseOverrides = {}): WeatherApiResult => {
   const baseWeather: WeatherPayload = {
     daily: DEFAULT_DAILY,
     fetchedAt: '2024-01-03T09:00:00+09:00',
@@ -89,7 +90,10 @@ describe('useWeather', () => {
     expect(result.current.previous).toBeNull()
 
     fetchWeatherMock.mockResolvedValueOnce(
-      createWeatherResponse({ requestId: 'request-2', weather: { fetchedAt: '2024-01-04T09:00:00+09:00' } }),
+      createWeatherResponse({
+        requestId: 'request-2',
+        weather: { fetchedAt: '2024-01-04T09:00:00+09:00' },
+      }),
     )
 
     await act(async () => {
@@ -159,7 +163,10 @@ describe('useWeather', () => {
     await advanceTime(60_000)
 
     fetchWeatherMock.mockResolvedValueOnce(
-      createWeatherResponse({ requestId: 'request-3', weather: { fetchedAt: '2024-01-05T09:00:00+09:00' } }),
+      createWeatherResponse({
+        requestId: 'request-3',
+        weather: { fetchedAt: '2024-01-05T09:00:00+09:00' },
+      }),
     )
 
     await act(async () => {

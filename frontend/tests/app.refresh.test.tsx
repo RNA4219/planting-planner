@@ -37,9 +37,7 @@ vi.mock('../src/lib/swClient', () => ({
   },
   setLastSync: vi.fn((value: string | null) => {
     swSnapshot = { ...swSnapshot, lastSyncAt: value }
-    swListeners.forEach((listener) =>
-      listener({ type: 'last-sync', lastSyncAt: value }),
-    )
+    swListeners.forEach((listener) => listener({ type: 'last-sync', lastSyncAt: value }))
   }),
 }))
 
@@ -145,9 +143,9 @@ describe('App refresh workflow', () => {
       const stack = startToastContainer.closest('[data-testid="toast-stack"]')
       expect(stack).not.toBeNull()
       if (stack) {
-        expect(
-          Array.from(stack.classList).some((className) => className.startsWith('toast')),
-        ).toBe(false)
+        expect(Array.from(stack.classList).some((className) => className.startsWith('toast'))).toBe(
+          false,
+        )
       }
     }
 
@@ -210,10 +208,9 @@ describe('App refresh workflow', () => {
     const updateToast = await screen.findByText(TOAST_MESSAGES.serviceWorkerUpdateAvailable)
     const updateToastContainer = updateToast.closest('[data-testid="toast"]')
     expect(updateToastContainer).not.toBeNull()
-    const updateNowButton = await within(updateToastContainer as Element).findByRole(
-      'button',
-      { name: TOAST_MESSAGES.serviceWorkerUpdateNow },
-    )
+    const updateNowButton = await within(updateToastContainer as Element).findByRole('button', {
+      name: TOAST_MESSAGES.serviceWorkerUpdateNow,
+    })
     await fireEvent.click(updateNowButton)
 
     expect(skipWaitingMock).toHaveBeenCalledTimes(1)

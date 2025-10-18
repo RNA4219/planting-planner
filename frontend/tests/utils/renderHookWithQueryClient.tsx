@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
-import type {
-  RenderHookOptions,
-  RenderHookResult,
-} from '@testing-library/react'
+import type { RenderHookOptions, RenderHookResult } from '@testing-library/react'
 import { afterEach } from 'vitest'
 
 export function renderHookWithQueryClient<Result, Props>(

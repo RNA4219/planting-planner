@@ -12,8 +12,8 @@ const createRootMock = vi.fn<(container: Container) => Root>(() => ({
 type IdleCallback = (deadline: { readonly didTimeout: boolean; timeRemaining(): number }) => void
 type IdleScheduler = (callback: IdleCallback) => number
 
-const originalIdle =
-  (globalThis as typeof globalThis & { requestIdleCallback?: IdleScheduler }).requestIdleCallback
+const originalIdle = (globalThis as typeof globalThis & { requestIdleCallback?: IdleScheduler })
+  .requestIdleCallback
 
 const setIdleScheduler = (scheduler: IdleScheduler | undefined) => {
   vi.stubGlobal('requestIdleCallback', scheduler)
@@ -169,18 +169,19 @@ describe('main entrypoint', () => {
     setDocumentReadyState('loading')
 
     let loadListener: (() => void) | undefined
-    vi.spyOn(window, 'addEventListener').mockImplementation(
-      ((type: string, listener: EventListenerOrEventListenerObject) => {
-        if (type === 'load') {
-          if (typeof listener === 'function') {
-            loadListener = () => listener(new Event('load'))
-          } else if (typeof listener === 'object' && listener !== null && 'handleEvent' in listener) {
-            loadListener = () => listener.handleEvent(new Event('load'))
-          }
+    vi.spyOn(window, 'addEventListener').mockImplementation(((
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+    ) => {
+      if (type === 'load') {
+        if (typeof listener === 'function') {
+          loadListener = () => listener(new Event('load'))
+        } else if (typeof listener === 'object' && listener !== null && 'handleEvent' in listener) {
+          loadListener = () => listener.handleEvent(new Event('load'))
         }
-        return undefined
-      }) as typeof window.addEventListener,
-    )
+      }
+      return undefined
+    }) as typeof window.addEventListener)
 
     const requestIdleCallbackSpy = vi.fn<(callback: IdleCallback) => void>()
     const globalWithIdle = globalThis as typeof globalThis & {

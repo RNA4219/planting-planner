@@ -42,18 +42,12 @@ describe('lighthouse ci configuration', () => {
   test('defines minimum scores for key categories', () => {
     const assertions = lhciConfig.ci.assert.assertions
 
-    expect(assertions['categories:pwa']).toEqual([
-      'error',
-      { minScore: 0.9 },
-    ])
+    expect(assertions['categories:pwa']).toEqual(['error', { minScore: 0.9 }])
     expect(assertions['categories:performance']).toEqual([
       'error',
       { minScore: 0.8, aggregationMethod: 'median' },
     ])
-    expect(assertions['categories:accessibility']).toEqual([
-      'error',
-      { minScore: 0.9 },
-    ])
+    expect(assertions['categories:accessibility']).toEqual(['error', { minScore: 0.9 }])
   })
 
   test('matches static dist collection settings', () => {

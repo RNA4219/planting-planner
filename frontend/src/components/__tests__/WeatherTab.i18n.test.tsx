@@ -9,11 +9,15 @@ const ORIGINAL_LOCATION = window.location
 const ORIGINAL_NAVIGATOR = { language: navigator.language, languages: navigator.languages }
 
 const extractLocale = (value: LocaleArg) =>
-  typeof value === 'string' ? value : Array.isArray(value) ? value[0] ?? '' : ''
+  typeof value === 'string' ? value : Array.isArray(value) ? (value[0] ?? '') : ''
 
 const stubLocation = (href: string) => {
   const url = new URL(href)
-  const stub = Object.assign(new URL(url.href), { assign: vi.fn(), reload: vi.fn(), replace: vi.fn() }) as unknown as Location
+  const stub = Object.assign(new URL(url.href), {
+    assign: vi.fn(),
+    reload: vi.fn(),
+    replace: vi.fn(),
+  }) as unknown as Location
   Object.defineProperty(window, 'location', { configurable: true, value: stub })
 }
 

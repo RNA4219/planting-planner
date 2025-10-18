@@ -96,10 +96,13 @@ export const ToastStack = ({
     })
   }, [autoCloseDurationMs, onDismiss, toasts])
 
-  useEffect(() => () => {
-    timersRef.current.forEach(clearTimeout)
-    timersRef.current.clear()
-  }, [])
+  useEffect(
+    () => () => {
+      timersRef.current.forEach(clearTimeout)
+      timersRef.current.clear()
+    },
+    [],
+  )
 
   if (toasts.length === 0) {
     return <div data-testid="toast-stack" aria-hidden="true" className="hidden" />
@@ -123,7 +126,9 @@ export const ToastStack = ({
         >
           <div className="flex-1 space-y-1">
             <p>{toast.message}</p>
-            {toast.detail ? <p className="text-sm font-normal text-white/80">{toast.detail}</p> : null}
+            {toast.detail ? (
+              <p className="text-sm font-normal text-white/80">{toast.detail}</p>
+            ) : null}
           </div>
           {toast.actions && toast.actions.length > 0 ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">

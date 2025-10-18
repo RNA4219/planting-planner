@@ -18,9 +18,7 @@ type ThemeTokenJsonEntry = {
 }
 
 const normalizeThemeToken = (token: string): string => {
-  const baseToken = token.startsWith('accent.')
-    ? `market-${token.slice('accent.'.length)}`
-    : token
+  const baseToken = token.startsWith('accent.') ? `market-${token.slice('accent.'.length)}` : token
 
   return baseToken.replaceAll('.', '-')
 }
@@ -70,24 +68,17 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
   })
 
   it('JSON 定義とフォールバック定義が 1 対 1 で一致する', () => {
-    const jsonDefinitions = (marketScopeDataset as MarketScopeJsonEntry[]).map(
-      (entry) => ({
-        scope: entry.scope,
-        displayName: entry.display_name,
-        themeToken: entry.theme_token,
-      }),
-    )
+    const jsonDefinitions = (marketScopeDataset as MarketScopeJsonEntry[]).map((entry) => ({
+      scope: entry.scope,
+      displayName: entry.display_name,
+      themeToken: entry.theme_token,
+    }))
 
     expect(jsonDefinitions).not.toHaveLength(0)
-    expect(MARKET_SCOPE_FALLBACK_DEFINITIONS).toHaveLength(
-      jsonDefinitions.length,
-    )
+    expect(MARKET_SCOPE_FALLBACK_DEFINITIONS).toHaveLength(jsonDefinitions.length)
 
     const fallbackByScope = new Map(
-      MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => [
-        definition.scope,
-        definition,
-      ]),
+      MARKET_SCOPE_FALLBACK_DEFINITIONS.map((definition) => [definition.scope, definition]),
     )
 
     for (const jsonDefinition of jsonDefinitions) {
@@ -100,17 +91,10 @@ describe('MARKET_SCOPE_FALLBACK_DEFINITIONS', () => {
 
       expect(fallbackDefinition?.theme.token).toBe(normalizedToken)
 
-      const themeTokenDefinition = themeTokensByNormalizedToken.get(
-        normalizedToken,
-      )
+      const themeTokenDefinition = themeTokensByNormalizedToken.get(normalizedToken)
 
-      if (
-        themeTokenDefinition !== undefined &&
-        !themeTokenDefinition.token.startsWith('accent.')
-      ) {
-        expect(fallbackDefinition?.theme.text).toBe(
-          themeTokenDefinition.text_color,
-        )
+      if (themeTokenDefinition !== undefined && !themeTokenDefinition.token.startsWith('accent.')) {
+        expect(fallbackDefinition?.theme.text).toBe(themeTokenDefinition.text_color)
       }
     }
   })

@@ -31,9 +31,7 @@ vi.mock('../src/lib/swClient', () => ({
   isForceUpdateEnabled: vi.fn(() => mockForceUpdateEnabled),
   setLastSync: vi.fn((value: string | null) => {
     mockSnapshot = { ...mockSnapshot, lastSyncAt: value }
-    listeners.forEach((listener) =>
-      listener({ type: 'last-sync', lastSyncAt: value }),
-    )
+    listeners.forEach((listener) => listener({ type: 'last-sync', lastSyncAt: value }))
   }),
 }))
 
@@ -46,9 +44,7 @@ vi.mock('../src/lib/telemetry', () => ({
 }))
 
 const useRefreshStatusControllerMock = vi.mocked(useRefreshStatusController)
-const subscribeMock = vi.mocked(
-  (await import('../src/lib/swClient')).subscribe,
-)
+const subscribeMock = vi.mocked((await import('../src/lib/swClient')).subscribe)
 
 const emitEvent = (event: ServiceWorkerClientEvent) => {
   if (event.type === 'waiting') {

@@ -4,8 +4,8 @@ import type { RecommendResponse } from '../../types'
 import type { RecommendResponseWithFallback } from '../api'
 import { createApiTestContext } from './apiTestContext'
 
-type FetchRecommendations = typeof import('../api')['fetchRecommendations']
-type PostRefresh = typeof import('../api')['postRefresh']
+type FetchRecommendations = (typeof import('../api'))['fetchRecommendations']
+type PostRefresh = (typeof import('../api'))['postRefresh']
 
 describe('fetchRecommendations', () => {
   const context = createApiTestContext()
@@ -133,27 +133,25 @@ describe('fetchRecommendations', () => {
   })
 
   it('postRefresh は Idempotency-Key を保持して送信する', async () => {
-    const randomUUID = installCryptoMock([
-      'idempotency-key-1',
-      'request-id-1',
-      'request-id-2',
-    ])
+    const randomUUID = installCryptoMock(['idempotency-key-1', 'request-id-1', 'request-id-2'])
     const localStorageMock = createLocalStorageMock()
     vi.stubGlobal('localStorage', localStorageMock)
 
     const payload = { state: 'running' as const }
     context.fetchMock
-      .mockImplementationOnce(async () =>
-        new Response(JSON.stringify(payload), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
+      .mockImplementationOnce(
+        async () =>
+          new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
       )
-      .mockImplementationOnce(async () =>
-        new Response(null, {
-          status: 204,
-          headers: { 'Content-Type': 'application/json' },
-        }),
+      .mockImplementationOnce(
+        async () =>
+          new Response(null, {
+            status: 204,
+            headers: { 'Content-Type': 'application/json' },
+          }),
       )
 
     await loadFetchRecommendations()

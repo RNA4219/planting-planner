@@ -73,9 +73,7 @@ describe('RegionSelect i18n', () => {
     const select = screen.getByRole('combobox')
     expect(select).toHaveAttribute('aria-label', 'Region')
     expect(screen.getByRole('option', { name: 'Cold region' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('option', { name: 'Temperate region' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Temperate region' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Warm region' })).toBeInTheDocument()
   })
 })

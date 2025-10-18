@@ -75,7 +75,9 @@ const getMarketSelectTheme = (
     : fallbackBackgroundToken
 
   const backgroundClass =
-    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ?? MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ?? 'bg-market-neutral'
+    MARKET_THEME_BACKGROUND_CLASSES[backgroundToken] ??
+    MARKET_THEME_BACKGROUND_CLASSES['market-neutral'] ??
+    'bg-market-neutral'
   const textColor = optionTheme?.text ?? fallbackTheme.text ?? FALLBACK_THEME_BY_GROUP.default.text
   const dataTheme = backgroundToken ?? fallbackBackgroundToken
 
@@ -93,11 +95,12 @@ const resolveMarketTheme = (
   readonly optionTheme: MarketScopeTheme | undefined
 } => {
   const fallbackByScope = FALLBACK_THEME_BY_SCOPE.get(scope)
-  const fallbackByGroup = scope === 'national'
-    ? FALLBACK_THEME_BY_GROUP.national
-    : scope.startsWith('city:')
-      ? FALLBACK_THEME_BY_GROUP.city
-      : FALLBACK_THEME_BY_GROUP.default
+  const fallbackByGroup =
+    scope === 'national'
+      ? FALLBACK_THEME_BY_GROUP.national
+      : scope.startsWith('city:')
+        ? FALLBACK_THEME_BY_GROUP.city
+        : FALLBACK_THEME_BY_GROUP.default
   const fallbackTheme = fallbackByScope ?? fallbackByGroup
 
   const activeOption = options.find((option) => option.value === scope)
@@ -126,7 +129,9 @@ export const SearchControls = ({
     queryFn: fetchMarkets,
   })
 
-  const marketOptions: readonly MarketScopeOption[] = isSuccess ? marketsResponse.markets : MARKET_SCOPE_OPTIONS
+  const marketOptions: readonly MarketScopeOption[] = isSuccess
+    ? marketsResponse.markets
+    : MARKET_SCOPE_OPTIONS
   useEffect(() => {
     if (!onMarketsUpdate || !isSuccess || !marketsResponse) {
       return

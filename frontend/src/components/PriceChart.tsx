@@ -67,7 +67,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         setTitle(`${res.series.crop} (${res.series.unit})`)
         const points = res.series.prices ?? []
         setLabels(points.map((p) => p.week))
-        setValues(points.map((p) => (p.avg_price ?? NaN)))
+        setValues(points.map((p) => p.avg_price ?? NaN))
         setIsFallback(res.isMarketFallback)
       } catch {
         if (active) {
@@ -88,16 +88,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     }
   }, [cropId, range?.from, range?.to, marketScope])
 
-  const fallbackNotice =
-    isFallback ? (
-      <p
-        role="alert"
-        aria-live="assertive"
-        className="rounded-lg border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning"
-      >
-        {TOAST_MESSAGES.recommendationFallbackWarning}
-      </p>
-    ) : null
+  const fallbackNotice = isFallback ? (
+    <p
+      role="alert"
+      aria-live="assertive"
+      className="rounded-lg border border-market-warning/50 bg-market-warning/10 px-4 py-3 text-sm font-semibold text-market-warning"
+    >
+      {TOAST_MESSAGES.recommendationFallbackWarning}
+    </p>
+  ) : null
 
   if (cropId == null) {
     return (
@@ -128,8 +127,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const firstWeek = labels[0]!
   const lastWeek = labels[labels.length - 1]!
-  const periodText =
-    firstWeek === lastWeek ? firstWeek : chart.periodRange(firstWeek, lastWeek)
+  const periodText = firstWeek === lastWeek ? firstWeek : chart.periodRange(firstWeek, lastWeek)
   const summary = chart.summary(title, periodText, labels.length)
 
   return (
@@ -142,9 +140,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             aria-label={chart.ariaLabel(title)}
             data={{
               labels,
-              datasets: [
-                { label: chart.legendLabel, data: values, tension: 0.2 },
-              ],
+              datasets: [{ label: chart.legendLabel, data: values, tension: 0.2 }],
             }}
             options={{
               responsive: true,

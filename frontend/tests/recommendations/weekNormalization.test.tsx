@@ -2,11 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, type MockInstance } from 'vitest'
 
-import {
-  fetchCrops,
-  fetchRecommendations,
-  renderApp,
-} from '../utils/renderApp'
+import { fetchCrops, fetchRecommendations, renderApp } from '../utils/renderApp'
 import {
   createItem,
   createRecommendResponse,

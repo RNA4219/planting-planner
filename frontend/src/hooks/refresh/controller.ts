@@ -136,12 +136,17 @@ export const useRefreshStatusController = (
   options?: UseRefreshStatusOptions,
 ): UseRefreshStatusResult => {
   const settings = useMemo(
-    () => ({ pollIntervalMs: options?.pollIntervalMs ?? 5000, timeoutMs: options?.timeoutMs ?? 120000 }),
+    () => ({
+      pollIntervalMs: options?.pollIntervalMs ?? 5000,
+      timeoutMs: options?.timeoutMs ?? 120000,
+    }),
     [options?.pollIntervalMs, options?.timeoutMs],
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [pendingToasts, setPendingToasts] = useState<RefreshToast[]>([])
-  const [lastSync, setLastSyncState] = useState<RefreshLastSyncSnapshot | null>(() => getCachedLastSync())
+  const [lastSync, setLastSyncState] = useState<RefreshLastSyncSnapshot | null>(() =>
+    getCachedLastSync(),
+  )
   const active = useRef(false)
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completion = useRef<(() => void) | null>(null)
@@ -166,10 +171,13 @@ export const useRefreshStatusController = (
     toastTimers.current.set(id, timer)
   }, [])
 
-  const dismissToast = useCallback((id: string) => {
-    cancelToastTimer(id)
-    setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [cancelToastTimer])
+  const dismissToast = useCallback(
+    (id: string) => {
+      cancelToastTimer(id)
+      setPendingToasts((prev) => prev.filter((toast) => toast.id !== id))
+    },
+    [cancelToastTimer],
+  )
 
   useEffect(
     () => () => {

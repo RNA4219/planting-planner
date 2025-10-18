@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { PriceChart } from '../../src/components/PriceChart'
 
-type FetchPrice = typeof import('../../src/lib/api')['fetchPrice']
+type FetchPrice = (typeof import('../../src/lib/api'))['fetchPrice']
 
 const { fetchPriceMock } = vi.hoisted(() => ({
   fetchPriceMock: vi.fn<FetchPrice>(),
@@ -34,7 +34,7 @@ describe('PriceChart のアクセシビリティ', () => {
     await screen.findByRole('heading', { name: 'トマト (kg)' })
 
     const summary = await screen.findByText(
-      'トマト (kg) の週平均価格。期間: 2024-W01 〜 2024-W02。データ点数: 2件。'
+      'トマト (kg) の週平均価格。期間: 2024-W01 〜 2024-W02。データ点数: 2件。',
     )
 
     expect(summary.tagName.toLowerCase()).toBe('figcaption')

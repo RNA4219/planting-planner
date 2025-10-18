@@ -66,7 +66,10 @@ describe('SearchControls i18n', () => {
   })
 
   it('市場ラベルと aria-label が日本語辞書値を表示する', async () => {
-    const { queryClient } = await renderSearchControls({ marketLabel: '市場', marketAriaLabel: '市場' })
+    const { queryClient } = await renderSearchControls({
+      marketLabel: '市場',
+      marketAriaLabel: '市場',
+    })
 
     expect(screen.getByText('市場')).toBeInTheDocument()
     const select = screen.getByRole('combobox', { name: '市場' })
@@ -76,7 +79,10 @@ describe('SearchControls i18n', () => {
   })
 
   it('市場ラベルと aria-label が英語辞書値を表示する', async () => {
-    const { queryClient } = await renderSearchControls({ marketLabel: 'Market', marketAriaLabel: 'Market' })
+    const { queryClient } = await renderSearchControls({
+      marketLabel: 'Market',
+      marketAriaLabel: 'Market',
+    })
 
     expect(screen.getByText('Market')).toBeInTheDocument()
     const select = screen.getByRole('combobox', { name: 'Market' })

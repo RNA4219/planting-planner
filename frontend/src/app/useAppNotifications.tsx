@@ -4,12 +4,7 @@ import type { ToastStackItem } from '../components/ToastStack'
 import { APP_STATUS_MESSAGES, TOAST_MESSAGES } from '../constants/messages'
 import { useRefreshStatusController } from '../hooks/refresh/controller'
 import type { RecommendationLoadError } from '../hooks/recommendations/loader'
-import {
-  getSnapshot,
-  isForceUpdateEnabled,
-  subscribe,
-  skipWaiting,
-} from '../lib/swClient'
+import { getSnapshot, isForceUpdateEnabled, subscribe, skipWaiting } from '../lib/swClient'
 import { sendTelemetry } from '../lib/telemetry'
 import { formatLastSync } from '../utils/formatLastSync'
 
@@ -178,7 +173,10 @@ export const useAppNotifications = ({
       setOfflineBanner(null)
       return
     }
-    const formattedLastSync = formatLastSync(lastSyncDate, APP_STATUS_MESSAGES.offlineBannerLastSyncUnknown)
+    const formattedLastSync = formatLastSync(
+      lastSyncDate,
+      APP_STATUS_MESSAGES.offlineBannerLastSyncUnknown,
+    )
     setOfflineBanner(
       <div
         data-testid="offline-status-banner"
@@ -238,21 +236,18 @@ export const useAppNotifications = ({
     [dismissToast, forceUpdateRequired, updateToast],
   )
 
-  const combinedToasts = useMemo(
-    () => {
-      const base = [
-        ...pendingToasts,
-        ...recommendationErrorToasts,
-        ...marketFallbackToasts,
-        ...shareToasts,
-      ]
-      if (updateToast) {
-        return [updateToast, ...base]
-      }
-      return base
-    },
-    [marketFallbackToasts, pendingToasts, recommendationErrorToasts, shareToasts, updateToast],
-  )
+  const combinedToasts = useMemo(() => {
+    const base = [
+      ...pendingToasts,
+      ...recommendationErrorToasts,
+      ...marketFallbackToasts,
+      ...shareToasts,
+    ]
+    if (updateToast) {
+      return [updateToast, ...base]
+    }
+    return base
+  }, [marketFallbackToasts, pendingToasts, recommendationErrorToasts, shareToasts, updateToast])
 
   const fallbackNotice = useMemo(() => {
     if (!isMarketFallback) {
@@ -287,28 +282,25 @@ export const useAppNotifications = ({
     [forceUpdateRequired, updateToast],
   )
 
-  const notifyShareResult = useCallback(
-    (result: 'success' | 'copied' | 'error') => {
-      const id = `share-${shareToastSeqRef.current + 1}`
-      shareToastSeqRef.current += 1
-      const message =
-        result === 'success'
-          ? TOAST_MESSAGES.shareSuccess
-          : result === 'copied'
-            ? TOAST_MESSAGES.shareCopied
-            : TOAST_MESSAGES.shareError
-      const variant = result === 'error' ? 'error' : 'info'
-      setShareToasts([
-        {
-          id,
-          variant,
-          message,
-          detail: null,
-        },
-      ])
-    },
-    [],
-  )
+  const notifyShareResult = useCallback((result: 'success' | 'copied' | 'error') => {
+    const id = `share-${shareToastSeqRef.current + 1}`
+    shareToastSeqRef.current += 1
+    const message =
+      result === 'success'
+        ? TOAST_MESSAGES.shareSuccess
+        : result === 'copied'
+          ? TOAST_MESSAGES.shareCopied
+          : TOAST_MESSAGES.shareError
+    const variant = result === 'error' ? 'error' : 'info'
+    setShareToasts([
+      {
+        id,
+        variant,
+        message,
+        detail: null,
+      },
+    ])
+  }, [])
 
   return {
     isRefreshing,

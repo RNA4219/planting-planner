@@ -81,12 +81,14 @@ describe('processRefreshQueue telemetry', () => {
   it('sends failure telemetry when retries are exhausted', async () => {
     const fetchError = new Error('network failed')
     const fetchMock = vi.fn(() => Promise.reject(fetchError))
-    const setTimeoutMock = vi.spyOn(globalThis, 'setTimeout').mockImplementation((callback: TimerHandler) => {
-      if (typeof callback === 'function') {
-        callback()
-      }
-      return 0 as unknown as ReturnType<typeof setTimeout>
-    })
+    const setTimeoutMock = vi
+      .spyOn(globalThis, 'setTimeout')
+      .mockImplementation((callback: TimerHandler) => {
+        if (typeof callback === 'function') {
+          callback()
+        }
+        return 0 as unknown as ReturnType<typeof setTimeout>
+      })
     vi.stubGlobal('fetch', fetchMock)
 
     const queueEntry = {
@@ -95,10 +97,7 @@ describe('processRefreshQueue telemetry', () => {
       }),
     }
 
-    const shiftRequest = vi
-      .fn()
-      .mockResolvedValueOnce(queueEntry)
-      .mockResolvedValueOnce(undefined)
+    const shiftRequest = vi.fn().mockResolvedValueOnce(queueEntry).mockResolvedValueOnce(undefined)
     const unshiftRequest = vi.fn(() => Promise.resolve())
 
     const { processRefreshQueue } = await import('../../src/sw')
@@ -130,10 +129,7 @@ describe('processRefreshQueue telemetry', () => {
       }),
     }
 
-    const shiftRequest = vi
-      .fn()
-      .mockResolvedValueOnce(queueEntry)
-      .mockResolvedValueOnce(undefined)
+    const shiftRequest = vi.fn().mockResolvedValueOnce(queueEntry).mockResolvedValueOnce(undefined)
     const unshiftRequest = vi.fn(() => Promise.resolve())
 
     const { processRefreshQueue } = await import('../../src/sw')

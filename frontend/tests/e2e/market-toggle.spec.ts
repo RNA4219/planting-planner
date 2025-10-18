@@ -11,10 +11,22 @@ const CROPS = [
 const RECOMMENDATIONS: Record<string, Record<string, unknown[]>> = {
   national: {
     leaf: [
-      { crop: '春菊', sowing_week: '2024-W30', harvest_week: '2024-W35', source: '全国統計', growth_days: 42 },
+      {
+        crop: '春菊',
+        sowing_week: '2024-W30',
+        harvest_week: '2024-W35',
+        source: '全国統計',
+        growth_days: 42,
+      },
     ],
     flower: [
-      { crop: 'バラ', sowing_week: '2024-W28', harvest_week: '2024-W34', source: '全国統計', growth_days: 60 },
+      {
+        crop: 'バラ',
+        sowing_week: '2024-W28',
+        harvest_week: '2024-W34',
+        source: '全国統計',
+        growth_days: 60,
+      },
     ],
   },
   'city:tokyo': {
@@ -90,12 +102,14 @@ test.describe('市場トグルとカテゴリ遷移', () => {
       '市場データが一時的に利用できないため、推定値を表示しています。',
     )
     await expect(page.getByRole('row', { name: /バラ/ })).toBeVisible()
-    expect.soft(recommendRequests).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
-        expect.objectContaining({ marketScope: 'city:tokyo', category: 'leaf' }),
-        expect.objectContaining({ marketScope: 'city:tokyo', category: 'flower' }),
-      ]),
-    )
+    expect
+      .soft(recommendRequests)
+      .toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
+          expect.objectContaining({ marketScope: 'city:tokyo', category: 'leaf' }),
+          expect.objectContaining({ marketScope: 'city:tokyo', category: 'flower' }),
+        ]),
+      )
   })
 })

@@ -7,19 +7,9 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import type { Queue } from 'workbox-background-sync'
 
-import {
-  APP_VERSION,
-  DATA_EPOCH,
-  SCHEMA_VERSION,
-  buildTelemetryContext,
-} from './config/pwa'
+import { APP_VERSION, DATA_EPOCH, SCHEMA_VERSION, buildTelemetryContext } from './config/pwa'
 import { sendTelemetry } from './lib/telemetry'
-import {
-  recordAttempt,
-  recordEnqueue,
-  recordFailure,
-  recordSuccess,
-} from './sw/refreshQueueStore'
+import { recordAttempt, recordEnqueue, recordFailure, recordSuccess } from './sw/refreshQueueStore'
 
 interface RefreshQueueMetadata {
   refreshQueueId?: string
@@ -45,7 +35,9 @@ const getOrCreateEntryId = (entry: QueueEntry): string => {
     return metadata.refreshQueueId
   }
 
-  const id = self.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  const id =
+    self.crypto?.randomUUID?.() ??
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
   metadata.refreshQueueId = id
   return id
 }
