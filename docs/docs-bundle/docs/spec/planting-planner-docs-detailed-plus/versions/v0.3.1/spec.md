@@ -10,7 +10,7 @@
 ### 2.2 Runtime Cache
 - 静的資産: Stale-While-Revalidate
 - `GET /api/*`: Network-First（失敗時 `cache.match` フォールバック）
-- キャッシュキー: `api:{method}:{url}:{query}:v{schemaVersion}:e{dataEpoch}`
+- キャッシュキー: `api:{method}:{url.pathname}{url.search}:v{schemaVersion}:e{dataEpoch}`（クエリパラメータは `?foo=bar` などの形式で `pathname` の直後に連結する）
 ### 2.3 Background Sync（`POST /api/refresh`）
 - 失敗時 payload を IndexedDB('sync-queue') に保存、Workbox が登録する `tag='workbox-background-sync:refresh-queue'`（キュー名を名前空間化するため接頭辞が付与される）
 - `sync` イベントで再送、指数バックオフ（最大 3 回）
