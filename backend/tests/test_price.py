@@ -9,7 +9,6 @@ from app.db.connection import get_conn
 from app.main import app
 from app.seed import seed
 
-
 CACHE_CONTROL_VALUE = "public, max-age=300, stale-while-revalidate=60"
 ETAG_PATTERN = r'^W/"[0-9a-f]{64}"$'
 
