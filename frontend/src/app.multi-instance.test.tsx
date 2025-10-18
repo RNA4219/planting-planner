@@ -1,8 +1,24 @@
 import '@testing-library/jest-dom/vitest'
 import type { ReactNode } from 'react'
-import { render, within } from '@testing-library/react'
+import { render, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
+
+const flushSyncMock = vi.fn<(callback: () => void) => void>()
+
+vi.mock('react-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-dom')>('react-dom')
+  return {
+    ...actual,
+    flushSync: ((callback: () => void) => {
+      flushSyncMock(callback)
+      if (typeof actual.flushSync === 'function') {
+        return actual.flushSync(callback)
+      }
+      return callback()
+    }) as typeof actual.flushSync,
+  }
+})
 
 vi.mock('./components/SearchControls', () => ({
   __esModule: true,
@@ -108,5 +124,24 @@ describe('AppContent multi-instance accessibility', () => {
     expect(firstControls).toBeTruthy()
     expect(secondControls).toBeTruthy()
     expect(firstControls).not.toBe(secondControls)
+  })
+
+  it('天気タブの遅延初期化で flushSync を使って同期描画する', async () => {
+    flushSyncMock.mockClear()
+
+    const { AppContent } = await import('./App')
+    const queryClient = new QueryClient()
+
+    const { unmount } = render(
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(flushSyncMock).toHaveBeenCalled()
+    })
+
+    unmount()
   })
 })
