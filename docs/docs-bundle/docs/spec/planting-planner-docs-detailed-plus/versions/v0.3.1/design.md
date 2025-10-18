@@ -5,11 +5,53 @@ Client → Service Worker → Network/Cache → API
 
 ## 擬似コード
 ```ts
-precacheAndRoute(self.__WB_MANIFEST);
-registerRoute(isStatic, new StaleWhileRevalidate());
-registerRoute(isApiGet, new NetworkFirst({ cacheName: 'api', networkTimeoutSeconds: 4 }));
-const bgSync = new BackgroundSyncPlugin('refresh-queue', { maxRetentionTime: 1440 });
-registerRoute(isRefreshPost, new NetworkOnly({ plugins: [bgSync] }), 'POST');
+precacheAndRoute(self.__WB_MANIFEST)
+cleanupOutdatedCaches()
+clientsClaim()
+
+registerRoute(
+  isStatic,
+  new StaleWhileRevalidate({
+    cacheName: 'static-assets',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 60 * 60 * 24,
+        purgeOnQuotaError: true,
+      }),
+    ],
+  }),
+)
+
+registerRoute(
+  isApiGet,
+  new NetworkFirst({
+    cacheName: 'api-get-cache',
+    networkTimeoutSeconds: 4,
+    plugins: [
+      versionedCacheKeyPlugin,
+      telemetryCachePlugin,
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 60,
+        purgeOnQuotaError: true,
+      }),
+    ],
+    fetchOptions: { credentials: 'include' },
+  }),
+)
+
+const refreshBackgroundSyncPlugin = new BackgroundSyncPlugin('refresh-queue', {
+  maxRetentionTime: 60 * 24,
+  onSync: ({ queue }) => processRefreshQueue(queue),
+})
+
+registerRoute(
+  isRefreshPost,
+  new NetworkOnly({ plugins: [refreshBackgroundSyncPlugin] }),
+  'POST',
+)
 ```
 
 ## データ
