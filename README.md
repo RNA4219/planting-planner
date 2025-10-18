@@ -61,7 +61,8 @@
     - PWA ≥ 0.90
     - Performance ≥ 0.80
     - Accessibility ≥ 0.90
-    - Best Practices / SEO ≥ 0.80
-  - 更新後の基準が CI の `lhci autorun` 結果と矛盾しないことを確認するため、上記コマンドをローカルで実行し、各スコアが基準値を満たすことを確認してください。
+    - Best Practices ≥ 0.80
+    - SEO ≥ 0.80
+  - 更新後の基準が CI の `lhci autorun` 結果と矛盾しないことを確認するため、`npm run build && npm run preview && lhci autorun` をローカルで実行し、各スコアが基準値を満たすことを確認してください。
 
 家庭菜園の計画づくりに、Planting Planner をぜひお役立てください。
