@@ -19,7 +19,7 @@
 ### 更新フロー
 1. 最新ソースを取得後、必要に応じて `poetry run python -m backend.app.etl_runner` で ETL を実行し、加工済み JSON を更新する。
 2. データ検証（後述）で JSON/DB スキーマの整合性と回帰を確認する。
-3. `scripts/export_seed.py` を用いて `data/seed-YYYYMMDD.db` を生成する。出力先は既存ファイルと衝突しない日付にする。
+3. リポジトリ同梱の `scripts/export_seed.py` を用いて `data/seed-YYYYMMDD.db` を生成する。出力先は既存ファイルと衝突しない日付にする。
 4. 直前のスナップショットと比較し、差分を記録する。
    - `sqlite3 data/seed-YYYYMMDD.db '.dump' > tmp/seed-YYYYMMDD.sql`
    - `sqlite3 data/seed-<prev>.db '.dump' > tmp/seed-<prev>.sql`
@@ -35,9 +35,10 @@
     --data-dir data --data-date 2024-12-05
   ```
 - 省略時は `--output` が未指定でも `data/seed-YYYYMMDD.db` として当日付のファイルを生成する。
+- `--data-dir` を省略すると `data/` 配下の既定 JSON を参照する。
 - `--data-date` を省略した場合は当日の日付がメタデータ `data_fetched_at` に記録される。
 - スクリプトは生成日時や使用した JSON のコミットハッシュなどのメタデータを `metadata` テーブルに書き込み、レビュー時に出典を追跡できるようにする。
-  - `metadata` テーブルには `schema_version`・`data_fetched_at`・`git_commit`・`exported_at` のキーが `TEXT` 形式で保存される。
+  - `metadata` テーブルには `schema_version`・`data_fetched_at`・`git_commit`・`exported_at` のキーが ISO 8601 形式の `TEXT` 値として保存される。
 
 ## 生成データの検証手順
 - シード投入の動作確認：
