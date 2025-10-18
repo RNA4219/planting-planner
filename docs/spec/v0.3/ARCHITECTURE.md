@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # アーキテクチャ概要 — v0.3
 
 - バックエンド: FastAPI は既存 `/api/recommend` で `marketScope` クエリを受け、`market_prices` から都市別レコードを参照しつつレスポンス形は維持。

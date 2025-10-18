@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # リリースチェックリスト — v0.3
 
 ## KPI 達成チェック

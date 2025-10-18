@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD013": false } -->
+
 # ロードマップ — v0.3
 
 > ⚠️ PNG アセットに関する PR は CI 制約により作成できません。該当項目は計画に含めないでください。
