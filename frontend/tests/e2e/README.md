@@ -1,4 +1,5 @@
 # E2E テスト指針
+
 <!-- markdownlint-disable MD013 -->
 
 - Playwright で市場トグルとカテゴリ遷移を監視する。
