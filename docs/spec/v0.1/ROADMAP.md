@@ -23,7 +23,7 @@
 - [x] 更新ボタン → `/refresh` API 呼び出し
 - [x] MVP版公開（Pages/Render）
 
-  - デプロイ設定（Render/GitHub Pages）の雛形を追加し、Secrets/環境変数の整理を行う。
+  デプロイ設定（Render/GitHub Pages）の雛形を追加し、Secrets/環境変数の整理を行う。
 
 ---
 
@@ -34,7 +34,7 @@
 - [ ] `/refresh/status` を用いたポーリング&トースト通知（UI）
 - [x] 欠損データ処理（過去平均補完）
 
-  - 直近3週平均で欠損補完済み。
+  直近3週平均で欠損補完済み。
 
 - [x] API `/price` 実装（価格履歴表示）
 - [x] Backend ユニットテスト充実
