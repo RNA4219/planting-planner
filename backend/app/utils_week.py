@@ -20,7 +20,10 @@ def iso_week_to_date(week: str) -> date:
     if not 1 <= week_number <= 53:
         raise WeekFormatError("week number must be between 1 and 53")
 
-    return date.fromisocalendar(year, week_number, 1)
+    try:
+        return date.fromisocalendar(year, week_number, 1)
+    except ValueError as exc:
+        raise WeekFormatError("week does not exist in given year") from exc
 
 
 def iso_week_to_date_mid(week: str) -> date:
