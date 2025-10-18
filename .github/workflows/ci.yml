@@ -10,6 +10,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  backend-poetry:
+    name: backend dependencies (poetry)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: install poetry
+        run: |
+          pipx install poetry
+          poetry self add poetry-plugin-export
+      - name: install dependencies
+        run: poetry install --with backend,dev
+      - name: export backend requirements
+        run: |
+          poetry export --without-hashes -f requirements.txt --with backend -o backend/requirements.txt
+          poetry export --without-hashes -f requirements.txt --with backend,dev -o backend/requirements-dev.txt
+      - name: verify exported requirements
+        run: git diff --exit-code backend/requirements*.txt
+
   frontend-typecheck:
     name: frontend typecheck (vite+ts)
     runs-on: ubuntu-latest
@@ -148,6 +170,7 @@ jobs:
   backend-lint:
     name: backend lint (ruff+black+mypy)
     runs-on: ubuntu-latest
+    needs: backend-poetry
     defaults:
       run:
         working-directory: backend
@@ -157,17 +180,22 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: install poetry
+        run: pipx install poetry
+      - name: install dependencies
+        run: poetry install --with backend,dev
+        working-directory: ..
       - name: lint (ruff)
-        run: ruff check .
+        run: poetry --directory .. run ruff check .
       - name: format check (black)
-        run: black --check .
+        run: poetry --directory .. run black --check .
       - name: type check (mypy)
-        run: mypy app
+        run: poetry --directory .. run mypy app
 
   backend-test:
     name: backend test (pytest)
     runs-on: ubuntu-latest
+    needs: backend-poetry
     defaults:
       run:
         working-directory: backend
@@ -177,9 +205,19 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: install poetry
+        run: pipx install poetry
+      - name: install dependencies
+        run: poetry install --with backend,dev
+        working-directory: ..
       - name: test (pytest)
-        run: pytest -q
+        run: poetry --directory .. run pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=80
+      - name: upload coverage report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage.xml
 
   frontend-lighthouse:
     name: frontend lighthouse (smoke)
