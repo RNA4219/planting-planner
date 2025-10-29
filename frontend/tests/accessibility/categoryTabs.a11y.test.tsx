@@ -1,9 +1,20 @@
 import '@testing-library/jest-dom/vitest'
 
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 
-import { fetchRecommend, fetchRecommendations, fetchCrops, renderApp } from '../utils/renderApp'
+import {
+  fetchRecommend,
+  fetchRecommendations,
+  fetchCrops,
+  renderApp,
+  resetAppSpies,
+} from '../utils/renderApp'
+
+afterEach(() => {
+  cleanup()
+  resetAppSpies()
+})
 
 const getActiveTab = async () => {
   const activeTabs = await screen.findAllByRole('tab', { selected: true })
