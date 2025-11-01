@@ -272,7 +272,7 @@ export const useRefreshStatusController = (
         finish(toastFromStatus(response), response)
       } else {
         enqueue({ variant: 'info', message: TOAST_MESSAGES.refreshRequestStarted, detail: null })
-        void pollerRef.current?.run()
+        await pollerRef.current?.run()
       }
     } catch (error) {
       finish({

@@ -11,6 +11,7 @@
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --config .eslintrc.json --max-warnings=0 src --ext .ts,.tsx,.js,.jsx",
     "test": "vitest run",
     "test:file": "vitest run --passWithNoTests",
+    "pretest:e2e": "npx playwright install",
     "test:e2e": "npm run build && npx playwright test playwright/app.spec.js tests/e2e/*.spec.ts",
     "test:lighthouse": "npm run build && lighthouse http://localhost:4173 --chrome-flags=--headless",
     "test:bundle-size": "node --test tests/ci/bundle-size.test.mjs"

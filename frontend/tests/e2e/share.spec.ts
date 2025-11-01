@@ -210,6 +210,15 @@ test.describe('共有フロー', () => {
         ),
       )
       .toBe(1)
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as typeof window & { __refreshStatusCalls?: string[] }).__refreshStatusCalls
+              ?.length ?? 0,
+        ),
+      )
+      .toBeGreaterThan(0)
     const refreshCalls = await page.evaluate<string[]>(
       () => (window as typeof window & { __refreshCalls?: string[] }).__refreshCalls ?? [],
     )

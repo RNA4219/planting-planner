@@ -53,4 +53,20 @@ describe('useRefreshStatusController / polling', () => {
     expect(latestOptions?.pollIntervalMs).toBe(1000)
     expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(2)
   })
+
+  it('更新開始直後にステータス取得を行う', async () => {
+    postRefreshMock.mockResolvedValueOnce({ state: 'running' })
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('running'))
+    fetchRefreshStatusMock.mockResolvedValueOnce(createStatus('success'))
+
+    const { result } = renderController({ pollIntervalMs: 1000 })
+
+    await act(async () => {
+      const promise = result.current.startRefresh()
+      await vi.runAllTicks()
+      expect(fetchRefreshStatusMock).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1000)
+      await promise
+    })
+  })
 })
