@@ -51,6 +51,8 @@ cd ..
 - PowerShell ウィンドウを 2 つ開いて、バックエンドとフロントエンドをそれぞれ起動
 - フロントエンドを `http://127.0.0.1:5173` でブラウザ表示
 
+`Start.bat` はまず `poetry run` を使い、`poetry` が見つからない場合は `py -m uvicorn` / `python -m uvicorn` にフォールバックします。
+
 補助オプション:
 
 ```powershell

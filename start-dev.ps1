@@ -16,40 +16,30 @@ function Assert-Command {
     }
 }
 
-function Resolve-PoetryCommand {
-    function Test-PoetryModule {
-        param(
-            [Parameter(Mandatory = $true)]
-            [string]$Launcher
-        )
-
-        if (-not (Get-Command $Launcher -ErrorAction SilentlyContinue)) {
-            return $false
-        }
-
-        cmd.exe /d /c "$Launcher -m poetry --version >nul 2>nul"
-        return $LASTEXITCODE -eq 0
-    }
+function Resolve-BackendCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoRoot
+    )
 
     if (Get-Command "poetry" -ErrorAction SilentlyContinue) {
-        return "poetry"
+        return "Set-Location -LiteralPath '$RepoRoot'; poetry run uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
     }
 
-    if (Test-PoetryModule -Launcher "py") {
-        return "py -m poetry"
+    if (Get-Command "py" -ErrorAction SilentlyContinue) {
+        return "Set-Location -LiteralPath '$RepoRoot'; py -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
     }
 
-    if (Test-PoetryModule -Launcher "python") {
-        return "python -m poetry"
+    if (Get-Command "python" -ErrorAction SilentlyContinue) {
+        return "Set-Location -LiteralPath '$RepoRoot'; python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
     }
 
-    throw "Poetry was not found. Install Poetry or add it to PATH."
+    throw "Missing backend launcher. Install Poetry or Python 3.11+."
 }
 
 $repoRoot = $PSScriptRoot
 $frontendRoot = Join-Path $repoRoot "frontend"
 $frontendNodeModules = Join-Path $frontendRoot "node_modules"
-$poetryCommand = Resolve-PoetryCommand
 
 Assert-Command -Name "powershell.exe"
 Assert-Command -Name "npm"
@@ -62,13 +52,12 @@ if (-not (Test-Path -LiteralPath $frontendNodeModules)) {
     Write-Warning "frontend/node_modules is missing. Run 'cd frontend; npm install' first."
 }
 
-$backendCommand = "Set-Location -LiteralPath '$repoRoot'; $poetryCommand run uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
+$backendCommand = Resolve-BackendCommand -RepoRoot $repoRoot
 $frontendCommand = "Set-Location -LiteralPath '$frontendRoot'; npm run dev -- --host 127.0.0.1 --port 5173 --strictPort"
 
 if ($CheckOnly) {
     Write-Host "Planting Planner startup check"
     Write-Host "Repo root   : $repoRoot"
-    Write-Host "Poetry cmd  : $poetryCommand"
     Write-Host "Backend cmd : $backendCommand"
     Write-Host "Frontend cmd: $frontendCommand"
     exit 0
