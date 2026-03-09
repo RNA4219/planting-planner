@@ -65,7 +65,7 @@ cd ..
 ### 3. 手動で起動したい場合
 
 ```bash
-poetry run uvicorn backend.app.main:app --reload
+poetry run uvicorn app.main:app --app-dir backend --reload
 ```
 
 API は既定で `http://127.0.0.1:8000` で起動します。

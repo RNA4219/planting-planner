@@ -23,15 +23,15 @@ function Resolve-BackendCommand {
     )
 
     if (Get-Command "poetry" -ErrorAction SilentlyContinue) {
-        return "Set-Location -LiteralPath '$RepoRoot'; poetry run uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
+        return "Set-Location -LiteralPath '$RepoRoot'; poetry run uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000"
     }
 
     if (Get-Command "py" -ErrorAction SilentlyContinue) {
-        return "Set-Location -LiteralPath '$RepoRoot'; py -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
+        return "Set-Location -LiteralPath '$RepoRoot'; py -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000"
     }
 
     if (Get-Command "python" -ErrorAction SilentlyContinue) {
-        return "Set-Location -LiteralPath '$RepoRoot'; python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000"
+        return "Set-Location -LiteralPath '$RepoRoot'; python -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000"
     }
 
     throw "Missing backend launcher. Install Poetry or Python 3.11+."
