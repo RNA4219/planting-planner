@@ -18,7 +18,7 @@ for candidate in (PROJECT_ROOT, BACKEND_ROOT):
     if candidate_str not in sys.path:
         sys.path.insert(0, candidate_str)
 
-from app.compat import UTC
+from app.compat import UTC  # noqa: E402
 
 try:
     export_seed: ModuleType = importlib.import_module("scripts.export_seed")

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 from typing_extensions import Protocol
 
-from . import connection, metadata
 from ..compat import UTC
+from . import connection, metadata
 
 logger = logging.getLogger(__name__)
 

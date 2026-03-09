@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal, cast, get_args
 
+try:
+    from typing import NotRequired
+except ImportError:  # pragma: no cover - Python 3.10 fallback
+    from typing_extensions import NotRequired  # noqa: UP035
+
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 Region = Literal["cold", "temperate", "warm"]
 RefreshState = Literal["success", "failure", "running", "stale"]
