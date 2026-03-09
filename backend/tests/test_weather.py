@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from app.compat import UTC
 from app.main import app
 from app.routes.weather import get_weather_service
-from app.services.weather import WeatherService
+from app.services.weather import OpenMeteoWeatherAdapter, WeatherService
 
 
 class StubWeatherAdapter:
@@ -103,3 +105,72 @@ def test_weather_module_initializes_when_registry_missing(monkeypatch: pytest.Mo
         sys.modules["adapter"] = original_adapter
     else:
         sys.modules.pop("adapter", None)
+
+
+def test_open_meteo_adapter_normalizes_daily_forecast() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/forecast"
+        assert request.url.params["daily"] == (
+            "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max"
+        )
+        assert request.url.params["wind_speed_unit"] == "ms"
+        return httpx.Response(
+            200,
+            json={
+                "daily": {
+                    "time": ["2024-01-01", "2024-01-02"],
+                    "temperature_2m_max": [11.2, 13.4],
+                    "temperature_2m_min": [2.3, 4.5],
+                    "precipitation_sum": [0.0, 1.2],
+                    "wind_speed_10m_max": [3.4, 5.6],
+                }
+            },
+        )
+
+    async def run() -> dict[str, Any]:
+        transport = httpx.MockTransport(handler)
+        async with httpx.AsyncClient(transport=transport, base_url="https://api.open-meteo.com") as client:
+            adapter = OpenMeteoWeatherAdapter(
+                client=client,
+                base_url="/v1/forecast",
+                clock=lambda: datetime(2024, 1, 1, tzinfo=UTC),
+            )
+            return await adapter.get_daily(35.0, 139.0)
+
+    payload = asyncio.run(run())
+
+    assert payload == {
+        "daily": [
+            {"date": "2024-01-01", "tmax": 11.2, "tmin": 2.3, "rain": 0.0, "wind": 3.4},
+            {"date": "2024-01-02", "tmax": 13.4, "tmin": 4.5, "rain": 1.2, "wind": 5.6},
+        ],
+        "fetchedAt": "2024-01-01T00:00:00+00:00",
+    }
+
+
+def test_weather_service_uses_default_adapter_when_registry_has_no_weather(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import app.services.weather as weather_module
+
+    payload = {
+        "daily": [
+            {"date": "2024-01-01", "tmax": 10, "tmin": 3, "rain": 0, "wind": 2},
+            {"date": "2024-01-02", "tmax": 12, "tmin": 4, "rain": 1, "wind": 3},
+        ],
+        "fetchedAt": "2024-01-01T00:00:00+00:00",
+    }
+    adapter = StubWeatherAdapter(payload)
+    service = WeatherService(clock=lambda: datetime(2024, 1, 1, tzinfo=UTC))
+
+    class EmptyRegistry:
+        def get(self, name: str) -> Any:
+            raise KeyError(name)
+
+    monkeypatch.setattr(weather_module, "adapter_registry", EmptyRegistry())
+    monkeypatch.setattr(WeatherService, "_create_default_adapter", lambda self: adapter)
+
+    response = asyncio.run(service.get_weather(35.0, 139.0))
+
+    assert response.model_dump(by_alias=True) == payload
+    assert adapter.calls == [(35.0, 139.0)]

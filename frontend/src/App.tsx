@@ -1,5 +1,4 @@
 import {
-  ComponentType,
   ChangeEvent,
   FormEvent,
   useCallback,
@@ -20,6 +19,7 @@ import { RecommendationsTable } from './components/RecommendationsTable'
 import { SearchControls } from './components/SearchControls'
 import { useFavorites } from './components/FavStar'
 import { ToastStack } from './components/ToastStack'
+import { WeatherTab } from './components/WeatherTab'
 import { loadRegion, loadMarketScope, loadSelectedCategory } from './lib/storage'
 import { isShareSupported, shareCurrentView } from './lib/share'
 import {
@@ -28,7 +28,7 @@ import {
 } from './hooks/recommendations/controller'
 import { useWeather } from './hooks/weather/useWeather'
 import type { CropCategory, MarketScope, Region } from './types'
-import { APP_TEXT, TOAST_MESSAGES, WEATHER_MESSAGES } from './constants/messages'
+import { APP_TEXT, TOAST_MESSAGES } from './constants/messages'
 import { getRegionCoordinates } from './constants/weather'
 import { isWeatherTabEnabled } from './config/featureFlags'
 
@@ -43,44 +43,6 @@ const createQueryClient = () =>
       },
     },
   })
-
-const scheduleWeatherSection = (task: () => void): (() => void) => {
-  const globalWithIdle = globalThis as typeof globalThis & {
-    requestIdleCallback?: (callback: IdleRequestCallback) => number
-    cancelIdleCallback?: (handle: number) => void
-  }
-
-  if (typeof globalWithIdle.requestIdleCallback === 'function') {
-    const handle = globalWithIdle.requestIdleCallback(() => {
-      task()
-    })
-    return () => {
-      globalWithIdle.cancelIdleCallback?.(handle)
-    }
-  }
-
-  const timeout = setTimeout(() => {
-    task()
-  }, 120)
-
-  return () => {
-    clearTimeout(timeout)
-  }
-}
-
-const WeatherSectionFallback = () => (
-  <section
-    aria-label={WEATHER_MESSAGES.title}
-    className="space-y-6 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-lg backdrop-blur"
-    role="status"
-    aria-live="polite"
-  >
-    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-      <h2 className="text-2xl font-bold text-market-neutral-strong">{WEATHER_MESSAGES.title}</h2>
-    </div>
-    <p className="text-sm text-market-neutral/70">{WEATHER_MESSAGES.loading}</p>
-  </section>
-)
 
 const noop = () => {}
 
@@ -122,7 +84,6 @@ export const AppContent = () => {
   const initialRegionRef = useRef<Region>(loadRegion())
   const initialMarketScopeRef = useRef<MarketScope>(loadMarketScope())
   const initialCategoryRef = useRef<CropCategory>(loadSelectedCategory())
-  const isMountedRef = useRef(true)
 
   const fallbackRecommendationsRef = useRef<UseRecommendationsResult | null>(null)
 
@@ -272,13 +233,6 @@ export const AppContent = () => {
     }
   }, [category, ensureValidCategory, marketScope, setCategory])
 
-  useEffect(
-    () => () => {
-      isMountedRef.current = false
-    },
-    [],
-  )
-
   const activeCategoryTabId = `category-tab-${category}`
 
   const fallbackNoticeContent =
@@ -295,75 +249,14 @@ export const AppContent = () => {
     ) : null)
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
-  const [shouldRenderWeatherTab, setShouldRenderWeatherTab] = useState(false)
-  const [WeatherTabComponent, setWeatherTabComponent] = useState<ComponentType<{
-    latest: typeof weatherLatest
-    previous: typeof weatherPrevious
-    isLoading: boolean
-    error: typeof weatherError
-  }> | null>(null)
-
-  useEffect(() => {
-    if (!weatherTabEnabled) {
-      setShouldRenderWeatherTab(false)
-      return
-    }
-
-    if (shouldRenderWeatherTab) {
-      return
-    }
-
-    const cancel = scheduleWeatherSection(() => {
-      if (!isMountedRef.current) {
-        return
-      }
-      if (typeof globalThis.window === 'undefined') {
-        return
-      }
-      setShouldRenderWeatherTab(true)
-    })
-
-    return () => {
-      cancel()
-    }
-  }, [shouldRenderWeatherTab, weatherTabEnabled])
-
-  useEffect(() => {
-    if (!shouldRenderWeatherTab || WeatherTabComponent) {
-      return
-    }
-
-    let active = true
-    void import('./components/WeatherTab').then((module) => {
-      if (!active || !isMountedRef.current) {
-        return
-      }
-      if (typeof globalThis.window === 'undefined') {
-        return
-      }
-      setWeatherTabComponent(() => module.WeatherTab)
-    })
-
-    return () => {
-      active = false
-    }
-  }, [WeatherTabComponent, shouldRenderWeatherTab])
 
   const weatherSection = weatherTabEnabled ? (
-    shouldRenderWeatherTab ? (
-      WeatherTabComponent ? (
-        <WeatherTabComponent
-          latest={weatherLatest}
-          previous={weatherPrevious}
-          isLoading={isWeatherLoading}
-          error={weatherError}
-        />
-      ) : (
-        <WeatherSectionFallback />
-      )
-    ) : (
-      <WeatherSectionFallback />
-    )
+    <WeatherTab
+      latest={weatherLatest}
+      previous={weatherPrevious}
+      isLoading={isWeatherLoading}
+      error={weatherError}
+    />
   ) : null
 
   return (

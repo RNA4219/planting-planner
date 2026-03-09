@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
-import { act, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppContent } from '../../App'
 import {
@@ -80,6 +80,11 @@ describe('AppContent accessibility', () => {
     mockUseWeather.mockReturnValue(createMockWeatherResult())
   })
 
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
   it('useRecommendations が未設定でも安全に描画できる', () => {
     const queryClient = new QueryClient()
 
@@ -125,7 +130,7 @@ describe('AppContent accessibility', () => {
     expect(screen.getByRole('heading', { name: '価格推移' })).toBeInTheDocument()
   })
 
-  it('天気タブをアイドル時に遅延ロードする', async () => {
+  it('天気タブを即座に描画する', () => {
     const mockUseRecommendations = vi.mocked(useRecommendations)
     const mockUseAppNotifications = vi.mocked(useAppNotifications)
     const mockUseWeather = vi.mocked(useWeather)
@@ -137,39 +142,37 @@ describe('AppContent accessibility', () => {
     mockUseAppNotifications.mockReturnValue(notificationsResult)
     mockUseWeather.mockReturnValue(createMockWeatherResult())
 
-    const originalIdle = globalThis as {
-      requestIdleCallback?: typeof window.requestIdleCallback
-      cancelIdleCallback?: typeof window.cancelIdleCallback
-    }
-    type IdleQueueEntry = { handle: number; callback: IdleRequestCallback }
-    const idleQueue: IdleQueueEntry[] = []
-    let handleSequence = 0
+    const queryClient = new QueryClient()
 
-    const idleStub = (callback: IdleRequestCallback): number => {
-      handleSequence += 1
-      idleQueue.push({ handle: handleSequence, callback })
-      return handleSequence
-    }
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>,
+    )
 
-    const cancelIdleStub = (handle: number) => {
-      const index = idleQueue.findIndex((entry) => entry.handle === handle)
-      if (index >= 0) {
-        idleQueue.splice(index, 1)
-      }
-    }
+    const weatherRegions = screen.getAllByRole('region', { name: '天気' })
+    expect(weatherRegions).not.toHaveLength(0)
 
-    ;(
-      globalThis as {
-        requestIdleCallback?: typeof window.requestIdleCallback
-        cancelIdleCallback?: typeof window.cancelIdleCallback
-      }
-    ).requestIdleCallback = idleStub
-    ;(
-      globalThis as {
-        requestIdleCallback?: typeof window.requestIdleCallback
-        cancelIdleCallback?: typeof window.cancelIdleCallback
-      }
-    ).cancelIdleCallback = cancelIdleStub
+    const weatherRegion = weatherRegions.find((region) =>
+      within(region).queryByTestId('weather-latest'),
+    )
+
+    expect(weatherRegion).toBeDefined()
+
+    queryClient.clear()
+  })
+
+  it('天気データ取得中でもタブ本体を維持する', () => {
+    const mockUseRecommendations = vi.mocked(useRecommendations)
+    const mockUseAppNotifications = vi.mocked(useAppNotifications)
+    const mockUseWeather = vi.mocked(useWeather)
+
+    mockUseRecommendations.mockReturnValue(createMockRecommendationsResult())
+    mockUseAppNotifications.mockReturnValue(createMockAppNotificationsResult())
+    mockUseWeather.mockReturnValue({
+      ...createMockWeatherResult(),
+      isLoading: true,
+    })
 
     const queryClient = new QueryClient()
 
@@ -179,38 +182,9 @@ describe('AppContent accessibility', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.queryAllByRole('status', { name: '天気' })).not.toHaveLength(0)
-    expect(screen.queryByRole('region', { name: '天気' })).not.toBeInTheDocument()
-
-    await act(async () => {
-      idleQueue.splice(0).forEach(({ callback }) => {
-        callback({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline)
-      })
-      await Promise.resolve()
-    })
-
-    const weatherRegions = await screen.findAllByRole('region', { name: '天気' })
-    expect(weatherRegions).not.toHaveLength(0)
-
-    const weatherRegion = weatherRegions.find((region) =>
-      within(region).queryByTestId('weather-latest'),
-    )
-
-    expect(weatherRegion).toBeDefined()
-    expect(screen.queryByRole('status', { name: '天気' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '天気' })).toBeInTheDocument()
+    expect(screen.getByText('取得中…')).toBeInTheDocument()
 
     queryClient.clear()
-    ;(
-      globalThis as {
-        requestIdleCallback?: typeof window.requestIdleCallback
-        cancelIdleCallback?: typeof window.cancelIdleCallback
-      }
-    ).requestIdleCallback = originalIdle.requestIdleCallback
-    ;(
-      globalThis as {
-        requestIdleCallback?: typeof window.requestIdleCallback
-        cancelIdleCallback?: typeof window.cancelIdleCallback
-      }
-    ).cancelIdleCallback = originalIdle.cancelIdleCallback
   })
 })

@@ -12,6 +12,7 @@ vi.mock('vite-plugin-pwa', () => ({
 
 vi.mock('vite', () => ({
   defineConfig: (config: unknown) => config,
+  loadEnv: () => ({}),
 }))
 
 vi.mock('@vitejs/plugin-react', () => ({
@@ -21,7 +22,10 @@ vi.mock('@vitejs/plugin-react', () => ({
 }))
 
 const configModule = await import('../../vite.config')
-const config = configModule.default
+const config =
+  typeof configModule.default === 'function'
+    ? configModule.default({ command: 'build', mode: 'test', isSsrBuild: false, isPreview: false })
+    : configModule.default
 
 describe('vite PWA configuration', () => {
   test('includes VitePWA plugin with expected options', () => {
