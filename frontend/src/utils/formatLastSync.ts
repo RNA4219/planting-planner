@@ -62,6 +62,7 @@ export const formatLastSync = (date: Date | null, unknownLabel?: string): string
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
+      timeZone: 'UTC',
     })
     return formatter.format(date)
   } catch {

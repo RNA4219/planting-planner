@@ -29,7 +29,7 @@ describe('App behavior', () => {
     resetAppSpies()
   })
 
-  test('市場APIがフォールバックモードの場合に警告トーストを表示する', async () => {
+  test('市場APIがフォールバックモードの場合に警告 notice を常時表示する', async () => {
     fetchRecommendations.mockResolvedValue(createFallbackResponse())
     fetchRecommend.mockResolvedValue({
       week: '2024-W30',
@@ -37,14 +37,12 @@ describe('App behavior', () => {
       items: [],
     })
 
-    const { user } = await renderApp()
+    await renderApp()
 
-    const [toastStack] = await screen.findAllByTestId('toast-stack')
-    const warningToast = within(toastStack).getByText(
+    const notice = await screen.findByTestId('market-fallback-notice')
+    expect(notice).toHaveTextContent(
       '市場データが一時的に利用できないため、推定値を表示しています。',
     )
-
-    expect(warningToast).toBeInTheDocument()
   })
 
   test('推奨データ取得時に直前のキャッシュを復元できる', async () => {

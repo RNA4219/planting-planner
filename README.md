@@ -14,30 +14,64 @@
 - 直感的なPC向け画面で、お気に入りの作物を☆マークで保存し並び替え。
 - 「更新」ボタンひとつで最新データを取得し、週次のおすすめ作物をチェック。
 
-## ローカルで試す
+## クイックスタート
 
-1. Node.js 20 以上、Python 3.11 以上、Poetry 1.6 以上を準備します。
-2. 依存関係をまとめてインストールします。
+### 前提
 
-   ```bash
-   poetry install --with backend,dev
-   ```
+- Node.js 20 以上
+- Python 3.11 以上
+- Poetry 1.6 以上
 
-3. バックエンド API を起動します。
+### 1. 依存関係を入れる
 
-   ```bash
-   poetry run uvicorn backend.app.main:app --reload
-   ```
+リポジトリ直下でバックエンド依存を入れます。
 
-4. 別ターミナルでフロントエンドを起動します。
+```bash
+poetry install --with backend,dev
+```
 
-   ```bash
-   cd frontend
-   npm ci
-   npm run dev
-   ```
+続けてフロントエンド依存を入れます。
 
-5. 表示されたローカル URL を開き、地域を選んで「今週の作付け計画」を確認します。
+```bash
+cd frontend
+npm ci
+cd ..
+```
+
+### 2. バックエンドを起動する
+
+```bash
+poetry run uvicorn backend.app.main:app --reload
+```
+
+API は既定で `http://127.0.0.1:8000` で起動します。
+
+### 3. フロントエンドを起動する
+
+別ターミナルで実行します。
+
+```bash
+cd frontend
+npm run dev
+```
+
+表示されたローカル URL を開き、地域を選んで「今週の作付け計画」を確認します。
+
+### 4. 動作確認をする
+
+バックエンド:
+
+```bash
+python -m pytest backend/tests tests -q
+```
+
+フロントエンド:
+
+```bash
+cd frontend
+npm run typecheck
+npm test
+```
 
 > 💡 SQLite の既存データを使うので、基本設定のままでお試しできます。
 > ETL を走らせる場合は `data/` ディレクトリや `/api/refresh` をご覧ください。

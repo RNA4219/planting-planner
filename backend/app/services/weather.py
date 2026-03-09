@@ -5,7 +5,7 @@ import inspect
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from threading import Lock
@@ -14,6 +14,7 @@ from typing import Any, Protocol, cast
 from pydantic import ValidationError
 
 from .. import schemas
+from ..compat import UTC
 
 CacheKey = str
 

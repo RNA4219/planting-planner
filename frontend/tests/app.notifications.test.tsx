@@ -83,16 +83,15 @@ describe('useAppNotifications', () => {
     })
   })
 
-  test('マーケットフォールバック時にトーストを1件だけ表示し続ける', async () => {
+  test('マーケットフォールバック時に常設 notice を返し、トーストは増やさない', async () => {
     const reloadCurrentWeek = vi.fn()
     const startRefresh = vi.fn()
     const dismissToast = vi.fn()
-    const pendingToastsRef: { current: ToastStackItem[] } = { current: [] }
 
     useRefreshStatusControllerMock.mockImplementation(() => ({
       isRefreshing: false,
       startRefresh,
-      pendingToasts: pendingToastsRef.current,
+      pendingToasts: [],
       dismissToast,
     }))
 
@@ -104,66 +103,16 @@ describe('useAppNotifications', () => {
       await Promise.resolve()
     })
 
-    expect(result.current.combinedToasts).toHaveLength(1)
-    const [initialToast] = result.current.combinedToasts
-    expect(initialToast.variant).toBe('warning')
-    expect(initialToast.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
+    expect(result.current.combinedToasts).toHaveLength(0)
+    expect(result.current.fallbackNotice).not.toBeNull()
 
     for (let i = 0; i < 2; i += 1) {
       await act(async () => {
         rerender()
       })
-      expect(result.current.combinedToasts).toHaveLength(1)
-      const [currentToast] = result.current.combinedToasts
-      expect(currentToast.id).toBe(initialToast.id)
-      expect(currentToast.variant).toBe('warning')
+      expect(result.current.combinedToasts).toHaveLength(0)
+      expect(result.current.fallbackNotice).not.toBeNull()
     }
-
-    const successToast: ToastStackItem = {
-      id: 'success-toast',
-      variant: 'success',
-      message: 'ok',
-      detail: null,
-    }
-    pendingToastsRef.current = [successToast]
-
-    await act(async () => {
-      rerender()
-    })
-
-    expect(result.current.combinedToasts).toHaveLength(2)
-    const [firstToast, secondToast] = result.current.combinedToasts
-    expect(firstToast).toBe(successToast)
-    expect(secondToast.id).toBe(initialToast.id)
-    expect(secondToast.variant).toBe('warning')
-
-    await act(async () => {
-      rerender()
-    })
-    expect(result.current.combinedToasts).toHaveLength(2)
-    const [, latestFallback] = result.current.combinedToasts
-    expect(latestFallback.id).toBe(initialToast.id)
-
-    await act(async () => {
-      result.current.handleToastDismiss(initialToast.id)
-    })
-
-    expect(result.current.combinedToasts).toHaveLength(2)
-    let [successAfterDismiss, restoredFallback] = result.current.combinedToasts
-    expect(successAfterDismiss).toBe(successToast)
-    expect(restoredFallback.id).not.toBe(initialToast.id)
-    expect(restoredFallback.variant).toBe('warning')
-    expect(restoredFallback.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
-
-    await act(async () => {
-      rerender()
-    })
-
-    expect(result.current.combinedToasts).toHaveLength(2)
-    ;[successAfterDismiss, restoredFallback] = result.current.combinedToasts
-    expect(successAfterDismiss).toBe(successToast)
-    expect(restoredFallback.variant).toBe('warning')
-    expect(restoredFallback.message).toBe(TOAST_MESSAGES.recommendationFallbackWarning)
   })
 
   test('待機中の Service Worker が存在する場合に更新トーストを表示し「今すぐ更新」で SKIP_WAITING を送信する', async () => {

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.compat import UTC
 from app.main import app
 from app.routes.weather import get_weather_service
 from app.services.weather import WeatherService

@@ -4,12 +4,13 @@ import logging
 import sqlite3
 import time
 from collections.abc import Callable, Iterable
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 from typing_extensions import Protocol
 
 from . import connection, metadata
+from ..compat import UTC
 
 logger = logging.getLogger(__name__)
 

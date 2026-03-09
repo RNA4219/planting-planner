@@ -1,8 +1,7 @@
 import {
+  ComponentType,
   ChangeEvent,
   FormEvent,
-  Suspense,
-  lazy,
   useCallback,
   useEffect,
   useId,
@@ -10,7 +9,6 @@ import {
   useRef,
   useState,
 } from 'react'
-import { flushSync } from 'react-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { AppScreen } from './app/AppScreen'
@@ -45,11 +43,6 @@ const createQueryClient = () =>
       },
     },
   })
-
-const LazyWeatherTab = lazy(async () => {
-  const module = await import('./components/WeatherTab')
-  return { default: module.WeatherTab }
-})
 
 const scheduleWeatherSection = (task: () => void): (() => void) => {
   const globalWithIdle = globalThis as typeof globalThis & {
@@ -303,6 +296,12 @@ export const AppContent = () => {
 
   const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
   const [shouldRenderWeatherTab, setShouldRenderWeatherTab] = useState(false)
+  const [WeatherTabComponent, setWeatherTabComponent] = useState<ComponentType<{
+    latest: typeof weatherLatest
+    previous: typeof weatherPrevious
+    isLoading: boolean
+    error: typeof weatherError
+  }> | null>(null)
 
   useEffect(() => {
     if (!weatherTabEnabled) {
@@ -321,9 +320,7 @@ export const AppContent = () => {
       if (typeof globalThis.window === 'undefined') {
         return
       }
-      flushSync(() => {
-        setShouldRenderWeatherTab(true)
-      })
+      setShouldRenderWeatherTab(true)
     })
 
     return () => {
@@ -331,16 +328,39 @@ export const AppContent = () => {
     }
   }, [shouldRenderWeatherTab, weatherTabEnabled])
 
+  useEffect(() => {
+    if (!shouldRenderWeatherTab || WeatherTabComponent) {
+      return
+    }
+
+    let active = true
+    void import('./components/WeatherTab').then((module) => {
+      if (!active || !isMountedRef.current) {
+        return
+      }
+      if (typeof globalThis.window === 'undefined') {
+        return
+      }
+      setWeatherTabComponent(() => module.WeatherTab)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [WeatherTabComponent, shouldRenderWeatherTab])
+
   const weatherSection = weatherTabEnabled ? (
     shouldRenderWeatherTab ? (
-      <Suspense fallback={null}>
-        <LazyWeatherTab
+      WeatherTabComponent ? (
+        <WeatherTabComponent
           latest={weatherLatest}
           previous={weatherPrevious}
           isLoading={isWeatherLoading}
           error={weatherError}
         />
-      </Suspense>
+      ) : (
+        <WeatherSectionFallback />
+      )
     ) : (
       <WeatherSectionFallback />
     )

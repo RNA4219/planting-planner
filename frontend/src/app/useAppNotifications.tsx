@@ -34,8 +34,6 @@ export const useAppNotifications = ({
 }: UseAppNotificationsArgs): UseAppNotificationsResult => {
   const { isRefreshing, startRefresh, pendingToasts, dismissToast } = useRefreshStatusController()
   const lastSuccessToastIdRef = useRef<string | null>(null)
-  const marketFallbackToastSeqRef = useRef(0)
-  const [marketFallbackToasts, setMarketFallbackToasts] = useState<ToastStackItem[]>([])
   const recommendationErrorToastSeqRef = useRef(0)
   const [recommendationErrorToasts, setRecommendationErrorToasts] = useState<ToastStackItem[]>([])
   const shareToastSeqRef = useRef(0)
@@ -64,29 +62,6 @@ export const useAppNotifications = ({
     lastSuccessToastIdRef.current = latestSuccess.id
     void reloadCurrentWeek()
   }, [pendingToasts, reloadCurrentWeek])
-
-  useEffect(() => {
-    if (!isMarketFallback) {
-      marketFallbackToastSeqRef.current = 0
-      setMarketFallbackToasts((prev) => (prev.length > 0 ? [] : prev))
-      return
-    }
-    setMarketFallbackToasts((prev) => {
-      if (prev.length > 0) {
-        return prev
-      }
-      const id = `market-fallback-${marketFallbackToastSeqRef.current + 1}`
-      marketFallbackToastSeqRef.current += 1
-      return [
-        {
-          id,
-          variant: 'warning',
-          message: TOAST_MESSAGES.recommendationFallbackWarning,
-          detail: null,
-        },
-      ]
-    })
-  }, [isMarketFallback, marketFallbackToasts.length])
 
   useEffect(() => {
     if (!recommendationError) {
@@ -207,13 +182,6 @@ export const useAppNotifications = ({
         removed = true
         return prev.filter((toast) => toast.id !== id)
       })
-      setMarketFallbackToasts((prev) => {
-        if (!prev.some((toast) => toast.id === id)) {
-          return prev
-        }
-        removed = true
-        return prev.filter((toast) => toast.id !== id)
-      })
       setShareToasts((prev) => {
         if (!prev.some((toast) => toast.id === id)) {
           return prev
@@ -237,17 +205,12 @@ export const useAppNotifications = ({
   )
 
   const combinedToasts = useMemo(() => {
-    const base = [
-      ...pendingToasts,
-      ...recommendationErrorToasts,
-      ...marketFallbackToasts,
-      ...shareToasts,
-    ]
+    const base = [...pendingToasts, ...recommendationErrorToasts, ...shareToasts]
     if (updateToast) {
       return [updateToast, ...base]
     }
     return base
-  }, [marketFallbackToasts, pendingToasts, recommendationErrorToasts, shareToasts, updateToast])
+  }, [pendingToasts, recommendationErrorToasts, shareToasts, updateToast])
 
   const fallbackNotice = useMemo(() => {
     if (!isMarketFallback) {

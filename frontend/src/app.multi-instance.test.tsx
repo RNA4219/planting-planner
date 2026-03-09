@@ -4,22 +4,6 @@ import { render, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 
-const flushSyncMock = vi.fn<(callback: () => void) => void>()
-
-vi.mock('react-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-dom')>('react-dom')
-  return {
-    ...actual,
-    flushSync: ((callback: () => void) => {
-      flushSyncMock(callback)
-      if (typeof actual.flushSync === 'function') {
-        return actual.flushSync(callback)
-      }
-      return callback()
-    }) as typeof actual.flushSync,
-  }
-})
-
 vi.mock('./components/SearchControls', () => ({
   __esModule: true,
   SearchControls: () => null,
@@ -129,20 +113,18 @@ describe('AppContent multi-instance accessibility', () => {
     queryClient.clear()
   })
 
-  it('天気タブの遅延初期化で flushSync を使って同期描画する', async () => {
-    flushSyncMock.mockClear()
-
+  it('天気タブの遅延初期化後に実コンテンツへ置き換わる', async () => {
     const { AppContent } = await import('./App')
     const queryClient = new QueryClient()
 
-    const { unmount } = render(
+    const { getByTestId, unmount } = render(
       <QueryClientProvider client={queryClient}>
         <AppContent />
       </QueryClientProvider>,
     )
 
     await waitFor(() => {
-      expect(flushSyncMock).toHaveBeenCalled()
+      expect(getByTestId('weather-latest')).toBeInTheDocument()
     })
 
     unmount()

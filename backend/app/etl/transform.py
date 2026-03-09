@@ -4,10 +4,11 @@ import json
 import logging
 import sqlite3
 from collections import defaultdict
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Any, cast
 
 from .. import schemas, utils_week
+from ..compat import UTC
 from . import expectations
 from .loader import DataLoader, load_price_feed
 

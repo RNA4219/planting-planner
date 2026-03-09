@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from app.compat import UTC
+
 ROOT_DIR = Path(__file__).resolve().parents[3]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -87,7 +89,7 @@ def test_export_seed_script_writes_metadata(
     monkeypatch.setattr(export_seed, "_resolve_schema_version", lambda: "schema-1")
     monkeypatch.setattr(export_seed, "_today", lambda: dt.date(2024, 1, 2))
 
-    fake_now = dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=dt.UTC)
+    fake_now = dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=UTC)
     monkeypatch.setattr(export_seed, "_utcnow", lambda: fake_now)
 
     exit_code = export_seed.main(["--output", str(output_path)])

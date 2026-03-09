@@ -18,6 +18,8 @@ for candidate in (PROJECT_ROOT, BACKEND_ROOT):
     if candidate_str not in sys.path:
         sys.path.insert(0, candidate_str)
 
+from app.compat import UTC
+
 try:
     export_seed: ModuleType = importlib.import_module("scripts.export_seed")
 except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for docs bundle
@@ -80,7 +82,7 @@ def test_export_seed_script_writes_metadata(
     monkeypatch.setattr(export_seed, "_resolve_schema_version", lambda: "schema-1")
     monkeypatch.setattr(export_seed, "_today", lambda: dt.date(2024, 1, 2))
 
-    fake_now = dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=dt.UTC)
+    fake_now = dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=UTC)
     monkeypatch.setattr(export_seed, "_utcnow", lambda: fake_now)
 
     assert export_seed.main(["--output", str(output_path)]) == 0
