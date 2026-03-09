@@ -63,7 +63,8 @@ describe('App recommendations / 地域変更と競合制御', () => {
       )
     })
     expect(saveRegion).toHaveBeenLastCalledWith('cold')
-    expect(screen.getByText('にんじん')).toBeInTheDocument()
+    const table = await screen.findByRole('table')
+    expect(within(table).getByText('にんじん')).toBeInTheDocument()
   })
 
   it('地域変更で即時フェッチされテーブルが更新される', async () => {
@@ -92,7 +93,8 @@ describe('App recommendations / 地域変更と競合制御', () => {
       )
     })
 
-    expect(screen.getByText('春菊')).toBeInTheDocument()
+    const initialTable = await screen.findByRole('table')
+    expect(within(initialTable).getByText('春菊')).toBeInTheDocument()
 
     const select = screen.getByLabelText('地域')
     await user.selectOptions(select, '寒冷地')

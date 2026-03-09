@@ -101,6 +101,9 @@ type PriceChartMessages = {
     readonly heading: string
     readonly hint: string
     readonly loading: string
+    readonly selectorLabel: string
+    readonly selectorPlaceholder: string
+    readonly selectorUnavailable: string
   }
   readonly chart: {
     readonly status: {
@@ -119,8 +122,11 @@ const PRICE_CHART_MESSAGES_DICTIONARY: Record<LanguageCode, PriceChartMessages> 
   ja: {
     section: {
       heading: '価格推移',
-      hint: '作物一覧で行をクリックすると、価格推移が表示されます。',
+      hint: '作物一覧の行をクリックするか、主要野菜から選択すると価格推移が表示されます。',
       loading: '価格チャートを準備中です…',
+      selectorLabel: '主要野菜',
+      selectorPlaceholder: '主要野菜を選択',
+      selectorUnavailable: '主要野菜を読み込めません',
     },
     chart: {
       status: {
@@ -138,8 +144,11 @@ const PRICE_CHART_MESSAGES_DICTIONARY: Record<LanguageCode, PriceChartMessages> 
   en: {
     section: {
       heading: 'Price trend',
-      hint: 'Click a row in the crop list to view price trends.',
+      hint: 'Click a crop row or choose a featured vegetable to view price trends.',
       loading: 'Preparing price chart…',
+      selectorLabel: 'Featured vegetables',
+      selectorPlaceholder: 'Select a featured vegetable',
+      selectorUnavailable: 'Featured vegetables are unavailable',
     },
     chart: {
       status: {

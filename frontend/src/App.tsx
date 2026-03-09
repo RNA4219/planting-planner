@@ -313,7 +313,11 @@ export const AppContent = () => {
         />
       }
       priceChartSection={
-        <PriceChartSection selectedCropId={selectedCropId} marketScope={selectedMarket} />
+        <PriceChartSection
+          selectedCropId={selectedCropId}
+          marketScope={selectedMarket}
+          onSelectCrop={setSelectedCropId}
+        />
       }
       weatherTab={weatherSection}
       appVersion={appVersion}

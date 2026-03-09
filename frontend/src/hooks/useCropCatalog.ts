@@ -71,7 +71,7 @@ export const useCropCatalog = (): UseCropCatalogResult => {
         setIsLoading(true)
         const response = await fetchCrops()
         if (active) {
-          setCrops(response)
+          setCrops(Array.isArray(response) ? response : [])
         }
       } catch {
         if (active) {

@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CropCategory } from '../../types'
-import { buildRecommendationRows } from '../recommendations'
+import { buildRecommendationRows, normalizeCropLookupName } from '../recommendations'
 
 describe('buildRecommendationRows', () => {
   it('カテゴリが列挙外の場合は undefined に落とす', () => {
     const cropIndex = new Map<string, { id: number; category?: CropCategory }>([
-      ['Spinach', { id: 1, category: 'leaf' }],
-      ['Mystery Crop', { id: 2, category: 'alien' as unknown as CropCategory }],
+      [normalizeCropLookupName('Spinach'), { id: 1, category: 'leaf' }],
+      [
+        normalizeCropLookupName('Mystery Crop'),
+        { id: 2, category: 'alien' as unknown as CropCategory },
+      ],
     ])
 
     const rows = buildRecommendationRows({

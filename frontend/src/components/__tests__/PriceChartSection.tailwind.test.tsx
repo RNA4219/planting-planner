@@ -1,8 +1,16 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PriceChartSection } from '../PriceChartSection'
+
+vi.mock('../../hooks/useCropCatalog', () => ({
+  __esModule: true,
+  useCropCatalog: () => ({
+    catalog: new Map(),
+    isLoading: false,
+  }),
+}))
 
 describe('PriceChartSection (tailwind)', () => {
   afterEach(() => {
@@ -10,7 +18,13 @@ describe('PriceChartSection (tailwind)', () => {
   })
 
   it('セクションにカード風レイアウトの Tailwind クラスを適用する', () => {
-    render(<PriceChartSection selectedCropId={null} marketScope="national" />)
+    render(
+      <PriceChartSection
+        selectedCropId={null}
+        marketScope="national"
+        onSelectCrop={vi.fn()}
+      />,
+    )
 
     const heading = screen.getByRole('heading', { level: 2, name: '価格推移' })
     const section = heading.closest('section')
@@ -31,9 +45,17 @@ describe('PriceChartSection (tailwind)', () => {
   })
 
   it('補足文に Tailwind の文字装飾クラスを適用する', () => {
-    render(<PriceChartSection selectedCropId={null} marketScope="national" />)
+    render(
+      <PriceChartSection
+        selectedCropId={null}
+        marketScope="national"
+        onSelectCrop={vi.fn()}
+      />,
+    )
 
-    const hint = screen.getByText('作物一覧で行をクリックすると、価格推移が表示されます。')
+    const hint = screen.getByText(
+      '作物一覧の行をクリックするか、主要野菜から選択すると価格推移が表示されます。',
+    )
 
     expect(hint).toHaveClass('text-sm')
     expect(hint).toHaveClass('text-slate-500')

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { createInteractionsHarness } from '../utils/interactionsHarness'
@@ -58,11 +58,12 @@ describe('Region switching resets crop selection', () => {
 
     const { user } = await renderApp()
 
-    await screen.findByText('トマト')
+    const initialTable = await screen.findByRole('table')
+    await screen.findByRole('row', { name: /トマト/ })
 
     expect(screen.getByText('作物を選択すると価格推移が表示されます。')).toBeInTheDocument()
 
-    const tomatoRow = screen.getByRole('row', { name: /トマト/ })
+    const tomatoRow = within(initialTable).getByRole('row', { name: /トマト/ })
     await user.click(tomatoRow)
 
     await waitFor(() => {
@@ -76,7 +77,8 @@ describe('Region switching resets crop selection', () => {
     const regionSelect = await screen.findByLabelText('地域')
     await user.selectOptions(regionSelect, 'warm')
 
-    await screen.findByText('キュウリ')
+    const warmTable = await screen.findByRole('table')
+    await within(warmTable).findByText('キュウリ')
 
     await waitFor(() => {
       expect(screen.getByText('作物を選択すると価格推移が表示されます。')).toBeInTheDocument()

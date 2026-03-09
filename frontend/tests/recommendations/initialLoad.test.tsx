@@ -101,7 +101,8 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
     await waitFor(() => {
       expect(fetchRecommend).toHaveBeenCalledWith({ region: 'temperate', week: '2024-W30' })
     })
-    await expect(screen.findByText('春菊')).resolves.toBeInTheDocument()
+    const table = await screen.findByRole('table')
+    await expect(within(table).findByText('春菊')).resolves.toBeInTheDocument()
   })
 
   it('初期ロードで fetchRecommendations が失敗したら fetchRecommend にフォールバックする', async () => {
@@ -126,7 +127,8 @@ describe('App recommendations / 初期ロードとフォールバック', () => 
       expect.objectContaining({ marketScope: 'national', category: 'leaf' }),
     )
     expect(fetchRecommend).toHaveBeenCalledWith({ region: 'temperate', week: '2024-W30' })
-    await expect(screen.findByText('春菊')).resolves.toBeInTheDocument()
+    const table = await screen.findByRole('table')
+    await expect(within(table).findByText('春菊')).resolves.toBeInTheDocument()
   })
 
   it('週入力は normalizeIsoWeek で揃えてAPIへ送られる', async () => {

@@ -6,6 +6,7 @@ import {
   buildRecommendationRows,
   formatWeekLabel,
   isCropCategory,
+  normalizeCropLookupName,
 } from '../../utils/recommendations'
 
 import { useRecommendationLoader, type RecommendationLoadError } from './loader'
@@ -79,7 +80,7 @@ export const useRecommendations = ({
     const map = new Map<string, { id: number; category?: CropCategory }>()
     cropCatalog.forEach((entry, cropName) => {
       const category = isCropCategory(entry.category) ? entry.category : undefined
-      map.set(cropName, { id: entry.id, category })
+      map.set(normalizeCropLookupName(cropName), { id: entry.id, category })
     })
     return map
   }, [cropCatalog])

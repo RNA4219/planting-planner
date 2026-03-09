@@ -9,6 +9,14 @@ const { importSpy, PriceChartMock } = vi.hoisted(() => ({
   PriceChartMock: vi.fn(() => <div data-testid="price-chart">chart</div>),
 }))
 
+vi.mock('../../src/hooks/useCropCatalog', () => ({
+  __esModule: true,
+  useCropCatalog: () => ({
+    catalog: new Map(),
+    isLoading: false,
+  }),
+}))
+
 vi.mock('../../src/components/PriceChart', (): PriceChartModule => {
   importSpy()
   return {
@@ -26,10 +34,18 @@ describe('PriceChartSection', () => {
   test('作物未選択時はチャートモジュールを遅延読込せず案内を表示する', async () => {
     const { PriceChartSection } = await import('../../src/components/PriceChartSection')
 
-    render(<PriceChartSection selectedCropId={null} marketScope="national" />)
+    render(
+      <PriceChartSection
+        selectedCropId={null}
+        marketScope="national"
+        onSelectCrop={vi.fn()}
+      />,
+    )
 
     expect(
-      screen.getByText('作物一覧で行をクリックすると、価格推移が表示されます。'),
+      screen.getByText(
+        '作物一覧の行をクリックするか、主要野菜から選択すると価格推移が表示されます。',
+      ),
     ).toBeInTheDocument()
     expect(importSpy).not.toHaveBeenCalled()
     expect(PriceChartMock).not.toHaveBeenCalled()
@@ -38,7 +54,13 @@ describe('PriceChartSection', () => {
   test('作物選択時にチャートモジュールを読み込み描画する', async () => {
     const { PriceChartSection } = await import('../../src/components/PriceChartSection')
 
-    render(<PriceChartSection selectedCropId={42} marketScope="national" />)
+    render(
+      <PriceChartSection
+        selectedCropId={42}
+        marketScope="national"
+        onSelectCrop={vi.fn()}
+      />,
+    )
 
     await waitFor(() => {
       expect(importSpy).toHaveBeenCalled()

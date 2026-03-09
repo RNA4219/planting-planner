@@ -42,6 +42,16 @@ const { fetchPriceMock } = vi.hoisted(() => ({
 }))
 
 vi.mock('../../lib/api', () => ({ fetchPrice: fetchPriceMock }))
+vi.mock('../../hooks/useCropCatalog', () => ({
+  __esModule: true,
+  useCropCatalog: () => ({
+    catalog: new Map([
+      ['トマト', { id: 1, name: 'トマト', category: 'flower' }],
+      ['レタス', { id: 2, name: 'レタス', category: 'leaf' }],
+    ]),
+    isLoading: false,
+  }),
+}))
 
 const DEFAULT_URL = 'http://localhost/'
 const ORIGINAL_LOCATION = window.location
@@ -93,15 +103,18 @@ describe('PriceChart i18n', () => {
 
   it('既定では日本語文言を表示する', async () => {
     await renderSectionAndChart(
-      { selectedCropId: null, marketScope: 'national' },
+      { selectedCropId: null, marketScope: 'national', onSelectCrop: vi.fn() },
       { cropId: null, marketScope: 'national' },
     )
 
     expect(screen.getByRole('heading', { level: 2, name: '価格推移' })).toBeInTheDocument()
     expect(screen.getAllByText('作物を選択すると価格推移が表示されます。')).toHaveLength(2)
     expect(
-      screen.getByText('作物一覧で行をクリックすると、価格推移が表示されます。'),
+      screen.getByText(
+        '作物一覧の行をクリックするか、主要野菜から選択すると価格推移が表示されます。',
+      ),
     ).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: '主要野菜' })).toBeInTheDocument()
   })
 
   it('英語設定時は英語文言を表示する', async () => {
@@ -122,15 +135,16 @@ describe('PriceChart i18n', () => {
     fetchPriceMock.mockResolvedValue({ series, isMarketFallback: false })
 
     await renderSectionAndChart(
-      { selectedCropId: null, marketScope: 'national' },
+      { selectedCropId: null, marketScope: 'national', onSelectCrop: vi.fn() },
       { cropId: 1, marketScope: 'national' },
     )
 
     expect(screen.getByRole('heading', { level: 2, name: 'Price trend' })).toBeInTheDocument()
     expect(screen.getByText('Select a crop to view price trends.')).toBeInTheDocument()
     expect(
-      screen.getByText('Click a row in the crop list to view price trends.'),
+      screen.getByText('Click a crop row or choose a featured vegetable to view price trends.'),
     ).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Featured vegetables' })).toBeInTheDocument()
 
     await waitFor(() => expect(fetchPriceMock).toHaveBeenCalled())
 

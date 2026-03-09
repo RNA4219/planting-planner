@@ -37,7 +37,8 @@ describe('Favorites interactions', () => {
 
     const { user } = await renderApp()
 
-    await screen.findByText('トマト')
+    const table = await screen.findByRole('table')
+    await within(table).findByText('トマト')
     await waitFor(() => {
       expect(fetchRecommendations).toHaveBeenCalled()
     })
@@ -57,7 +58,7 @@ describe('Favorites interactions', () => {
       )
     })
 
-    const tomatoCell = screen.getByText('トマト')
+    const tomatoCell = within(table).getByText('トマト')
     const tomatoRow = tomatoCell.closest('tr')
     expect(tomatoRow).not.toBeNull()
     const selectedRow = tomatoRow as HTMLTableRowElement

@@ -10,6 +10,9 @@ const { compareIsoWeek, formatIsoWeek, normalizeIsoWeek } = week
 export const isCropCategory = (value: unknown): value is CropCategory =>
   value === 'leaf' || value === 'root' || value === 'flower'
 
+export const normalizeCropLookupName = (value: string): string =>
+  value.normalize('NFKC').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ja-JP')
+
 export type RecommendationRow = RecommendationItem & {
   cropId?: number
   category?: CropCategory
@@ -89,7 +92,7 @@ export const buildRecommendationRows = ({
   const favoriteSet = new Set(favorites)
   return items
     .map<RecommendationRow>((item) => {
-      const catalogEntry = cropIndex.get(item.crop)
+      const catalogEntry = cropIndex.get(normalizeCropLookupName(item.crop))
       const category = catalogEntry?.category
       return {
         ...item,
