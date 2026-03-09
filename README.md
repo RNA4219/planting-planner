@@ -38,7 +38,29 @@ npm ci
 cd ..
 ```
 
-### 2. バックエンドを起動する
+### 2. Windows では `Start.bat` でまとめて起動する
+
+エクスプローラーからダブルクリックするか、PowerShell / コマンドプロンプトで次を実行してください。
+
+```powershell
+.\Start.bat
+```
+
+これで以下が自動で実行されます。
+
+- PowerShell ウィンドウを 2 つ開いて、バックエンドとフロントエンドをそれぞれ起動
+- フロントエンドを `http://127.0.0.1:5173` でブラウザ表示
+
+補助オプション:
+
+```powershell
+.\Start.bat -CheckOnly
+.\Start.bat -NoBrowser
+```
+
+`-CheckOnly` は起動せずに前提コマンドだけ確認し、`-NoBrowser` はブラウザを開かずにサーバーだけ立ち上げます。
+
+### 3. 手動で起動したい場合
 
 ```bash
 poetry run uvicorn backend.app.main:app --reload
@@ -46,9 +68,7 @@ poetry run uvicorn backend.app.main:app --reload
 
 API は既定で `http://127.0.0.1:8000` で起動します。
 
-### 3. フロントエンドを起動する
-
-別ターミナルで実行します。
+別ターミナルでフロントエンドを起動します。
 
 ```bash
 cd frontend
