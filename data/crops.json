@@ -79,5 +79,221 @@
         "source": "MAFF"
       }
     ]
+  },
+  {
+    "id": 5,
+    "name": "レタス",
+    "category": "leaf",
+    "price_weekly": [
+      { "week": 202446, "price": 198.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W46",
+        "avg_price": 198.0,
+        "stddev": 12.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "キャベツ",
+    "category": "leaf",
+    "price_weekly": [
+      { "week": 202445, "price": 168.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W45",
+        "avg_price": 168.0,
+        "stddev": 10.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "白菜",
+    "category": "leaf",
+    "price_weekly": [
+      { "week": 202447, "price": 172.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W47",
+        "avg_price": 172.0,
+        "stddev": 11.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "小松菜",
+    "category": "leaf",
+    "price_weekly": [
+      { "week": 202449, "price": 222.0, "source": "JA Tokyo" }
+    ],
+    "market_prices": [
+      {
+        "scope": "city:tokyo",
+        "week": "2024-W49",
+        "avg_price": 24.0,
+        "stddev": 1.8,
+        "unit": "円/100g",
+        "source": "tokyo-market"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "ねぎ",
+    "category": "leaf",
+    "price_weekly": [
+      { "week": 202444, "price": 286.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W44",
+        "avg_price": 286.0,
+        "stddev": 17.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "玉ねぎ",
+    "category": "root",
+    "price_weekly": [
+      { "week": 202443, "price": 188.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W43",
+        "avg_price": 188.0,
+        "stddev": 9.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "大根",
+    "category": "root",
+    "price_weekly": [
+      { "week": 202441, "price": 148.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W41",
+        "avg_price": 148.0,
+        "stddev": 8.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "じゃがいも",
+    "category": "root",
+    "price_weekly": [
+      { "week": 202440, "price": 205.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W40",
+        "avg_price": 205.0,
+        "stddev": 13.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "きゅうり",
+    "category": "flower",
+    "price_weekly": [
+      { "week": 202447, "price": 338.0, "source": "JA Ibaraki" }
+    ],
+    "market_prices": [
+      {
+        "scope": "city:tokyo",
+        "week": "2024-W47",
+        "avg_price": 34.0,
+        "stddev": 2.2,
+        "unit": "円/100g",
+        "source": "tokyo-market"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "なす",
+    "category": "flower",
+    "price_weekly": [
+      { "week": 202446, "price": 358.0, "source": "JA Kochi" }
+    ],
+    "market_prices": [
+      {
+        "scope": "city:osaka",
+        "week": "2024-W46",
+        "avg_price": 362.0,
+        "stddev": 19.0,
+        "unit": "円/kg",
+        "source": "osaka-market"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "ピーマン",
+    "category": "flower",
+    "price_weekly": [
+      { "week": 202445, "price": 418.0, "source": "JA Miyazaki" }
+    ],
+    "market_prices": [
+      {
+        "scope": "city:nagoya",
+        "week": "2024-W45",
+        "avg_price": 425.0,
+        "stddev": 21.0,
+        "unit": "円/kg",
+        "source": "nagoya-market"
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "ブロッコリー",
+    "category": "flower",
+    "price_weekly": [
+      { "week": 202444, "price": 268.0, "source": "e-Stat" }
+    ],
+    "market_prices": [
+      {
+        "scope": "national",
+        "week": "2024-W44",
+        "avg_price": 268.0,
+        "stddev": 16.0,
+        "unit": "円/kg",
+        "source": "e-Stat"
+      }
+    ]
   }
 ]
